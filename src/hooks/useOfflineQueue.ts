@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/components/ui/use-toast';
+import type { Transcript as TranscriptT } from '@/types/types';
 import {
   saveToOfflineQueue,
   loadOfflineQueue,
@@ -12,12 +13,27 @@ import {
   updateTranscriptAsync,
   deleteTranscriptAsync,
 } from '@/hooks/useCreateTranscript';
+import { debounce } from '@/utils/debounce';
 
-export function useOfflineQueue() {
+const LOCALSTORAGE_KEY = 'offlineTranscripts';
+
+export const saveTranscriptsToLocalStorage = (transcripts: TranscriptT[]) => {
+  localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(transcripts));
+};
+
+export const loadTranscriptsFromLocalStorage = (): TranscriptT[] => {
+  const storedData = localStorage.getItem(LOCALSTORAGE_KEY);
+  return storedData ? JSON.parse(storedData) : [];
+};
+export function useOfflineQueue(
+  mergedTranscripts?: TranscriptT[],
+  isOnline?: boolean,
+) {
   const [offlineQueueCount, setOfflineQueueCount] = useState(0);
   const [isProcessingOfflineQueue, setIsProcessingOfflineQueue] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [prevOnlineStatus, setPrevOnlineStatus] = useState<Boolean>(isOnline);
 
   useEffect(() => {
     setOfflineQueueCount(loadOfflineQueue().length);
@@ -68,6 +84,45 @@ export function useOfflineQueue() {
     setIsProcessingOfflineQueue(false);
     queryClient.invalidateQueries(['transcripts2']);
   }, [toast, queryClient]);
+
+  const debouncedSync = useMemo(
+    () =>
+      debounce(() => {
+        if (mergedTranscripts && mergedTranscripts.length) {
+          saveTranscriptsToLocalStorage(mergedTranscripts);
+
+          // Process offline queue
+          processQueue();
+        }
+      }, 1000),
+    [mergedTranscripts, processQueue],
+  );
+
+  useEffect(() => {
+    if (
+      typeof isOnline === 'boolean' &&
+      typeof prevOnlineStatus === 'boolean' &&
+      isOnline !== prevOnlineStatus
+    ) {
+      if (isOnline) {
+        toast({
+          title: 'Online',
+          description: 'Your connection has been restored.',
+          variant: 'default',
+        });
+
+        debouncedSync();
+      } else {
+        toast({
+          title: 'Offline',
+          description:
+            'You are currently offline. Changes will be synced when your connection is restored.',
+          variant: 'default',
+        });
+      }
+      setPrevOnlineStatus(isOnline);
+    }
+  }, [isOnline, debouncedSync, prevOnlineStatus, toast]);
 
   return {
     offlineQueueCount,
