@@ -128,8 +128,11 @@ const TranscriptSummary = forwardRef(({ summary, transcript }: Props, ref) => {
     const dateOfVisit = momentOfVisit.format('DD-MMM-YY');
     const timeOfVisit = momentOfVisit.format('HH:mm');
 
-    const statusColor = isFinal ? '#0B9E0E' : '#FFA500';
-    const headerColor = isFinal ? statusColor : '#0141C8';
+    // Use project-defined color variables instead of hard-coded values
+    const statusColor = isFinal
+      ? 'hsl(var(--success))'
+      : 'hsl(var(--destructive))';
+    const headerColor = isFinal ? statusColor : 'hsl(var(--primary))';
 
     if (summaryCopy.number === 1 && (editedText === null || !editMode)) {
       return <>
@@ -138,7 +141,7 @@ const TranscriptSummary = forwardRef(({ summary, transcript }: Props, ref) => {
         <span>Date of visit: {dateOfVisit}</span><br />
         <span>Time: {timeOfVisit}</span><br /><br />
         <span>{text}</span><br /><br />
-        <b style={{color: "#8c8c8c"}}>
+        <b style={{color: 'hsl(var(--muted-foreground))'}}>
           CoPilot: Armada AssistMD & AssistPRO<br />
           With Ambient Scribe and Evolved Solutions (AS|ES) (TM)<br />
           {"{MPE-ARM-P24.1}"}
@@ -178,7 +181,7 @@ const TranscriptSummary = forwardRef(({ summary, transcript }: Props, ref) => {
               suppressContentEditableWarning={true}
               onBlur={saveEdit}
               onClick={() => handleCopy(summaryCopy.summary)}
-              style={isCopied ? { backgroundColor: '#CF9FFF' } : {}}
+              style={isCopied ? { backgroundColor: 'hsl(var(--accent))' } : {}}
             >
               {processedText}
             </p>
@@ -231,7 +234,7 @@ const TranscriptSummary = forwardRef(({ summary, transcript }: Props, ref) => {
           suppressContentEditableWarning={true}
           onBlur={saveEdit}
           onClick={() => handleCopy(summaryCopy.summary)}
-          style={isCopied ? { backgroundColor: '#CF9FFF' } : {}}
+          style={isCopied ? { backgroundColor: 'hsl(var(--accent))' } : {}}
         >
           {processedText}
         </p>
