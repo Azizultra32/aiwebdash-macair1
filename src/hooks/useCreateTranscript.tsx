@@ -140,7 +140,8 @@ export async function updateTranscriptAsync(transcript: TranscriptTokenCount) {
   return transcript.mid;
 }
 
-export default function useCreateTransript() {
+// Hook used to create a new transcript and keep the query cache in sync
+export default function useCreateTranscript() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -151,7 +152,8 @@ export default function useCreateTransript() {
   });
 }
 
-export function useUpdateTransript() {
+// Hook used to update a transcript and keep the query cache in sync
+export function useUpdateTranscript() {
   const queryClient = useQueryClient();
 
   return useMutation({
