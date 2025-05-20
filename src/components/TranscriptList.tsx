@@ -9,11 +9,11 @@ import OnlineStatusIndicator from '@/components/OnlineStatusIndicator';
 
 type Props = {
   transcripts: Transcript[];
-  selectedTranscript: any;
-  onSelectTranscript: (mid: any) => void;
+  selectedTranscript?: Transcript;
+  onSelectTranscript: (transcript: Transcript) => void;
   onDeleteTranscript: (patient: TranscriptData) => void;
-  recordingPatientMidUUID: string | undefined;
-  uploadingPatientMidUUID: string | undefined;
+  recordingPatientMidUUID?: string;
+  uploadingPatientMidUUID?: string;
   offlineQueueCount: number;
 };
 
@@ -26,7 +26,7 @@ const TranscriptList = ({
   uploadingPatientMidUUID,
   offlineQueueCount,
 }: Props) => {
-  const [unlock, setUnlock] = useState<any>({});
+  const [unlock, setUnlock] = useState<Record<number, boolean>>({});
   const [patientName, setPatientName] = useState<string>("");
   const selectedRef = useRef<HTMLButtonElement>(null);
 
@@ -85,8 +85,8 @@ const TranscriptList = ({
                         contentEditable={unlock[index]}
                         style={unlock[index] ? { outline: 'none', boxShadow: '0 -2px 0 #fff inset' } : {}}
                         spellCheck={false}
-                        onClick={(e: any) => { if (unlock[index]) { e.stopPropagation() } }}
-                        onKeyDown={(e: any) => {
+                        onClick={(e: React.MouseEvent) => { if (unlock[index]) { e.stopPropagation() } }}
+                        onKeyDown={(e: React.KeyboardEvent<HTMLSpanElement>) => {
                           if (e.key === 'Enter') {
                             e.preventDefault();
                             setUnlock({ ...unlock, [index]: false });
@@ -96,7 +96,7 @@ const TranscriptList = ({
                             e.preventDefault();
                           }
                         }}
-                        onKeyUp={(e: any) => {
+                        onKeyUp={(e: React.KeyboardEvent<HTMLSpanElement>) => {
                           setPatientName(e.currentTarget.textContent || '');
                         }}
                       >

@@ -3,14 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Copy, Maximize2 } from 'lucide-react';
 import { Button } from './ui/button';
 import TranscriptSummary from './TranscriptSummary';
-import type { Transcript } from '@/types/types';
+import type { Transcript, AI_Summary, SummaryRef } from '@/types/types';
 
 interface TranscriptOrdersProps {
   transcript: Transcript;
-  summaryMap: any;
-  onCopy: (ref: any) => void;
-  onMaximize: (ref: any) => void;
-  summaryRef: React.RefObject<any>;
+  summaryMap: Record<string, AI_Summary['arguments']['summaries'][0]>;
+  onCopy: (ref: React.RefObject<SummaryRef>) => void;
+  onMaximize: (ref: React.RefObject<SummaryRef>) => void;
+  summaryRef: React.RefObject<SummaryRef>;
 }
 
 const TranscriptOrders: React.FC<TranscriptOrdersProps> = ({

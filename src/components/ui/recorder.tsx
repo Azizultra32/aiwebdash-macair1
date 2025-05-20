@@ -3,7 +3,7 @@ import supabase from '@/supabase';
 import { useMemo } from 'react';
 import { getAudioMimeType, uuidv4 } from '@/lib/utils';
 import { ReactMic } from '@/lib/react-mic';
-import { ChunkNumberWrapper } from '@/types/types';
+import { ChunkNumberWrapper, TranscriptData } from '@/types/types';
 import NoSleep from 'nosleep.js';
 import 'regenerator-runtime/runtime'
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
@@ -18,7 +18,19 @@ let uploadMap: Map<string, Promise<any>[]> = new Map<string, Promise<any>[]>();
 const noSleep = new NoSleep();
 let didEnableNoSleep = false;
 
-function AudioRecorder(_props: any) {
+interface AudioRecorderProps {
+  patientTag: number;
+  patientData: TranscriptData;
+  newPatientData: TranscriptData;
+  hasMicrophoneAccess: boolean;
+  onRecording: (patient: TranscriptData) => Promise<void>;
+  onStopRecording: (patient: TranscriptData) => void;
+  onUploadComplete?: (patient: TranscriptData) => void;
+  onSpeechCommand?: (command: number, text?: string) => void;
+  selectPatient: (patientTag: number) => void;
+}
+
+function AudioRecorder(_props: AudioRecorderProps) {
   const [recording, setRecording] = useState<boolean>(false);
   const [recordingPaused, setRecordingPaused] = useState<boolean>(false);
   const [isRecordButtonDisabled, setRecordingButtonDisabled] = useState<boolean>(false);

@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useTranscriptFeatures } from '@/hooks/useTranscriptFeatures';
-import type { Transcript as TranscriptType } from '@/types/types';
+import type { Transcript as TranscriptType, AI_Summary, SummaryRef } from '@/types/types';
 import { useCopyToClipboard } from 'usehooks-ts';
 import TranscriptSoap from './TranscriptSoap';
 import TranscriptTabs from './TranscriptTabs';
@@ -13,7 +13,13 @@ type Props = {
   uploadingPatientMidUUID: string | undefined;
 };
 
-const ToggleButton = ({ label, checked, onCheckedChange }: any) => (
+interface ToggleButtonProps {
+  label: string;
+  checked: boolean;
+  onCheckedChange: (value: boolean) => void;
+}
+
+const ToggleButton = ({ label, checked, onCheckedChange }: ToggleButtonProps) => (
   <motion.div
     className="flex items-center space-x-2"
     initial={false}
@@ -35,30 +41,31 @@ const Transcript = ({ transcript }: Props) => {
   const [showDetail, setShowDetail] = useState(false);
   const [_, copy] = useCopyToClipboard();
 
-  const summaryMap = (showDetail ? transcript.ai_summary : transcript.ai_short_summary)?.arguments?.summaries?.reduce((acc: any, latest) => {
+  type Summary = AI_Summary['arguments']['summaries'][0];
+  const summaryMap = (showDetail ? transcript.ai_summary : transcript.ai_short_summary)?.arguments?.summaries?.reduce((acc: Record<string, Summary>, latest) => {
     acc[latest.number.toString()] = latest;
     return acc;
   }, { '-1': { number: -1, summary: '' } }) ?? {};
 
   // Create refs for each summary
-  const summaryRefs = {
-    '1': useRef(null),
-    '2': useRef(null),
-    '3': useRef(null),
-    '4': useRef(null),
-    '5': useRef(null),
-    '6': useRef(null),
-    '9': useRef(null),
+  const summaryRefs: Record<string, React.RefObject<SummaryRef>> = {
+    '1': useRef<SummaryRef>(null),
+    '2': useRef<SummaryRef>(null),
+    '3': useRef<SummaryRef>(null),
+    '4': useRef<SummaryRef>(null),
+    '5': useRef<SummaryRef>(null),
+    '6': useRef<SummaryRef>(null),
+    '9': useRef<SummaryRef>(null),
   };
 
-  const handleCopy = (ref: any) => {
+  const handleCopy = (ref: React.RefObject<SummaryRef>) => {
     if (ref.current) {
       const text = ref.current.getSummary();
       copy(text);
     }
   };
 
-  const handleMaximize = (ref: any) => {
+  const handleMaximize = (ref: React.RefObject<SummaryRef>) => {
     if (ref.current) {
       ref.current.toggleMaximize();
     }
