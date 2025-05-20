@@ -28,7 +28,7 @@ If you are developing a production application, we recommend updating the config
 
 ## Development Setup
 
-1. After cloning the repository, run the setup script to install the Node.js dependencies:
+1. After cloning the repository, run the setup script once to install the Node.js dependencies:
 
    ```bash
    ./setup.sh
