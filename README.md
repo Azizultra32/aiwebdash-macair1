@@ -40,3 +40,19 @@ If you are developing a production application, we recommend updating the config
    ```bash
    npm run dev
    ```
+
+### Running ESLint
+
+To check the codebase with ESLint, run:
+
+```bash
+npm run lint
+```
+
+### Running tests
+
+Execute the test suite using:
+
+```bash
+npm run test
+```
