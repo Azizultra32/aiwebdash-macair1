@@ -1,5 +1,4 @@
 module.exports = {
-  root: true,
   env: { browser: true, es2020: true },
   extends: [
     'eslint:recommended',
@@ -24,7 +23,8 @@ module.exports = {
       typescript: {},
     },
   },
-  ignorePatterns: ['dist', '.eslintrc.cjs'],
+  ignores: ['node_modules/', 'dist/', 'env.d.ts'],
+  ignorePatterns: ['dist', 'eslint.config.cjs'],
   parser: '@typescript-eslint/parser',
   plugins: ['react-refresh', 'import'],
   rules: {
