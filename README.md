@@ -25,3 +25,21 @@ If you are developing a production application, we recommend updating the config
 - Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
 - Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
 - Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+
+## Development Setup
+
+1. Install the project dependencies with npm or yarn:
+
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+2. Create a `.env` file by copying `.env.example` and updating the values for your environment.
+
+3. Run the development server:
+
+   ```bash
+   npm run dev
+   ```
