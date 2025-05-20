@@ -28,14 +28,11 @@ If you are developing a production application, we recommend updating the config
 
 ## Development Setup
 
-1. Install the project dependencies with npm or yarn:
+1. After cloning the repository, run the setup script to install the Node.js dependencies:
 
    ```bash
-   npm install
-   # or
-   yarn install
+   ./setup.sh
    ```
-
 2. Create a `.env` file by copying `.env.example` and updating the values for your environment.
 
 3. Run the development server:
