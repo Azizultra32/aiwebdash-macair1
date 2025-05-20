@@ -19,11 +19,16 @@ import { useSpeechRecognition } from 'react-speech-recognition';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { debounce } from '@/utils/debounce';
 import { unregisterServiceWorker } from '@/utils/serviceWorker';
+import {
+  saveToOfflineQueue,
+  loadOfflineQueue,
+  clearOfflineQueue,
+  type OfflineAction,
+} from '@/utils/storageHelpers';
 
 let clientSideMid: string | undefined = undefined;
 
 const LOCALSTORAGE_KEY = 'offlineTranscripts';
-const OFFLINE_QUEUE_KEY = 'offlineQueue';
 
 const saveToLocalStorage = (transcripts: TranscriptT[]) => {
   localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(transcripts));
@@ -32,25 +37,6 @@ const saveToLocalStorage = (transcripts: TranscriptT[]) => {
 const loadFromLocalStorage = (): TranscriptT[] => {
   const storedData = localStorage.getItem(LOCALSTORAGE_KEY);
   return storedData ? JSON.parse(storedData) : [];
-};
-
-type OfflineAction =
-  | { type: 'create'; data: TranscriptData }
-  | { type: 'update'; data: { mid: string; token_count: number } }
-  | { type: 'delete'; data: { mid: string } };
-
-const saveToOfflineQueue = (action: OfflineAction) => {
-  const queue = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
-  queue.push(action);
-  localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
-};
-
-const loadOfflineQueue = (): OfflineAction[] => {
-  return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
-};
-
-const clearOfflineQueue = () => {
-  localStorage.removeItem(OFFLINE_QUEUE_KEY);
 };
 
 const Dashboard = () => {
