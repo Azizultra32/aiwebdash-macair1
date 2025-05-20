@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="msapplication-navbutton-color" content="#ffffff">
+    <meta name="apple-mobile-web-app-status-bar-style" content="#ffffff">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="description" content="AssistMD - Medical Transcription Assistant">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>AssistMD</title>
+    <link href="https://api.fontshare.com/v2/css?f[]=panchang@1&display=swap" rel="stylesheet">
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@1&display=swap" rel="stylesheet">
+  </head>
+  <body style="overflow: hidden; margin: 0; padding: 0; height: 100vh;">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Fallback for browsers that don't support Service Workers
+      if (!('serviceWorker' in navigator)) {
+        console.log('Service Worker not supported');
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,186 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --lk-va-bar-width: 72px;
+  --lk-control-bar-height: unset;
+  --background: 0 0% 98%;
+}
+
+.agent-visualizer>.lk-audio-bar {
+  width: 72px;
+}
+
+.lk-agent-control-bar {
+  @apply border-t-0 p-0 h-min mr-4;
+}
+
+.lk-disconnect-button {
+  @apply h-[36px] hover:bg-[#6b221a] hover:text-[white] bg-[#31100c] border-[#6b221a];
+}
+
+@layer base {
+  html, body {
+    overflow: hidden;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+  }
+  
+  :root {
+    --foreground: 222.2 84% 4.9%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 140 90.8% 70.6%;
+    --success-foreground: 222.2 84% 4.9%;
+
+    --ring: 215 20.2% 65.1%;
+
+    --radius: 0.5rem;
+
+    /* Custom */
+    --sidebar-width: 20rem;
+    --header-height: 4rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 85.7% 97.3%;
+
+    --success: 140 90.8% 70.6%;
+    --success-foreground: 222.2 84% 4.9%;
+
+    --ring: 217.2 32.6% 17.5%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .loading {
+    transform-origin: center;
+    animation: spinner_zKoa 1.5s linear infinite;
+  }
+
+  .loading circle {
+    stroke-linecap: round;
+    animation: spinner_YpZS 1s ease-in-out infinite;
+  }
+
+  @keyframes spinner_zKoa {
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes spinner_YpZS {
+    0% {
+      stroke-dasharray: 0 150;
+      stroke-dashoffset: 0;
+    }
+
+    47.5% {
+      stroke-dasharray: 42 150;
+      stroke-dashoffset: -16;
+    }
+
+    95%,
+    100% {
+      stroke-dasharray: 42 150;
+      stroke-dashoffset: -59;
+    }
+  }
+}
+
+button:not(.bg-primary).days0 {
+  background-color: #F1F5F9;
+}
+
+button:not(.bg-primary).days1 {
+  background-color: #dce0e5;
+}
+
+button:not(.bg-primary).days2 {
+  background-color: #D0D5DF;
+}
+
+button:not(.bg-primary).days3 {
+  background-color: #B5B4C4;
+}
+
+.DialogOverlay {
+  background: rgba(0 0 0 / 0.5);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+}
+
+.DialogContent {
+  min-width: 300px;
+  background: white;
+  padding: 30px;
+  border-radius: 4px;
+}
+
+.header {
+  background-color: #FAFAFA;
+}
