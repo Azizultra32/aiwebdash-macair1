@@ -104,32 +104,47 @@ const TranscriptList = ({
         <div className="flex items-center gap-3">
           {unlock[index] ? (
             <>
-              <Trash
-                className="h-4 w-4 text-gray-500 hover:text-red-500"
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 p-0"
                 onClick={(e) => {
                   e.stopPropagation();
                   setUnlock({ ...unlock, [index]: false });
                   onDeleteTranscript(patient);
                 }}
-              />
-              <Unlock
-                className="h-4 w-4 text-gray-500 hover:text-blue-500"
+              >
+                <Trash className="h-4 w-4 text-gray-500 hover:text-red-500" />
+                <span className="sr-only">Delete transcript</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 p-0"
                 onClick={(e) => {
                   e.stopPropagation();
                   setUnlock({ ...unlock, [index]: false });
                   handleRename(patientName || patient.patient_code, patient.mid);
                 }}
-              />
+              >
+                <Unlock className="h-4 w-4 text-gray-500 hover:text-blue-500" />
+                <span className="sr-only">Save name</span>
+              </Button>
             </>
           ) : (
-            <Lock
-              className="h-4 w-4"
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 p-0"
               onClick={(e) => {
                 e.stopPropagation();
                 setUnlock({ ...unlock, [index]: true });
                 setPatientName(patient.patient_code);
               }}
-            />
+            >
+              <Lock className="h-4 w-4" />
+              <span className="sr-only">Edit name</span>
+            </Button>
           )}
           {patient.mid === recordingPatientMidUUID ? (
             <Mic className="h-4 w-4 text-blue-500" />
