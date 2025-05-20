@@ -41,6 +41,7 @@ const TranscriptSoap: React.FC<TranscriptSoapProps> = ({
                   onClick={() => handleCopy(summaryRef)}
                 >
                   <Copy className="h-5 w-5" />
+                  <span className="sr-only">Copy summary</span>
                 </Button>
                 <Button
                   variant="ghost"
@@ -48,6 +49,7 @@ const TranscriptSoap: React.FC<TranscriptSoapProps> = ({
                   onClick={() => handleMaximize(summaryRef)}
                 >
                   <Maximize2 className="h-5 w-5" />
+                  <span className="sr-only">Maximize summary</span>
                 </Button>
               </div>
               <div className="flex items-center gap-2">

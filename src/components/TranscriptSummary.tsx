@@ -212,6 +212,7 @@ const TranscriptSummary = forwardRef(({ summary, transcript }: Props, ref) => {
                     onClick={handleRecord}
                   >
                     <Mic size={16} color={isRecording ? 'red' : 'black'} />
+                    <span className="sr-only">{isRecording ? 'Stop recording' : 'Record summary'}</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>

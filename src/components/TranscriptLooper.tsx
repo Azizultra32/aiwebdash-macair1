@@ -26,19 +26,21 @@ const TranscriptLooper: React.FC<TranscriptLooperProps> = ({
         <div className="flex justify-between items-center border-b pb-2">
           <CardTitle className="text-xl font-semibold text-primary-600">Looper</CardTitle>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="sm"
               onClick={() => onCopy(summaryRef)}
             >
               <Copy className="h-5 w-5" />
+              <span className="sr-only">Copy summary</span>
             </Button>
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="sm"
               onClick={() => onMaximize(summaryRef)}
             >
               <Maximize2 className="h-5 w-5" />
+              <span className="sr-only">Maximize summary</span>
             </Button>
           </div>
         </div>
