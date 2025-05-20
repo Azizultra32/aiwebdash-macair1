@@ -74,7 +74,7 @@ const TranscriptTabs = ({
           {activeTab === 'consult' && <FloatingAfterscribe />}
         </div>
 
-        <div className="p-6" style={{ height: 'calc(50vh - 120px)' }}>
+        <div className="p-6 h-[calc(50vh-120px)]">
           <TabsContent value="consult" className="h-full m-0">
             <TranscriptConsultWizard
               transcript={transcript}
