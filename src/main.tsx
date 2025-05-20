@@ -1,3 +1,4 @@
+import 'regenerator-runtime/runtime';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -28,7 +29,7 @@ if ('serviceWorker' in navigator) {
       const currentVersion = localStorage.getItem('app-version');
       event.source?.postMessage({
         type: 'CURRENT_VERSION',
-        version: currentVersion
+        version: currentVersion,
       });
     } else if (event.data.type === 'UPDATE_AVAILABLE') {
       // Update stored version and reload
@@ -42,10 +43,10 @@ const initializeServices = async () => {
   try {
     // Register Service Worker
     await registerServiceWorker();
-    
+
     // Initialize IndexedDB through Web Worker
     await initIndexedDB();
-    
+
     console.log('App services initialized successfully');
   } catch (error) {
     console.error('Failed to initialize app services:', error);
