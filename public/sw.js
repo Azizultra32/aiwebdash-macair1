@@ -14,23 +14,15 @@ async function checkForUpdates() {
   }
 }
 
-const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/logo1.png',
-  '/record.png',
-  '/stop.png',
-  '/vite.svg',
-  '/assets/index-[hash].css',
-  '/assets/index-[hash].js',
-];
+import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 
-// Install event - cache static assets
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(ASSETS_TO_CACHE))
-  );
+// Precache assets injected by Workbox during the build
+cleanupOutdatedCaches();
+precacheAndRoute(self.__WB_MANIFEST);
+
+// Install event - immediately activate the new service worker
+self.addEventListener('install', () => {
+  self.skipWaiting();
 });
 
 // Activate event - cleanup old caches
