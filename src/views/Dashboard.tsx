@@ -16,38 +16,23 @@ import { useToast } from '@/components/ui/use-toast';
 import 'regenerator-runtime/runtime'
 import { useSpeechRecognition } from 'react-speech-recognition';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
-import { debounce } from '@/utils/debounce';
-import { unregisterServiceWorker } from '@/utils/serviceWorker';
-import { useOfflineQueue } from '@/hooks/useOfflineQueue';
+import {
+  useOfflineQueue,
+  loadTranscriptsFromLocalStorage,
+  saveTranscriptsToLocalStorage,
+} from '@/hooks/useOfflineQueue';
+import { useServiceWorkerReload } from '@/hooks/useServiceWorkerReload';
 import { useTranscriptSelection } from '@/hooks/useTranscriptSelection';
 import SpeechCommandDialog from '@/components/SpeechCommandDialog';
 import StatusBanner from '@/components/StatusBanner';
 
 let clientSideMid: string | undefined = undefined;
 
-const LOCALSTORAGE_KEY = 'offlineTranscripts';
-
-const saveToLocalStorage = (transcripts: TranscriptT[]) => {
-  localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(transcripts));
-};
-
-const loadFromLocalStorage = (): TranscriptT[] => {
-  const storedData = localStorage.getItem(LOCALSTORAGE_KEY);
-  return storedData ? JSON.parse(storedData) : [];
-};
-
 const Dashboard = () => {
   const [clientTranscripts, setClientTranscripts] = useState<TranscriptT[]>();
   const { data: onlineTranscripts, isLoading: isLoadingTranscripts } = useTranscripts();
   const { toast } = useToast();
   const isOnline = useOnlineStatus();
-  const [prevOnlineStatus, setPrevOnlineStatus] = useState<Boolean>(isOnline);
-  const {
-    offlineQueueCount,
-    isProcessingOfflineQueue,
-    queueAction,
-    processQueue,
-  } = useOfflineQueue();
   // Hook for creating new transcripts on the server
   const { mutateAsync: createTranscript } = useCreateTranscript();
 
@@ -62,6 +47,26 @@ const Dashboard = () => {
 
     return Math.max(...tags) + 1;
   }, [onlineTranscripts, clientTranscripts]);
+
+  const mergedTranscripts = useMemo(() => {
+    if (!onlineTranscripts && !clientTranscripts) return [] as TranscriptT[];
+    const merged = [...(onlineTranscripts || []), ...(clientTranscripts || [])];
+    return merged
+      .filter((transcript, index, self) =>
+        index === self.findIndex(t => t.mid === transcript.mid),
+      )
+      .sort(
+        (a: TranscriptT, b: TranscriptT) =>
+          +new Date(b.created_at) - +new Date(a.created_at),
+      );
+  }, [onlineTranscripts, clientTranscripts]);
+
+  const {
+    offlineQueueCount,
+    isProcessingOfflineQueue,
+    queueAction,
+    processQueue,
+  } = useOfflineQueue(mergedTranscripts, isOnline);
 
   const defaultPatientData = { patient_code: 'Patient', patient_tag: patientTag, mid: uuidv4(), language: 'auto', token_count: 0 };
   const isDesktop = useMediaQuery('(min-width: 1024px)');
@@ -132,7 +137,7 @@ const Dashboard = () => {
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
-    const localStorageTranscripts = loadFromLocalStorage();
+    const localStorageTranscripts = loadTranscriptsFromLocalStorage();
     setClientTranscripts(localStorageTranscripts);
     setIsInitializing(false);
 
@@ -167,7 +172,7 @@ const Dashboard = () => {
       }
       const updatedTranscripts = clientTranscripts?.filter(t => t.mid !== mid) || [];
       setClientTranscripts(updatedTranscripts);
-      saveToLocalStorage(updatedTranscripts);
+      saveTranscriptsToLocalStorage(updatedTranscripts);
       setSelectedTranscript(undefined);
       if (clientSideMid === mid) {
         clientSideMid = undefined;
@@ -184,7 +189,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     // Initialize with local storage data immediately
-    const localStorageTranscripts = loadFromLocalStorage();
+    const localStorageTranscripts = loadTranscriptsFromLocalStorage();
     setClientTranscripts(localStorageTranscripts);
 
     if (!isDesktop) {
@@ -239,7 +244,7 @@ const Dashboard = () => {
     );
 
     setClientTranscripts(sortedClientTranscripts);
-    saveToLocalStorage(sortedClientTranscripts);
+    saveTranscriptsToLocalStorage(sortedClientTranscripts);
 
     if (!sortedClientTranscripts.length || !isDesktop || (selectedTranscript && !didCreateClientPatient && !didClearClientPatient)) {
       return;
@@ -346,20 +351,10 @@ const Dashboard = () => {
 
   // Load initial data from localStorage
   useEffect(() => {
-    const localStorageTranscripts = loadFromLocalStorage();
+    const localStorageTranscripts = loadTranscriptsFromLocalStorage();
     setClientTranscripts(localStorageTranscripts);
   }, []);
 
-  // 1. Memoize the merged transcripts calculation
-  const mergedTranscripts = useMemo(() => {
-    if (!onlineTranscripts && !clientTranscripts) return [];
-    const merged = [...(onlineTranscripts || []), ...(clientTranscripts || [])];
-    return merged.filter((transcript, index, self) =>
-      index === self.findIndex((t) => t.mid === transcript.mid)
-    ).sort((a: TranscriptT, b: TranscriptT) =>
-      +new Date(b.created_at) - +new Date(a.created_at)
-    );
-  }, [onlineTranscripts, clientTranscripts]);
 
   useEffect(() => {
     const mid = selectedTranscript?.mid;
@@ -370,75 +365,7 @@ const Dashboard = () => {
     }
   }, [mergedTranscripts, selectedTranscript?.mid]);
 
-  const debouncedSync = useMemo(
-    () =>
-      debounce(() => {
-        if (mergedTranscripts && mergedTranscripts.length) {
-          saveToLocalStorage(mergedTranscripts);
-
-          // Process offline queue
-          processQueue();
-        }
-      }, 1000),
-    [mergedTranscripts]
-  );
-
-  // Sync local data with online data when connection is restored
-  useEffect(() => {
-    if (isOnline !== prevOnlineStatus) {
-      if (isOnline) {
-        toast({
-          title: 'Online',
-          description: 'Your connection has been restored.',
-          variant: 'default',
-        });
-
-        debouncedSync();
-      } else {
-        toast({
-          title: 'Offline',
-          description: 'You are currently offline. Changes will be synced when your connection is restored.',
-          variant: 'default',
-        });
-      }
-      setPrevOnlineStatus(isOnline);
-    }
-  }, [isOnline, debouncedSync, prevOnlineStatus]);
-
-  //useEffect(() => debouncedSync(), [debouncedSync]);
-
-  const reloadIfNotRecording = useCallback(async () => {
-    const isRecording = recordingPatientMidUUID !== '';
-    toast({
-      title: 'Update Available',
-      description: isRecording ? 'Reload to get the latest version.' : 'Reloading in 3 seconds to get the latest version.',
-    });
-    await unregisterServiceWorker();
-    if (!isRecording) {
-      // Reload the page to get new version
-      setTimeout(() => window.location.reload(), 3000);
-    }
-  }, [recordingPatientMidUUID]);
-
-  const reloadHandler = useCallback((event: MessageEvent) => {
-    if (event.data.type === 'UPDATE_AVAILABLE') {
-      reloadIfNotRecording();
-    }
-  }, [reloadIfNotRecording]);
-
-  const [previousReloadHandler, setPreviousReloadHandler] = useState<(event: MessageEvent) => void>();
-
-  useEffect(() => {
-    if (previousReloadHandler !== reloadHandler) {
-      if ('serviceWorker' in navigator) {
-        if (previousReloadHandler) {
-          navigator.serviceWorker.removeEventListener('message', previousReloadHandler);
-        }
-        setPreviousReloadHandler(() => reloadHandler);
-        navigator.serviceWorker.addEventListener('message', reloadHandler);
-      }
-    }
-  }, [reloadHandler, previousReloadHandler]);
+  useServiceWorkerReload(recordingPatientMidUUID);
 
   const MemoizedTranscriptList = memo(TranscriptList);
 
