@@ -34,3 +34,8 @@ src/views/Reset.tsx(7,5): error TS2875: This JSX tag requires the module path 'r
 ### Render Performance
 
 Render timing numbers could not be collected because the project dependencies were missing.
+
+## 2025-05-20 (Attempt 2)
+
+Build failed because project dependencies were not installed. Network access was unavailable, so `npm ci` and `npm run build` failed.
+
