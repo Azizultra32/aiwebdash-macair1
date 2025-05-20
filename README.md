@@ -56,3 +56,22 @@ Execute the test suite using:
 ```bash
 npm run test
 ```
+
+### Codex environment setup
+
+Codex disables network access after the setup phase. Create a `.codex/setup.sh` script so dependencies are installed while the network is still available:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Install Node.js dependencies
+if command -v npm >/dev/null 2>&1; then
+  npm ci --include=dev
+else
+  echo "Error: npm not found." >&2
+  exit 1
+fi
+```
+
+Codex will execute this script automatically during environment initialization.
