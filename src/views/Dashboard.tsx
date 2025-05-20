@@ -34,13 +34,18 @@ const loadFromLocalStorage = (): TranscriptT[] => {
   return storedData ? JSON.parse(storedData) : [];
 };
 
-const saveToOfflineQueue = (action: { type: string; data: any }) => {
+type OfflineAction =
+  | { type: 'create'; data: TranscriptData }
+  | { type: 'update'; data: { mid: string; token_count: number } }
+  | { type: 'delete'; data: { mid: string } };
+
+const saveToOfflineQueue = (action: OfflineAction) => {
   const queue = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
   queue.push(action);
   localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
 };
 
-const loadOfflineQueue = () => {
+const loadOfflineQueue = (): OfflineAction[] => {
   return JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
 };
 
@@ -139,7 +144,7 @@ const Dashboard = () => {
   }, [isDesktop, showSidebar]);
 
   const selectTranscript = useCallback(
-    (transcript: any) => {
+    (transcript: TranscriptT) => {
       setSelectedTranscript(transcript);
       setPatientData(transcript);
       if (transcript && transcript.ai_summary == null) {
@@ -248,7 +253,9 @@ const Dashboard = () => {
       }
     }
 
-    const sortedClientTranscripts = updatedTranscripts.sort((a: any, b: any) => +new Date(b.created_at) - +new Date(a.created_at));
+    const sortedClientTranscripts = updatedTranscripts.sort((a: TranscriptT, b: TranscriptT) =>
+      +new Date(b.created_at) - +new Date(a.created_at)
+    );
 
     setClientTranscripts(sortedClientTranscripts);
     saveToLocalStorage(sortedClientTranscripts);
@@ -371,7 +378,9 @@ const Dashboard = () => {
     const merged = [...(onlineTranscripts || []), ...(clientTranscripts || [])];
     return merged.filter((transcript, index, self) =>
       index === self.findIndex((t) => t.mid === transcript.mid)
-    ).sort((a: any, b: any) => +new Date(b.created_at) - +new Date(a.created_at));
+    ).sort((a: TranscriptT, b: TranscriptT) =>
+      +new Date(b.created_at) - +new Date(a.created_at)
+    );
   }, [onlineTranscripts, clientTranscripts]);
 
   useEffect(() => {
@@ -421,7 +430,7 @@ const Dashboard = () => {
     }
   }, [isOnline, debouncedSync, prevOnlineStatus]);
 
-  const processOfflineQueue = async (queue: any[]) => {
+  const processOfflineQueue = async (queue: OfflineAction[]) => {
     setIsProcessingOfflineQueue(true);
     let shouldClearQueue = true;
     for (const action of queue) {
@@ -471,13 +480,13 @@ const Dashboard = () => {
     }
   }, [recordingPatientMidUUID]);
 
-  const reloadHandler = useCallback((event: any) => {
+  const reloadHandler = useCallback((event: MessageEvent) => {
     if (event.data.type === 'UPDATE_AVAILABLE') {
       reloadIfNotRecording();
     }
   }, [reloadIfNotRecording]);
 
-  const [previousReloadHandler, setPreviousReloadHandler] = useState<(event: any) => void>();
+  const [previousReloadHandler, setPreviousReloadHandler] = useState<(event: MessageEvent) => void>();
 
   useEffect(() => {
     if (previousReloadHandler !== reloadHandler) {

@@ -1,7 +1,7 @@
 import supabase from '@/supabase';
 import { LoginData, UserData, PasswordData } from '@/types/types';
 import { User, Session } from '@supabase/supabase-js';
-import { UseQueryResult, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { UseQueryResult, UseMutationResult, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, useContext, useEffect } from 'react';
 
 type Props = {
@@ -9,12 +9,18 @@ type Props = {
 };
 
 type AuthContextType = {
-  login: any;
-  register: any;
-  logout: any;
+  /** login mutation returned from useMutation */
+  login: UseMutationResult<{ user: User | null; session: Session | null }, Error, { phone: string; password: string }>;
+  /** register mutation returned from useMutation */
+  register: UseMutationResult<{ user: User | null; session: Session | null }, Error, LoginData>;
+  /** logout the current user */
+  logout: () => Promise<void>;
+  /** currently logged in user */
   getUser: UseQueryResult<User | null, unknown>;
-  reset: any;
-  changePassword: any;
+  /** request password reset */
+  reset: (data: UserData) => Promise<void>;
+  /** change the current user's password */
+  changePassword: (data: PasswordData) => Promise<void>;
   signUpWithPhone: (phone: string, password: string) => Promise<{
     user: User | null;
     session: Session | null;
@@ -27,12 +33,12 @@ type AuthContextType = {
 };
 
 const AuthContext = createContext<AuthContextType>({
-  login: () => {},
-  register: () => {},
-  logout: () => {},
+  login: {} as UseMutationResult<{ user: User | null; session: Session | null }, Error, { phone: string; password: string }>,
+  register: {} as UseMutationResult<{ user: User | null; session: Session | null }, Error, LoginData>,
+  logout: async () => {},
   getUser: {} as UseQueryResult<User | null, unknown>,
-  reset: () => {},
-  changePassword: () => {},
+  reset: async () => {},
+  changePassword: async () => {},
   signUpWithPhone: () => Promise.resolve({ user: null, session: null }),
   verifyOtp: () => Promise.resolve({ user: null, session: null }),
   resendOtp: () => Promise.resolve(),
@@ -51,7 +57,7 @@ const AuthProvider = ({ children }: Props) => {
     },
   });
 
-  const login = useMutation({
+  const login = useMutation<{ user: User | null; session: Session | null }, Error, { phone: string; password: string }>({
     mutationFn: async (credentials: { phone: string; password: string }) => {
       const { data, error } = await supabase.auth.signInWithPassword({
         phone: credentials.phone,
@@ -63,7 +69,7 @@ const AuthProvider = ({ children }: Props) => {
     }
   });
 
-  const register = useMutation(async ({ email, password }: LoginData) => {
+  const register = useMutation<{ user: User | null; session: Session | null }, Error, LoginData>(async ({ email, password }: LoginData) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
