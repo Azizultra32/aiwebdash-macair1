@@ -4,7 +4,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import FormCreateTranscript from '@/components/FormCreateTranscript';
 import TranscriptList from '@/components/TranscriptList';
 import useTranscripts from '@/hooks/useTranscripts';
-import useCreateTransript from '@/hooks/useCreateTranscript';
+import useCreateTranscript from '@/hooks/useCreateTranscript';
 import { realtimeTranscripts, deleteTranscriptAsync, createTranscriptAsync, updateTranscriptAsync } from '@/hooks/useCreateTranscript';
 import Transcript from '@/components/Transcript';
 import { Loading } from '@/components/Loading';
@@ -48,7 +48,8 @@ const Dashboard = () => {
   const [prevOnlineStatus, setPrevOnlineStatus] = useState<Boolean>(isOnline);
   const [offlineQueueCount, setOfflineQueueCount] = useState(0);
   const [isProcessingOfflineQueue, setIsProcessingOfflineQueue] = useState(false);
-  const { mutateAsync: createTranscript } = useCreateTransript();
+  // Hook for creating new transcripts on the server
+  const { mutateAsync: createTranscript } = useCreateTranscript();
 
   const patientTag = useMemo(() => {
     // Combine online and local transcripts, removing duplicates by mid
