@@ -32,6 +32,7 @@ const TranscriptConsultWizard: React.FC<TranscriptConsultWizardProps> = ({
               onClick={() => onCopy(summaryRef)}
             >
               <Copy className="h-5 w-5" />
+              <span className="sr-only">Copy summary</span>
             </Button>
             <Button
               variant="ghost"
@@ -39,6 +40,7 @@ const TranscriptConsultWizard: React.FC<TranscriptConsultWizardProps> = ({
               onClick={() => onMaximize(summaryRef)}
             >
               <Maximize2 className="h-5 w-5" />
+              <span className="sr-only">Maximize summary</span>
             </Button>
           </div>
         </div>
