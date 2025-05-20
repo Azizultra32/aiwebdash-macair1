@@ -8,7 +8,7 @@
     "build": "tsc && vite build && node update-appcache.cjs",
     "lint": "eslint . --ext .ts,.tsx",
     "preview": "vite preview",
-    "generate-types": "npx supabase gen types typescript --project-id 'VITE_APP_SUPABASE_URL' --schema public > src/types/supabase.ts"
+    "generate-types": "npx supabase gen types typescript --project-id 'VITE_SUPABASE_URL' --schema public > src/types/supabase.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
