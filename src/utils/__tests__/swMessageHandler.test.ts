@@ -1,0 +1,53 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
+let messageHandler: (event: any) => Promise<void>;
+let mockPostMessage: any;
+
+// Setup a faux service worker environment before importing the script
+beforeEach(async () => {
+  mockPostMessage = vi.fn();
+
+  (global as any).self = {
+    addEventListener: (type: string, handler: any) => {
+      if (type === 'message') {
+        messageHandler = handler;
+      }
+    },
+    clients: {
+      matchAll: vi.fn().mockResolvedValue([{ postMessage: mockPostMessage }]),
+    },
+  } as any;
+
+  (global as any).caches = {
+    delete: vi.fn().mockResolvedValue(true),
+  } as any;
+
+  global.fetch = vi
+    .fn()
+    .mockResolvedValue({ json: () => Promise.resolve({ version: '2' }) }) as any;
+
+  await import('../../../public/sw.js');
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  // Cleanup globals
+  delete (global as any).self;
+  delete (global as any).caches;
+});
+
+describe('service worker message handler', () => {
+  it('posts UPDATE_AVAILABLE when versions differ', async () => {
+    await messageHandler({ data: { type: 'CURRENT_VERSION', version: '1' } });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/version.json'),
+      expect.any(Object)
+    );
+    expect((global as any).caches.delete).toHaveBeenCalled();
+    expect(mockPostMessage).toHaveBeenCalledWith({
+      type: 'UPDATE_AVAILABLE',
+      version: '2',
+    });
+  });
+});
