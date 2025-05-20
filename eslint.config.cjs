@@ -4,7 +4,7 @@ const compat = new FlatCompat();
 
 module.exports = [
   {
-    ignores: ['node_modules/**', 'dist/**', 'env.d.ts', 'eslint.config.cjs'],
+    ignores: ['node_modules/**', 'dist/**', 'env.d.ts', 'eslint.config.cjs', '.storybook/**', '**/*.stories.tsx'],
   },
   ...compat.config({
     env: { browser: true, es2020: true },

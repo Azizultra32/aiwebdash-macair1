@@ -57,6 +57,16 @@ Execute the test suite using:
 npm run test
 ```
 
+### Storybook
+
+To develop components in isolation, run Storybook:
+
+```bash
+npm run storybook
+```
+
+The Storybook UI will be available at `http://localhost:6006`.
+
 ### Codex environment setup
 
 Codex disables network access after the setup phase. Create a `.codex/setup.sh` script so dependencies are installed while the network is still available:
