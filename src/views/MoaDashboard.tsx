@@ -439,7 +439,14 @@ export default function Dashboard() {
           <div className="p-4 flex justify-between items-center">
             <h2 className={`font-semibold ${isDoctorsVisible ? '' : 'hidden'}`}>Doctors</h2>
             <Button variant="ghost" size="icon" onClick={toggleDoctorsVisibility}>
-              {isDoctorsVisible ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              {isDoctorsVisible ? (
+                <ChevronLeft className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+              <span className="sr-only">
+                {isDoctorsVisible ? 'Hide doctors' : 'Show doctors'}
+              </span>
             </Button>
           </div>
           {isDoctorsVisible && (
