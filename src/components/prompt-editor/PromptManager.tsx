@@ -1,150 +1,55 @@
-import { useState, useEffect } from 'react';
-import styled from '@emotion/styled';
+import {
+  useState,
+  useEffect,
+  type PropsWithChildren,
+  type ButtonHTMLAttributes,
+  type FormHTMLAttributes,
+} from 'react';
 import supabase from '@/supabase';
 import PromptVisualizer from './PromptVisualizer';
 
-const Container = styled.div`
-  padding: 20px;
-`;
+const Container = ({ children }: PropsWithChildren) => (
+  <div className="p-5">{children}</div>
+);
 
-const TabBar = styled.div`
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-`;
+const TabBar = ({ children }: PropsWithChildren) => (
+  <div className="mb-5 flex gap-2.5">{children}</div>
+);
 
-const Tab = styled.button<{ active: boolean }>`
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  background-color: ${props => props.active ? '#0070f3' : '#e9ecef'};
-  color: ${props => props.active ? 'white' : '#333'};
-  &:hover {
-    background-color: ${props => props.active ? '#0051a2' : '#dee2e6'};
-  }
-`;
+interface TabProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  active?: boolean;
+}
 
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 20px;
-  th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-  }
-  th {
-    background-color: #f4f4f4;
-  }
-`;
+const Tab = ({ active, className = '', ...props }: TabProps) => {
+  const base = 'px-4 py-2 rounded';
+  const activeClasses = active
+    ? 'bg-blue-600 text-white hover:bg-blue-700'
+    : 'bg-gray-200 text-gray-800 hover:bg-gray-300';
+  return <button className={`${base} ${activeClasses} ${className}`} {...props} />;
+};
 
-const Button = styled.button`
-  padding: 8px 16px;
-  margin: 0 4px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  background-color: #0070f3;
-  color: white;
-  &:hover {
-    background-color: #0051a2;
-  }
-`;
+const Table = ({ children }: PropsWithChildren) => (
+  <table className="mb-5 w-full border-collapse text-left">{children}</table>
+);
 
-const EditForm = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-width: 600px;
-  margin: 20px 0;
-  
-  textarea {
-    min-height: 400px;
-    min-width: 600px;
-    padding: 8px;
-    font-family: monospace;
-  }
-  
-  input, select {
-    padding: 8px;
-  }
-`;
+const Button = ({ className = '', ...props }: ButtonHTMLAttributes<HTMLButtonElement>) => (
+  <button
+    className={`mx-1 rounded border-none bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 ${className}`}
+    {...props}
+  />
+);
 
-const PreviewSection = styled.div`
-  margin-top: 20px;
-  padding: 20px;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-  
-  h3 {
-    margin-bottom: 10px;
-  }
-  
-  .message {
-    margin-bottom: 15px;
-    padding: 10px;
-    border-radius: 4px;
-    font-family: monospace;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-  }
+const EditForm = ({ children, ...props }: PropsWithChildren<React.FormHTMLAttributes<HTMLFormElement>>) => (
+  <form className="my-5 flex max-w-[600px] flex-col gap-2.5" {...props}>{children}</form>
+);
 
-  .system {
-    background-color: #e9ecef;
-    border: 1px solid #dee2e6;
-  }
+const PreviewSection = ({ children }: PropsWithChildren) => (
+  <div className="mt-5 rounded bg-gray-100 p-5">{children}</div>
+);
 
-  .user {
-    background-color: #e3f2fd;
-    border: 1px solid #bbdefb;
-  }
-
-  .role-label {
-    font-size: 0.8em;
-    color: #666;
-    margin-bottom: 5px;
-    text-transform: uppercase;
-  }
-`;
-
-const Legend = styled.div`
-  margin: 20px 0;
-  padding: 15px;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-
-  h4 {
-    margin: 0 0 10px 0;
-    color: #333;
-  }
-
-  .variable {
-    font-family: monospace;
-    background-color: #e9ecef;
-    padding: 2px 6px;
-    border-radius: 3px;
-    margin-right: 10px;
-  }
-
-  .description {
-    color: #666;
-  }
-
-  ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-
-  li {
-    margin-bottom: 8px;
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-  }
-`;
+const Legend = ({ children }: PropsWithChildren) => (
+  <div className="my-5 rounded border border-gray-300 bg-gray-100 p-4">{children}</div>
+);
 
 const SUPERUSER_ID = '91201600-b62c-4a5e-b2a8-d6784e582b90';
 
@@ -343,10 +248,10 @@ const PromptManager = () => {
 
       {viewMode === 'visualize' && (
         <div>
-          <select 
-            value={selectedMid} 
+          <select
+            className="mb-5 p-2"
+            value={selectedMid}
             onChange={(e) => setSelectedMid(e.target.value)}
-            style={{ marginBottom: '20px', padding: '8px' }}
           >
             <option value="">Select a meeting...</option>
             {recentMeetings.map(meeting => (
@@ -367,12 +272,12 @@ const PromptManager = () => {
       {viewMode === 'edit' && (
         <>
           <Legend>
-            <h4>Available Variables</h4>
-            <ul>
-              {AVAILABLE_VARIABLES.map(variable => (
-                <li key={variable.name}>
-                  <span className="variable">{`{${variable.name}}`}</span>
-                  <span className="description">{variable.description}</span>
+            <h4 className="mb-2 font-semibold text-gray-800">Available Variables</h4>
+            <ul className="list-none p-0 m-0">
+              {AVAILABLE_VARIABLES.map((variable) => (
+                <li key={variable.name} className="mb-2 flex items-baseline gap-2.5">
+                  <span className="rounded bg-gray-200 px-1.5 py-0.5 font-mono">{`{${variable.name}}`}</span>
+                  <span className="text-gray-600">{variable.description}</span>
                 </li>
               ))}
             </ul>
@@ -387,12 +292,15 @@ const PromptManager = () => {
               <div>
                 <label>Key:</label>
                 <input
+                  className="p-2"
                   type="text"
                   value={editingPrompt.prompt_key}
-                  onChange={(e) => setEditingPrompt({
-                    ...editingPrompt,
-                    prompt_key: e.target.value
-                  })}
+                  onChange={(e) =>
+                    setEditingPrompt({
+                      ...editingPrompt,
+                      prompt_key: e.target.value,
+                    })
+                  }
                   required
                 />
               </div>
@@ -400,12 +308,15 @@ const PromptManager = () => {
               <div>
                 <label>Title:</label>
                 <input
+                  className="p-2"
                   type="text"
                   value={editingPrompt.title}
-                  onChange={(e) => setEditingPrompt({
-                    ...editingPrompt,
-                    title: e.target.value
-                  })}
+                  onChange={(e) =>
+                    setEditingPrompt({
+                      ...editingPrompt,
+                      title: e.target.value,
+                    })
+                  }
                   required
                 />
               </div>
@@ -413,11 +324,14 @@ const PromptManager = () => {
               <div>
                 <label>Role:</label>
                 <select
+                  className="p-2"
                   value={editingPrompt.prompt_role}
-                  onChange={(e) => setEditingPrompt({
-                    ...editingPrompt,
-                    prompt_role: e.target.value
-                  })}
+                  onChange={(e) =>
+                    setEditingPrompt({
+                      ...editingPrompt,
+                      prompt_role: e.target.value,
+                    })
+                  }
                   required
                 >
                   <option value="system">System</option>
@@ -428,12 +342,15 @@ const PromptManager = () => {
               <div>
                 <label>Sort Order:</label>
                 <input
+                  className="p-2"
                   type="number"
                   value={editingPrompt.sort_order}
-                  onChange={(e) => setEditingPrompt({
-                    ...editingPrompt,
-                    sort_order: parseInt(e.target.value)
-                  })}
+                  onChange={(e) =>
+                    setEditingPrompt({
+                      ...editingPrompt,
+                      sort_order: parseInt(e.target.value),
+                    })
+                  }
                   required
                 />
               </div>
@@ -441,23 +358,29 @@ const PromptManager = () => {
               <div>
                 <label>Active:</label>
                 <input
+                  className="ml-2"
                   type="checkbox"
                   checked={editingPrompt.is_active}
-                  onChange={(e) => setEditingPrompt({
-                    ...editingPrompt,
-                    is_active: e.target.checked
-                  })}
+                  onChange={(e) =>
+                    setEditingPrompt({
+                      ...editingPrompt,
+                      is_active: e.target.checked,
+                    })
+                  }
                 />
               </div>
               
               <div>
                 <label>Prompt Text (use variables like {'{transcript}'}):</label>
                 <textarea
+                  className="min-h-[400px] min-w-[600px] p-2 font-mono"
                   value={editingPrompt.prompt_text}
-                  onChange={(e) => setEditingPrompt({
-                    ...editingPrompt,
-                    prompt_text: e.target.value
-                  })}
+                  onChange={(e) =>
+                    setEditingPrompt({
+                      ...editingPrompt,
+                      prompt_text: e.target.value,
+                    })
+                  }
                   required
                 />
               </div>
@@ -474,23 +397,23 @@ const PromptManager = () => {
               <Table>
                 <thead>
                   <tr>
-                    <th>Key</th>
-                    <th>Title</th>
-                    <th>Role</th>
-                    <th>Order</th>
-                    <th>Active</th>
-                    <th>Actions</th>
+                    <th className="border bg-gray-100 p-2">Key</th>
+                    <th className="border bg-gray-100 p-2">Title</th>
+                    <th className="border bg-gray-100 p-2">Role</th>
+                    <th className="border bg-gray-100 p-2">Order</th>
+                    <th className="border bg-gray-100 p-2">Active</th>
+                    <th className="border bg-gray-100 p-2">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {prompts.map((prompt) => (
                     <tr key={prompt.id}>
-                      <td>{prompt.prompt_key}</td>
-                      <td>{prompt.title}</td>
-                      <td>{prompt.prompt_role}</td>
-                      <td>{prompt.sort_order}</td>
-                      <td>{prompt.is_active ? 'Yes' : 'No'}</td>
-                      <td>
+                      <td className="border p-2">{prompt.prompt_key}</td>
+                      <td className="border p-2">{prompt.title}</td>
+                      <td className="border p-2">{prompt.prompt_role}</td>
+                      <td className="border p-2">{prompt.sort_order}</td>
+                      <td className="border p-2">{prompt.is_active ? 'Yes' : 'No'}</td>
+                      <td className="border p-2">
                         <Button onClick={() => handleEdit(prompt)}>
                           Edit
                         </Button>
@@ -504,8 +427,17 @@ const PromptManager = () => {
                 <h3>Assembled Prompt Preview</h3>
                 <p>Using test transcript: "Doctor: Hello, how are you feeling today? / Patient: I have been having headaches."</p>
                 {assembledPrompt.map((message, index) => (
-                  <div key={index} className={`message ${message.role}`}>
-                    <div className="role-label">{message.role}</div>
+                  <div
+                    key={index}
+                    className={`mb-4 rounded border p-2.5 font-mono whitespace-pre-wrap break-words ${
+                      message.role === 'system'
+                        ? 'bg-gray-200 border-gray-300'
+                        : 'bg-blue-50 border-blue-200'
+                    }`}
+                  >
+                    <div className="mb-1 text-xs uppercase text-gray-600">
+                      {message.role}
+                    </div>
                     {message.content}
                   </div>
                 ))}
