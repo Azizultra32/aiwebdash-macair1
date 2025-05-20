@@ -104,32 +104,68 @@ const TranscriptList = ({
         <div className="flex items-center gap-3">
           {unlock[index] ? (
             <>
-              <Trash
-                className="h-4 w-4 text-gray-500 hover:text-red-500"
+              <span
+                role="button"
+                tabIndex={0}
+                aria-label="Delete transcript"
                 onClick={(e) => {
                   e.stopPropagation();
                   setUnlock({ ...unlock, [index]: false });
                   onDeleteTranscript(patient);
                 }}
-              />
-              <Unlock
-                className="h-4 w-4 text-gray-500 hover:text-blue-500"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setUnlock({ ...unlock, [index]: false });
+                    onDeleteTranscript(patient);
+                  }
+                }}
+              >
+                <Trash className="h-4 w-4 text-gray-500 hover:text-red-500" />
+              </span>
+              <span
+                role="button"
+                tabIndex={0}
+                aria-label="Save transcript name"
                 onClick={(e) => {
                   e.stopPropagation();
                   setUnlock({ ...unlock, [index]: false });
                   handleRename(patientName || patient.patient_code, patient.mid);
                 }}
-              />
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setUnlock({ ...unlock, [index]: false });
+                    handleRename(patientName || patient.patient_code, patient.mid);
+                  }
+                }}
+              >
+                <Unlock className="h-4 w-4 text-gray-500 hover:text-blue-500" />
+              </span>
             </>
           ) : (
-            <Lock
-              className="h-4 w-4"
+            <span
+              role="button"
+              tabIndex={0}
+              aria-label="Edit transcript name"
               onClick={(e) => {
                 e.stopPropagation();
                 setUnlock({ ...unlock, [index]: true });
                 setPatientName(patient.patient_code);
               }}
-            />
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setUnlock({ ...unlock, [index]: true });
+                  setPatientName(patient.patient_code);
+                }
+              }}
+            >
+              <Lock className="h-4 w-4" />
+            </span>
           )}
           {patient.mid === recordingPatientMidUUID ? (
             <Mic className="h-4 w-4 text-blue-500" />
@@ -174,7 +210,7 @@ const TranscriptList = ({
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [transcripts.length]);
 
   return (
     <div className="w-full md:w-64 bg-white h-full flex flex-col border-r border-gray-200">
