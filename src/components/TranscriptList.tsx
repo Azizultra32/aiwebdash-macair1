@@ -111,32 +111,47 @@ const TranscriptList = ({
                   <div className="flex items-center gap-3">
                     {unlock[index] ? (
                       <>
-                        <Trash
-                          className="h-4 w-4 text-gray-500 hover:text-red-500"
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={(e) => {
                             e.stopPropagation();
                             setUnlock({ ...unlock, [index]: false });
                             onDeleteTranscript(patient);
                           }}
-                        />
-                        <Unlock
-                          className="h-4 w-4 text-gray-500 hover:text-blue-500"
+                          aria-label="Delete transcript"
+                        >
+                          <Trash className="h-4 w-4 text-gray-500 hover:text-red-500" />
+                          <span className="sr-only">Delete transcript</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={(e) => {
                             e.stopPropagation();
                             setUnlock({ ...unlock, [index]: false });
                             handleRename(patientName || patient.patient_code, patient.mid);
                           }}
-                        />
+                          aria-label="Save patient name"
+                        >
+                          <Unlock className="h-4 w-4 text-gray-500 hover:text-blue-500" />
+                          <span className="sr-only">Save patient name</span>
+                        </Button>
                       </>
                     ) : (
-                      <Lock
-                        className="h-4 w-4"
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={(e) => {
                           e.stopPropagation();
                           setUnlock({ ...unlock, [index]: true });
                           setPatientName(patient.patient_code);
                         }}
-                      />
+                        aria-label="Edit patient name"
+                      >
+                        <Lock className="h-4 w-4" />
+                        <span className="sr-only">Edit patient name</span>
+                      </Button>
                     )}
                     {patient.mid === recordingPatientMidUUID ? (
                       <Mic className="h-4 w-4 text-blue-500" />

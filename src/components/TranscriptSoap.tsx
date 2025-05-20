@@ -35,20 +35,22 @@ const TranscriptSoap: React.FC<TranscriptSoapProps> = ({
             </CardTitle>
             <div className="flex flex-col items-end gap-2">
               <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleCopy(summaryRef)}
-                >
-                  <Copy className="h-5 w-5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleMaximize(summaryRef)}
-                >
-                  <Maximize2 className="h-5 w-5" />
-                </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleCopy(summaryRef)}
+            >
+              <Copy className="h-5 w-5" />
+              <span className="sr-only">Copy to clipboard</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleMaximize(summaryRef)}
+            >
+              <Maximize2 className="h-5 w-5" />
+              <span className="sr-only">Maximize summary</span>
+            </Button>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm">detail</span>
