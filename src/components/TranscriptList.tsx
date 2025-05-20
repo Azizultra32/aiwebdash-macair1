@@ -38,7 +38,7 @@ const TranscriptList = ({
   const OVERSCAN = 5;
   const VIRTUAL_THRESHOLD = 30;
 
-  const handleRename = async (editedText: String, mid: String) => {
+  const handleRename = async (editedText: string, mid: string) => {
     const { data, error } = await supabase.from('transcripts2').update({ patient_code: editedText }).eq('mid', mid);
     if (error) {
       throw new Error(error.message);
