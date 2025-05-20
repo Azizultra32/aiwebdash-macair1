@@ -14,7 +14,8 @@ module.exports = [
       'plugin:react-hooks/recommended',
       'plugin:import/recommended',
       'plugin:jsx-a11y/recommended',
-      'plugin:@typescript-eslint/recommended',
+      'plugin:@typescript-eslint/recommended-type-checked',
+      'plugin:@typescript-eslint/stylistic-type-checked',
       'eslint-config-prettier',
     ],
     settings: {
@@ -32,6 +33,9 @@ module.exports = [
       },
     },
     parser: '@typescript-eslint/parser',
+    parserOptions: {
+      project: ['./tsconfig.json', './tsconfig.node.json'],
+    },
     plugins: ['react-refresh', 'import'],
     rules: {
       'react-refresh/only-export-components': 'off',
