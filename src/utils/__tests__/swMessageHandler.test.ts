@@ -52,9 +52,10 @@ afterEach(() => {
 
 describe('service worker message handler', () => {
   it('posts UPDATE_AVAILABLE when versions differ', async () => {
-    await messageHandler({
+    const event = new MessageEvent<{ type: string; version: string }>('message', {
       data: { type: 'CURRENT_VERSION', version: '1' },
-    } as unknown as MessageEvent<{ type: string; version: string }>);
+    });
+    await messageHandler(event);
     // Allow queued promises inside the service worker handler to resolve
     await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -74,9 +75,10 @@ describe('service worker message handler', () => {
       .fn()
       .mockResolvedValue({ json: () => Promise.resolve({ version: '1' }) }) as any;
 
-    await messageHandler({
+    const event = new MessageEvent<{ type: string; version: string }>('message', {
       data: { type: 'CURRENT_VERSION', version: '1' },
-    } as unknown as MessageEvent<{ type: string; version: string }>);
+    });
+    await messageHandler(event);
     await new Promise(resolve => setTimeout(resolve, 0));
 
     expect(global.fetch).toHaveBeenCalled();
