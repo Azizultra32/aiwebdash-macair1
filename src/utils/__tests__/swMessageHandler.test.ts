@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
+// Mock workbox-precaching so importing the service worker doesn't attempt to
+// precache assets during the test run.
+vi.mock('workbox-precaching', () => ({
+  cleanupOutdatedCaches: vi.fn(),
+  precacheAndRoute: vi.fn(),
+}));
+
 let messageHandler: (event: any) => Promise<void>;
 let mockPostMessage: any;
 
@@ -16,6 +23,8 @@ beforeEach(async () => {
     clients: {
       matchAll: vi.fn().mockResolvedValue([{ postMessage: mockPostMessage }]),
     },
+    skipWaiting: vi.fn(),
+    __WB_MANIFEST: [],
   } as any;
 
   (global as any).caches = {
@@ -39,6 +48,8 @@ afterEach(() => {
 describe('service worker message handler', () => {
   it('posts UPDATE_AVAILABLE when versions differ', async () => {
     await messageHandler({ data: { type: 'CURRENT_VERSION', version: '1' } });
+    // Allow any pending promises inside the handler to resolve
+    await new Promise(process.nextTick);
 
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining('/version.json'),
