@@ -33,9 +33,15 @@ If you are developing a production application, we recommend updating the config
    ```bash
    ./setup.sh
    ```
-2. Create a `.env` file by copying `.env.example` and updating the values for your environment.
+2. Codex executes `.codex/setup.sh` during environment initialization to install dependencies. If `node_modules/` is missing, run:
 
-3. Run the development server:
+   ```bash
+   bash .codex/setup.sh
+   ```
+
+3. Create a `.env` file by copying `.env.example` and updating the values for your environment.
+
+4. Run the development server:
 
    ```bash
    npm run dev
