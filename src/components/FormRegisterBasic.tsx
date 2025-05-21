@@ -5,14 +5,7 @@ import * as z from 'zod';
 import { getCountryCallingCode } from 'libphonenumber-js';
 
 import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from './ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -32,7 +25,7 @@ const otpSchema = z.object({
     .string()
     .min(6, { message: 'OTP must be 6 digits' })
     .max(6, { message: 'OTP must be 6 digits' })
-    .regex(/^\d+$/, { message: 'OTP must contain only numbers' })
+    .regex(/^\d+$/, { message: 'OTP must contain only numbers' }),
 });
 
 const FormRegisterBasic = () => {
@@ -59,11 +52,11 @@ const FormRegisterBasic = () => {
 
   const otpForm = useForm<z.infer<typeof otpSchema>>({
     resolver: zodResolver(otpSchema),
-    defaultValues: { 
-      otp: '' 
+    defaultValues: {
+      otp: '',
     },
     mode: 'onBlur',
-    reValidateMode: 'onSubmit'
+    reValidateMode: 'onSubmit',
   });
 
   const formatPhoneNumber = (value: string) => {
@@ -75,57 +68,60 @@ const FormRegisterBasic = () => {
 
   const handleRegistrationSubmit = async (values: z.infer<typeof formSchema>) => {
     const phoneNumber = `${values.countryCode}${values.phone}`;
-    console.log("Starting registration with:", { 
-      phone: phoneNumber, 
-      email: values.email 
+    console.log('Starting registration with:', {
+      phone: phoneNumber,
+      email: values.email,
     });
 
     try {
       await signUpWithPhone(phoneNumber, values.password);
-      
+
       const registrationData = {
         phone: phoneNumber,
         password: values.password,
         email: values.email,
       };
-      console.log("Storing registration data:", registrationData);
-      
+      console.log('Storing registration data:', registrationData);
+
       localStorage.setItem('registrationData', JSON.stringify(registrationData));
 
       setShowOtp(true);
       setOtpTimer(60);
       setCanResend(false);
-      
+
       toast({
-        title: "Code Sent",
-        description: "Check your phone for the verification code",
+        title: 'Code Sent',
+        description: 'Check your phone for the verification code',
       });
     } catch (error: any) {
       console.error('Registration error:', error);
-      
+
       // Special case: rate limit error but OTP was sent
       if (error.message === 'RATE_LIMIT_BUT_SENT') {
-        localStorage.setItem('registrationData', JSON.stringify({
-          phone: phoneNumber,
-          password: values.password,
-          email: values.email,
-        }));
+        localStorage.setItem(
+          'registrationData',
+          JSON.stringify({
+            phone: phoneNumber,
+            password: values.password,
+            email: values.email,
+          }),
+        );
 
         setShowOtp(true);
         setOtpTimer(60);
         setCanResend(false);
-        
+
         toast({
-          title: "Code Sent",
-          description: "Code was sent successfully. Please enter it below.",
+          title: 'Code Sent',
+          description: 'Code was sent successfully. Please enter it below.',
         });
         return; // Exit early since we want to proceed with OTP verification
       }
-      
+
       if (error.message.includes('already registered')) {
         toast({
-          title: "Account Exists",
-          description: "This phone number is already registered. Please login instead.",
+          title: 'Account Exists',
+          description: 'This phone number is already registered. Please login instead.',
           action: (
             <Button variant="outline" onClick={() => navigate('/login')}>
               Go to Login
@@ -134,8 +130,8 @@ const FormRegisterBasic = () => {
         });
       } else if (error.message.includes('rate limit')) {
         toast({
-          title: "Please Wait",
-          description: "Please wait a few minutes before trying again",
+          title: 'Please Wait',
+          description: 'Please wait a few minutes before trying again',
           variant: 'destructive',
         });
       } else {
@@ -146,53 +142,52 @@ const FormRegisterBasic = () => {
       }
     }
   };
-  
 
   const handleOtpSubmit = async (values: z.infer<typeof otpSchema>) => {
     try {
       const registrationData = localStorage.getItem('registrationData');
       if (!registrationData) throw new Error('Registration data not found');
-      
+
       const { phone, email, password } = JSON.parse(registrationData);
-      console.log("Retrieved registration data:", { phone, email, password }); // Debug log
-      
+      console.log('Retrieved registration data:', { phone, email, password }); // Debug log
+
       const result = await verifyOtp(phone, values.otp);
 
       if (result.session) {
         // Store phone and password for login
         const loginCredentials = {
           phone: phone, // Use phone instead of email
-          password: password
+          password: password,
         };
-        console.log("Storing login credentials:", loginCredentials);
-        
+        console.log('Storing login credentials:', loginCredentials);
+
         localStorage.setItem('loginCredentials', JSON.stringify(loginCredentials));
-        
+
         // Clean up registration data
         localStorage.removeItem('registrationData');
-        
+
         toast({
-          title: "Success",
-          description: "Phone verified successfully",
+          title: 'Success',
+          description: 'Phone verified successfully',
         });
 
         // Add a small delay to ensure storage is complete
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
         // Log right before navigation to verify data is still in localStorage
         const savedLoginCredentials = localStorage.getItem('loginCredentials');
-        console.log("Final login credentials in storage:", savedLoginCredentials);
-        
+        console.log('Final login credentials in storage:', savedLoginCredentials);
+
         navigate('/login');
       }
     } catch (error: any) {
       const isExpired = error.message.toLowerCase().includes('expired');
-      
+
       console.error('OTP submission error:', error);
-      
+
       toast({
-        title: isExpired ? "Code Expired" : "Invalid Code",
-        description: isExpired ? "Request new code" : "Try again",
+        title: isExpired ? 'Code Expired' : 'Invalid Code',
+        description: isExpired ? 'Request new code' : 'Try again',
         variant: 'destructive',
         action: isExpired ? (
           <Button variant="outline" onClick={handleResendCode}>
@@ -207,20 +202,20 @@ const FormRegisterBasic = () => {
     try {
       const registrationData = localStorage.getItem('registrationData');
       if (!registrationData) throw new Error('Phone number not found');
-  
+
       const { phone } = JSON.parse(registrationData);
-  
+
       await resendOtp(phone); // Send OTP
       setOtpTimer(60); // Reset OTP timer
       setCanResend(false); // Disable resend button temporarily
-  
+
       // Start cooldown only after successful OTP resend
       setIsRequestCooling(true);
       setCooldownTimer(4);
-  
+
       toast({
-        title: "Code Sent",
-        description: "New verification code sent to your phone",
+        title: 'Code Sent',
+        description: 'New verification code sent to your phone',
       });
     } catch (error: any) {
       toast({
@@ -229,11 +224,10 @@ const FormRegisterBasic = () => {
       });
     }
   };
-  
 
   const handleReset = async () => {
     await cleanupAuthState();
-    
+
     registrationForm.reset({
       name: '',
       email: '',
@@ -241,14 +235,14 @@ const FormRegisterBasic = () => {
       countryCode: detectedCountryCode,
       phone: '',
     });
-    
+
     setShowOtp(false);
     setOtpTimer(60);
     setCanResend(false);
-    
+
     toast({
-      title: "Form Reset",
-      description: "All fields have been cleared",
+      title: 'Form Reset',
+      description: 'All fields have been cleared',
     });
   };
 
@@ -261,7 +255,7 @@ const FormRegisterBasic = () => {
       setIsRequestCooling(false);
       setCooldownTimer(0);
     } catch (error) {
-      console.error("Cleanup error:", error);
+      console.error('Cleanup error:', error);
     }
   };
 
@@ -282,7 +276,7 @@ const FormRegisterBasic = () => {
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    
+
     if (showOtp && otpTimer > 0) {
       interval = setInterval(() => {
         setOtpTimer((prev) => {
@@ -298,13 +292,13 @@ const FormRegisterBasic = () => {
     return () => {
       if (interval) {
         clearInterval(interval);
-    }
+      }
     };
   }, [showOtp, otpTimer]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    
+
     if (isRequestCooling && cooldownTimer > 0) {
       interval = setInterval(() => {
         setCooldownTimer((prev) => {
@@ -329,8 +323,6 @@ const FormRegisterBasic = () => {
       cleanupAuthState();
     };
   }, []);
-
-
 
   return (
     <>
@@ -422,19 +414,10 @@ const FormRegisterBasic = () => {
             )}
           />
           <div className="flex space-x-2">
-            <Button 
-              type="submit" 
-              disabled={registrationForm.formState.isSubmitting || isRequestCooling}
-            >
-              {isRequestCooling 
-                ? `Wait ${cooldownTimer}s...` 
-                : 'Submit'}
+            <Button type="submit" disabled={registrationForm.formState.isSubmitting || isRequestCooling}>
+              {isRequestCooling ? `Wait ${cooldownTimer}s...` : 'Submit'}
             </Button>
-            <Button 
-              type="button"
-              variant="outline"
-              onClick={handleReset}
-            >
+            <Button type="button" variant="outline" onClick={handleReset}>
               Reset Form
             </Button>
           </div>
@@ -454,8 +437,8 @@ const FormRegisterBasic = () => {
               <FormItem>
                 <FormLabel>OTP</FormLabel>
                 <FormControl>
-                  <Input 
-                    placeholder="Enter 6-digit OTP" 
+                  <Input
+                    placeholder="Enter 6-digit OTP"
                     maxLength={6}
                     type="text"
                     inputMode="numeric"
@@ -477,31 +460,28 @@ const FormRegisterBasic = () => {
               </FormItem>
             )}
           />
-          
+
           <div className="text-sm text-gray-500 mt-2">
-          {otpTimer > 0 ? (
+            {otpTimer > 0 ? (
               <span>Resend code in {otpTimer}s</span>
-          ) : (
-              <Button 
+            ) : (
+              <Button
                 type="button"
-                variant="link" 
+                variant="link"
                 onClick={handleResendCode}
                 disabled={!canResend}
                 className="p-0 h-auto font-normal"
               >
                 Resend code
-            </Button>
-          )}
+              </Button>
+            )}
           </div>
 
-          <Button 
-            type="submit" 
-            disabled={!otpForm.formState.isValid || otpForm.formState.isSubmitting}
-          >
-            {otpForm.formState.isSubmitting 
-              ? 'Verifying...' 
-              : otpForm.formState.isValid 
-                ? 'Verify OTP' 
+          <Button type="submit" disabled={!otpForm.formState.isValid || otpForm.formState.isSubmitting}>
+            {otpForm.formState.isSubmitting
+              ? 'Verifying...'
+              : otpForm.formState.isValid
+                ? 'Verify OTP'
                 : 'Enter 6-digit code'}
           </Button>
         </form>

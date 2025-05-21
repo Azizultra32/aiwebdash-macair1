@@ -14,7 +14,7 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
       onChange={(e) => onCheckedChange?.(e.target.checked)}
       {...props}
     />
-  )
+  ),
 );
 
 Checkbox.displayName = 'Checkbox';
