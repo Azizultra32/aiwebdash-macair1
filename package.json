@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "preflight": "bash preflight.sh",
     "dev": "vite",
     "build": "tsc && vite build && node update-appcache.cjs",
     "lint": "eslint . --ext .ts,.tsx",

@@ -39,6 +39,12 @@ If you are developing a production application, we recommend updating the config
    bash .codex/setup.sh
    ```
 
+   Verify that dependencies are present by running the preflight script:
+
+   ```bash
+   npm run preflight
+   ```
+
 3. Create a `.env` file by copying `.env.example` and updating the values for your environment.
 
 4. Run the development server:
@@ -49,7 +55,14 @@ If you are developing a production application, we recommend updating the config
 
 ### Running ESLint
 
-To check the codebase with ESLint, run:
+Before running the linter, ensure the development dependencies have been
+installed. If `node_modules/` is missing, execute:
+
+```bash
+bash .codex/setup.sh
+```
+
+Then check the codebase with ESLint:
 
 ```bash
 npm run lint
@@ -57,7 +70,8 @@ npm run lint
 
 ### Running tests
 
-Execute the test suite using:
+Before running tests, make sure dependencies are installed with `bash .codex/setup.sh`.
+Then execute the test suite using:
 
 ```bash
 npm run test
