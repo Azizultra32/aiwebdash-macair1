@@ -3,4 +3,4 @@ declare namespace Deno {
     get(key: string): string | undefined;
   }
   export const env: Env;
-} 
+}
