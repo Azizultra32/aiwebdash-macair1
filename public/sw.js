@@ -6,9 +6,9 @@ async function checkForUpdates() {
   try {
     // Request current version from client
     const clients = await self.clients.matchAll();
-    if (clients.length > 0) {
-      clients[0].postMessage({ type: 'GET_CURRENT_VERSION' });
-    }
+    clients.forEach((client) => {
+      client.postMessage({ type: 'GET_CURRENT_VERSION' });
+    });
   } catch (err) {
     console.log('Version check failed:', err);
   }
