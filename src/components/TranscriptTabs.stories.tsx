@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import TranscriptTabs from './TranscriptTabs';
-import type { Transcript } from '@/types/types';
+import type { Transcript, SummaryRef } from '@/types/types';
 import { useState, useRef } from 'react';
 
 const meta: Meta<typeof TranscriptTabs> = {
@@ -25,12 +25,12 @@ export const Default: Story = {
   render: () => {
     const [activeTab, setActiveTab] = useState('consult');
     const refs = {
-      '3': useRef<HTMLDivElement>(null),
-      '5': useRef<HTMLDivElement>(null),
-      '2': useRef<HTMLDivElement>(null),
-      '9': useRef<HTMLDivElement>(null),
-      '4': useRef<HTMLDivElement>(null),
-      '6': useRef<HTMLDivElement>(null),
+      '3': useRef<SummaryRef>(null),
+      '5': useRef<SummaryRef>(null),
+      '2': useRef<SummaryRef>(null),
+      '9': useRef<SummaryRef>(null),
+      '4': useRef<SummaryRef>(null),
+      '6': useRef<SummaryRef>(null),
     } as const;
 
     return (
