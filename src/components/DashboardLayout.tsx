@@ -207,6 +207,7 @@ const DashboardHeader = ({
                     className="transform scale-90 sm:scale-100"
                   />
                 </span>
+                <span className="sr-only">Settings</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
