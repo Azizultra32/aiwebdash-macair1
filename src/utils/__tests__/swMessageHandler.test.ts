@@ -5,6 +5,9 @@ let mockPostMessage: any;
 
 // Setup a faux service worker environment before importing the script
 beforeEach(async () => {
+  // Reset the module registry to ensure a fresh import of the service worker
+  // script for each test run. This avoids state leakage across tests.
+  vi.resetModules();
   mockPostMessage = vi.fn();
 
   (global as any).self = {
