@@ -39,3 +39,37 @@ Render timing numbers could not be collected because the project dependencies we
 
 Build failed because project dependencies were not installed. Network access was unavailable, so `npm ci` and `npm run build` failed.
 
+
+## 2025-05-21
+
+### Build Output
+
+`npm run build` failed due to missing dependencies in this environment. The tail of the output is shown below:
+
+```
+src/components/TranscriptTabs.tsx(127,17): error TS2322: Type '(ref: RefObject<HTMLDivElement>) => void' is not assignable to type '(ref: RefObject<SummaryRef>) => void'.
+  Types of parameters 'ref' and 'ref' are incompatible.
+    Type 'RefObject<SummaryRef>' is not assignable to type 'RefObject<HTMLDivElement>'.
+      Type 'SummaryRef' is missing the following properties from type 'HTMLDivElement': align, addEventListener, removeEventListener, accessKey, and 304 more.
+src/components/TranscriptTabs.tsx(128,17): error TS2322: Type '(ref: RefObject<HTMLDivElement>) => void' is not assignable to type '(ref: RefObject<SummaryRef>) => void'.
+  Types of parameters 'ref' and 'ref' are incompatible.
+    Type 'RefObject<SummaryRef>' is not assignable to type 'RefObject<HTMLDivElement>'.
+      Type 'SummaryRef' is missing the following properties from type 'HTMLDivElement': align, addEventListener, removeEventListener, accessKey, and 304 more.
+src/components/TranscriptTabs.tsx(129,17): error TS2322: Type 'RefObject<HTMLDivElement>' is not assignable to type 'RefObject<SummaryRef>'.
+  Type 'HTMLDivElement' is missing the following properties from type 'SummaryRef': toggleMaximize, getSummary
+src/components/TranscriptTabs.tsx(139,17): error TS2322: Type '(ref: RefObject<HTMLDivElement>) => void' is not assignable to type '(ref: RefObject<SummaryRef>) => void'.
+  Types of parameters 'ref' and 'ref' are incompatible.
+    Type 'RefObject<SummaryRef>' is not assignable to type 'RefObject<HTMLDivElement>'.
+      Type 'SummaryRef' is missing the following properties from type 'HTMLDivElement': align, addEventListener, removeEventListener, accessKey, and 304 more.
+src/components/TranscriptTabs.tsx(140,17): error TS2322: Type '(ref: RefObject<HTMLDivElement>) => void' is not assignable to type '(ref: RefObject<SummaryRef>) => void'.
+  Types of parameters 'ref' and 'ref' are incompatible.
+    Type 'RefObject<SummaryRef>' is not assignable to type 'RefObject<HTMLDivElement>'.
+      Type 'SummaryRef' is missing the following properties from type 'HTMLDivElement': align, addEventListener, removeEventListener, accessKey, and 304 more.
+src/components/TranscriptTabs.tsx(141,17): error TS2322: Type 'RefObject<HTMLDivElement>' is not assignable to type 'RefObject<SummaryRef>'.
+  Type 'HTMLDivElement' is missing the following properties from type 'SummaryRef': toggleMaximize, getSummary
+```
+
+### Render Performance
+
+Render timing numbers could not be collected because the project dependencies were missing.
+
