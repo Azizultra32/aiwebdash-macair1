@@ -37,9 +37,16 @@ export function useServiceWorkerReload(recordingPatientMidUUID: string) {
       if (previousReloadHandler) {
         navigator.serviceWorker.removeEventListener('message', previousReloadHandler);
       }
-      setPreviousReloadHandler(() => reloadHandler);
       navigator.serviceWorker.addEventListener('message', reloadHandler);
+      setPreviousReloadHandler(() => reloadHandler);
     }
-  }, [reloadHandler, previousReloadHandler]);
+
+    return () => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('message', reloadHandler);
+      }
+      setPreviousReloadHandler(undefined);
+    };
+  }, [reloadHandler]);
 }
 
