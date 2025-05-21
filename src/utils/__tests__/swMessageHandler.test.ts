@@ -20,6 +20,8 @@ beforeEach(async () => {
 
   // Workbox expects this manifest to be defined during tests
   (global as any).self.__WB_MANIFEST = [];
+  // Some build setups reference __WB_MANIFEST on the global scope
+  (global as any).__WB_MANIFEST = [];
 
   (global as any).caches = {
     delete: vi.fn().mockResolvedValue(true),
@@ -37,6 +39,7 @@ afterEach(() => {
   // Cleanup globals
   delete (global as any).self;
   delete (global as any).caches;
+  delete (global as any).__WB_MANIFEST;
 });
 
 describe('service worker message handler', () => {
