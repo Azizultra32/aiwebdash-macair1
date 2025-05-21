@@ -71,6 +71,10 @@ const Dashboard = () => {
   const defaultPatientData = { patient_code: 'Patient', patient_tag: patientTag, mid: uuidv4(), language: 'auto', token_count: 0 };
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const [showSidebar, setShowSidebar] = useState<boolean>(true);
+  // Duplicate toggleSidebar removed; see implementation below
+  // const toggleSidebar = useCallback(() => {
+  //   setShowSidebar((prev) => !prev);
+  // }, [showSidebar]);
   const toggleSidebar = useCallback(() => {
     setShowSidebar((prev) => !prev);
   }, [isDesktop, showSidebar]);
