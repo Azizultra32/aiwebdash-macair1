@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
+// Preserve originals for globals we mock
+const originalFetch = global.fetch;
+
 let messageHandler: (event: any) => Promise<void>;
 let mockPostMessage: any;
 
@@ -37,6 +40,7 @@ beforeEach(async () => {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  global.fetch = originalFetch;
   // Cleanup globals
   delete (global as any).self;
   delete (global as any).caches;
