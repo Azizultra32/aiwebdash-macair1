@@ -73,7 +73,7 @@ const Dashboard = () => {
   const [showSidebar, setShowSidebar] = useState<boolean>(true);
   const toggleSidebar = useCallback(() => {
     setShowSidebar((prev) => !prev);
-  }, [isDesktop]);
+  }, [isDesktop, showSidebar]);
   const [newPatient, setNewPatient] = useState<TranscriptData>();
   const [defaultPatientCode, setDefaultPatientCode] = useState<string>("");
   const [status, setStatus] = useState<string>("Ready");
@@ -145,11 +145,6 @@ const Dashboard = () => {
       selectTranscript(localStorageTranscripts[0]);
     }
   }, []);
-
-  const toggleSidebar = useCallback(() => {
-    setShowSidebar((prev) => !prev);
-  }, [isDesktop, showSidebar]);
-
 
   const queryClient = useQueryClient();
 
