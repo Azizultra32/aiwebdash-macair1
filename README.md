@@ -80,6 +80,19 @@ npm run storybook
 
 The Storybook UI will be available at `http://localhost:6006`.
 
+### Running Supabase locally
+
+1. Install the Supabase CLI.
+2. From the `supabase` directory start the stack:
+```bash
+supabase start
+```
+3. Point `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in your environment to the local instance.
+4. Stop the services with:
+```bash
+supabase stop
+```
+
 ### Codex environment setup
 
 Codex disables network access after the setup phase. Create a `.codex/setup.sh` script so dependencies are installed while the network is still available:
