@@ -1,7 +1,7 @@
 /// <reference types="react" />
 import React, { useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import type { Transcript } from '../types/types';
+import type { Transcript, SummaryRef } from '../types/types';
 import TranscriptConsultWizard from './TranscriptConsultWizard.tsx';
 import TranscriptOrders from './TranscriptOrders.tsx';
 import TranscriptLooper from './TranscriptLooper.tsx';
@@ -16,10 +16,10 @@ interface TranscriptTabsProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   summaryRefs: {
-    [key: string]: React.RefObject<HTMLDivElement>;
+    [key: string]: React.RefObject<SummaryRef>;
   };
-  handleCopy: (ref: React.RefObject<HTMLDivElement>) => void;
-  handleMaximize: (ref: React.RefObject<HTMLDivElement>) => void;
+  handleCopy: (ref: React.RefObject<SummaryRef>) => void;
+  handleMaximize: (ref: React.RefObject<SummaryRef>) => void;
   features: {
     looper: boolean;
     assistPatient: boolean;
