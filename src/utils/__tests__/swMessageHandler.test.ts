@@ -18,6 +18,9 @@ beforeEach(async () => {
     },
   } as any;
 
+  // Workbox expects this manifest to be defined during tests
+  (global as any).self.__WB_MANIFEST = [];
+
   (global as any).caches = {
     delete: vi.fn().mockResolvedValue(true),
   } as any;
@@ -39,6 +42,8 @@ afterEach(() => {
 describe('service worker message handler', () => {
   it('posts UPDATE_AVAILABLE when versions differ', async () => {
     await messageHandler({ data: { type: 'CURRENT_VERSION', version: '1' } });
+    // Allow queued promises inside the service worker handler to resolve
+    await new Promise(resolve => setTimeout(resolve, 0));
 
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining('/version.json'),
