@@ -3,6 +3,7 @@ import moment from 'moment';
 import { Lock, Unlock, Trash, Mic, ShieldAlert, Upload, ArrowRight, Check } from 'lucide-react';
 import { ScrollArea } from './ui/scroll-area';
 import { useState, useEffect, useRef } from 'react';
+import VirtualList, { VirtualListRef } from './VirtualList';
 import supabase from '@/supabase';
 import { Button } from './ui/button';
 import OnlineStatusIndicator from '@/components/OnlineStatusIndicator';
@@ -30,9 +31,7 @@ const TranscriptList = ({
   const [patientName, setPatientName] = useState<string>("");
   const selectedRef = useRef<HTMLButtonElement>(null);
 
-  const listRef = useRef<HTMLDivElement>(null);
-  const [scrollTop, setScrollTop] = useState(0);
-  const [containerHeight, setContainerHeight] = useState(0);
+  const listRef = useRef<VirtualListRef | null>(null);
 
   const ROW_HEIGHT = 72;
   const OVERSCAN = 5;
@@ -46,9 +45,6 @@ const TranscriptList = ({
     return data;
   };
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    setScrollTop(e.currentTarget.scrollTop);
-  };
 
   const TranscriptRow = ({
     patient,
@@ -173,23 +169,13 @@ const TranscriptList = ({
     if (transcripts.length > VIRTUAL_THRESHOLD) {
       const idx = transcripts.findIndex(t => t.mid === selectedTranscript?.mid);
       if (idx !== -1 && listRef.current) {
-        listRef.current.scrollTo({ top: idx * ROW_HEIGHT, behavior: 'smooth' });
+        listRef.current.scrollTo(idx * ROW_HEIGHT);
       }
     } else if (selectedRef.current) {
       selectedRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }, [selectedTranscript?.mid, transcripts.length]);
 
-  useEffect(() => {
-    const handleResize = () => {
-      if (listRef.current) {
-        setContainerHeight(listRef.current.clientHeight);
-      }
-    };
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   return (
     <div className="w-full md:w-64 bg-white h-full flex flex-col border-r border-gray-200">
@@ -218,28 +204,25 @@ const TranscriptList = ({
           </div>
         </ScrollArea>
       ) : (
-        <div ref={listRef} onScroll={handleScroll} className="flex-1 overflow-y-auto">
-          <div style={{ height: transcripts.length * ROW_HEIGHT, position: 'relative' }}>
-            <div style={{ transform: `translateY(${Math.floor(scrollTop / ROW_HEIGHT) * ROW_HEIGHT}px)` }}>
-              {transcripts
-                .slice(
-                  Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN),
-                  Math.floor(scrollTop / ROW_HEIGHT) + Math.ceil(containerHeight / ROW_HEIGHT) + OVERSCAN
-                )
-                .map((patient, i) => {
-                  const index = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN) + i;
-                  return (
-                    <TranscriptRow
-                      key={patient.mid}
-                      index={index}
-                      patient={patient}
-                      isSelected={selectedTranscript?.mid === patient.mid}
-                    />
-                  );
-                })}
-            </div>
-          </div>
-        </div>
+        <VirtualList
+          ref={listRef}
+          itemCount={transcripts.length}
+          itemSize={ROW_HEIGHT}
+          overscan={OVERSCAN}
+        >
+          {(index, style) => {
+            const patient = transcripts[index];
+            return (
+              <div style={style} key={patient.mid}>
+                <TranscriptRow
+                  index={index}
+                  patient={patient}
+                  isSelected={selectedTranscript?.mid === patient.mid}
+                />
+              </div>
+            );
+          }}
+        </VirtualList>
       )}
       {selectedTranscript && (
         <div className="p-4 border-t border-gray-200">
