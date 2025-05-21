@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-let activateHandler: any;
+// Minimal representation of the service worker `activate` event used in tests.
+interface ActivateEvent {
+  waitUntil(promise: Promise<void>): void;
+}
+
+let activateHandler: (event: ActivateEvent) => void;
 let mockClients: any[];
 
 beforeEach(async () => {
@@ -24,7 +29,8 @@ beforeEach(async () => {
     delete: vi.fn().mockResolvedValue(true),
   } as any;
 
-  global.setInterval = vi.fn();
+  // Mock the interval setter used inside the service worker logic
+  global.setInterval = vi.fn() as unknown as typeof setInterval;
   global.fetch = vi.fn().mockResolvedValue({ json: vi.fn() }) as any;
 
   await import('../../../public/sw.js');
@@ -39,7 +45,9 @@ afterEach(() => {
 describe('checkForUpdates', () => {
   it('sends GET_CURRENT_VERSION to all matched clients', async () => {
     await new Promise<void>((resolve) => {
-      activateHandler({ waitUntil: (p: Promise<void>) => p.then(resolve) });
+      activateHandler({
+        waitUntil: (p: Promise<void>) => p.then(resolve),
+      } as unknown as ActivateEvent);
     });
 
     for (const client of mockClients) {

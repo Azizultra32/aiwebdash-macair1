@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-let messageHandler: (event: any) => Promise<void>;
+// Explicitly type the expected shape of the message event handled by the
+// service worker. This mirrors the structure used in `public/sw.js` when
+// checking the current application version.
+let messageHandler: (event: MessageEvent<{ type: string; version: string }>) => Promise<void>;
 let mockPostMessage: any;
 
 // Setup a faux service worker environment before importing the script
@@ -45,7 +48,9 @@ afterEach(() => {
 
 describe('service worker message handler', () => {
   it('posts UPDATE_AVAILABLE when versions differ', async () => {
-    await messageHandler({ data: { type: 'CURRENT_VERSION', version: '1' } });
+    await messageHandler({
+      data: { type: 'CURRENT_VERSION', version: '1' },
+    } as unknown as MessageEvent<{ type: string; version: string }>);
     // Allow queued promises inside the service worker handler to resolve
     await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -65,7 +70,9 @@ describe('service worker message handler', () => {
       .fn()
       .mockResolvedValue({ json: () => Promise.resolve({ version: '1' }) }) as any;
 
-    await messageHandler({ data: { type: 'CURRENT_VERSION', version: '1' } });
+    await messageHandler({
+      data: { type: 'CURRENT_VERSION', version: '1' },
+    } as unknown as MessageEvent<{ type: string; version: string }>);
     await new Promise(resolve => setTimeout(resolve, 0));
 
     expect(global.fetch).toHaveBeenCalled();
