@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// Preserve originals for globals we mock
-const originalFetch = global.fetch;
-const originalSetInterval = global.setInterval;
+// Hold originals of globals that will be mocked during tests
+let originalFetch: typeof global.fetch;
+let originalSetInterval: typeof global.setInterval;
 
 // Minimal representation of the service worker `activate` event used in tests.
 interface ActivateEvent {
@@ -13,6 +13,9 @@ let activateHandler: (event: ActivateEvent) => void;
 let mockClients: any[];
 
 beforeEach(async () => {
+  // Save current global implementations so they can be restored in afterEach
+  originalFetch = global.fetch;
+  originalSetInterval = global.setInterval;
   mockClients = [{ postMessage: vi.fn() }, { postMessage: vi.fn() }];
 
   (global as any).self = {

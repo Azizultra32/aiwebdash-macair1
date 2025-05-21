@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// Preserve originals for globals we mock
-const originalFetch = global.fetch;
+// Will hold the original fetch so we can restore it after each test
+let originalFetch: typeof global.fetch;
 
 // Explicitly type the expected shape of the message event handled by the
 // service worker. This mirrors the structure used in `public/sw.js` when
@@ -12,6 +12,8 @@ let mockPostMessage: any;
 // Setup a faux service worker environment before importing the script
 beforeEach(async () => {
   vi.resetModules();
+  // Capture the current global fetch implementation so we can restore it later
+  originalFetch = global.fetch;
   mockPostMessage = vi.fn();
 
   (global as any).self = {
