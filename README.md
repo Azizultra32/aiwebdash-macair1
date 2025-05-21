@@ -98,3 +98,16 @@ fi
 ```
 
 Codex will execute this script automatically during environment initialization.
+
+### Running Supabase locally
+
+To spin up a local Supabase instance for development:
+
+1. Install the [Supabase CLI](https://supabase.com/docs/guides/cli).
+2. From the `supabase` directory, start the services:
+
+   ```bash
+   supabase start
+   ```
+3. Point your environment variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to the local instance.
+4. Stop the services with `supabase stop` or by pressing `Ctrl+C`.
