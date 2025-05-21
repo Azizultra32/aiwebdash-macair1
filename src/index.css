@@ -65,6 +65,7 @@
     /* Custom */
     --sidebar-width: 20rem;
     --header-height: 4rem;
+    --tabs-offset: 120px;
   }
 
   .dark {
