@@ -4,12 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 const originalFetch = global.fetch;
 const originalSetInterval = global.setInterval;
 
-// Minimal representation of the service worker `activate` event used in tests.
-interface ActivateEvent {
-  waitUntil(promise: Promise<void>): void;
-}
-
-let activateHandler: (event: ActivateEvent) => void;
+let activateHandler: (event: ExtendableEvent) => void;
 let mockClients: any[];
 
 beforeEach(async () => {
@@ -51,9 +46,14 @@ afterEach(() => {
 describe('checkForUpdates', () => {
   it('sends GET_CURRENT_VERSION to all matched clients', async () => {
     await new Promise<void>((resolve) => {
-      activateHandler({
-        waitUntil: (p: Promise<void>) => p.then(resolve),
-      } as unknown as ActivateEvent);
+      const EventCtor =
+        (global as any).ExtendableEvent ??
+        class ExtendableEvent extends Event {
+          waitUntil(_p: Promise<any>): void {}
+        };
+      const event = new EventCtor('activate') as ExtendableEvent;
+      (event as any).waitUntil = (p: Promise<void>) => p.then(resolve);
+      activateHandler(event);
     });
 
     for (const client of mockClients) {
