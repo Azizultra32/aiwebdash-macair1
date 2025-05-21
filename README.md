@@ -57,13 +57,6 @@ Execute the test suite using:
 npm run test
 ```
 
-To ensure code quality before committing or submitting pull requests, run the
-linter and tests together:
-
-```bash
-npm run lint && npm run test
-```
-
 ### Storybook
 
 To develop components in isolation, run Storybook:
