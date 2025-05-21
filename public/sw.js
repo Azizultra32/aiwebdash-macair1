@@ -45,6 +45,17 @@ self.addEventListener('activate', (event) => {
   const intervalId = setInterval(checkForUpdates, VERSION_CHECK_INTERVAL);
   // Store the interval ID if needed for cleanup
   self.__versionCheckInterval = intervalId;
+
+  // Cleanup interval when this service worker is being replaced
+  const cleanup = () => {
+    if (self.__versionCheckInterval) {
+      clearInterval(self.__versionCheckInterval);
+      delete self.__versionCheckInterval;
+    }
+  };
+
+  self.addEventListener('controllerchange', cleanup);
+  self.addEventListener('statechange', cleanup);
 });
 
 // Message event - handle version checks
