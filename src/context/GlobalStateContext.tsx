@@ -1,13 +1,14 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import type { Transcript } from '@/types/types';
 
 interface GlobalState {
-  clientTranscripts: TranscriptT[] | undefined;
+  clientTranscripts: Transcript[] | undefined;
   transcriptCount: number;
 }
 
 interface GlobalStateContextProps {
   state: GlobalState;
-  setClientTranscriptsData: (transcripts: TranscriptT[] | undefined) => void;
+  setClientTranscriptsData: (transcripts: Transcript[] | undefined) => void;
   updateTranscriptCount: (count: number) => void;
 }
 
@@ -20,11 +21,11 @@ export const GlobalStateProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const [state, setState] = useState<GlobalState>({
     clientTranscripts: [],
-    transcriptCount: 0
+    transcriptCount: 0,
   });
 
-  const setClientTranscriptsData = (transcripts: TranscriptT[] | undefined) => {
-    setState((prevState) => ({ ...prevState, clientTranscripts: transcripts }));
+  const setClientTranscriptsData = (transcripts: Transcript[] | undefined) => {
+    setState(prevState => ({ ...prevState, clientTranscripts: transcripts }));
   };
 
   const updateTranscriptCount = (count: number) => {
@@ -49,44 +50,3 @@ export const useGlobalState = () => {
   return context;
 };
 
-type Summary = {
-  summary: string;
-};
-
-type AISummaryArgument = {
-  number: number;
-  summary: string;
-};
-
-type AISummaryStructure = {
-  arguments?: {
-    summaries?: AISummaryArgument[];
-  };
-};
-
-export interface TranscriptT {
-  // Base fields
-  id: number;
-  user_id: string;
-  created_at: string;
-  summary?: Summary;
-  token_count: number;
-  mid: string;
-  completed_at?: string;
-  processed_at?: string;
-  transcript?: string;
-  translation?: string;
-  patient_tag: number;
-  patient_code: string;
-  language?: string;
-  error?: string;
-  status?: string;
-
-  // AI Summary related fields
-  ai_summary?: AISummaryStructure;
-  ai_short_summary?: AISummaryStructure;
-
-  // Processing status fields
-  queued_completed_at?: string;
-  is_paused?: boolean;
-}
