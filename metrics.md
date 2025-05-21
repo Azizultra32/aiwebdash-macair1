@@ -73,3 +73,59 @@ src/components/TranscriptTabs.tsx(141,17): error TS2322: Type 'RefObject<HTMLDiv
 
 Render timing numbers could not be collected because the project dependencies were missing.
 
+
+## 2025-05-21 (Attempt 2)
+
+### Build Output
+
+`npm run build` failed due to TypeScript errors. The tail of the output is shown below:
+
+```
+src/components/TranscriptTabs.tsx(127,17): error TS2322: Type '(ref: RefObject<HTMLDivElement>) => void' is not assignable to type '(ref: RefObject<SummaryRef>) => void'.
+  Types of parameters 'ref' and 'ref' are incompatible.
+    Type 'RefObject<SummaryRef>' is not assignable to type 'RefObject<HTMLDivElement>'.
+      Type 'SummaryRef' is missing the following properties from type 'HTMLDivElement': align, addEventListener, removeEventListener, accessKey, and 304 more.
+src/components/TranscriptTabs.tsx(128,17): error TS2322: Type '(ref: RefObject<HTMLDivElement>) => void' is not assignable to type '(ref: RefObject<SummaryRef>) => void'.
+  Types of parameters 'ref' and 'ref' are incompatible.
+    Type 'RefObject<SummaryRef>' is not assignable to type 'RefObject<HTMLDivElement>'.
+      Type 'SummaryRef' is missing the following properties from type 'HTMLDivElement': align, addEventListener, removeEventListener, accessKey, and 304 more.
+src/components/TranscriptTabs.tsx(129,17): error TS2322: Type 'RefObject<HTMLDivElement>' is not assignable to type 'RefObject<SummaryRef>'.
+  Type 'HTMLDivElement' is missing the following properties from type 'SummaryRef': toggleMaximize, getSummary
+src/components/TranscriptTabs.tsx(139,17): error TS2322: Type '(ref: RefObject<HTMLDivElement>) => void' is not assignable to type '(ref: RefObject<SummaryRef>) => void'.
+  Types of parameters 'ref' and 'ref' are incompatible.
+    Type 'RefObject<SummaryRef>' is not assignable to type 'RefObject<HTMLDivElement>'.
+      Type 'SummaryRef' is missing the following properties from type 'HTMLDivElement': align, addEventListener, removeEventListener, accessKey, and 304 more.
+src/components/TranscriptTabs.tsx(140,17): error TS2322: Type '(ref: RefObject<HTMLDivElement>) => void' is not assignable to type '(ref: RefObject<SummaryRef>) => void'.
+  Types of parameters 'ref' and 'ref' are incompatible.
+    Type 'RefObject<SummaryRef>' is not assignable to type 'RefObject<HTMLDivElement>'.
+      Type 'SummaryRef' is missing the following properties from type 'HTMLDivElement': align, addEventListener, removeEventListener, accessKey, and 304 more.
+src/components/TranscriptTabs.tsx(141,17): error TS2322: Type 'RefObject<HTMLDivElement>' is not assignable to type 'RefObject<SummaryRef>'.
+  Type 'HTMLDivElement' is missing the following properties from type 'SummaryRef': toggleMaximize, getSummary
+```
+
+### Test Output
+
+`npm run test` failed. The tail of the output is shown below:
+
+```
+ DEV  v1.6.1 /workspace/aiwebdash-macair1
+
+ ✓ src/utils/__tests__/indexedDB.test.ts  (4 tests) 13ms
+ ✓ src/__tests__/dashboard-offline.test.tsx  (1 test) 74ms
+ ❯ src/utils/__tests__/swMessageHandler.test.ts  (1 test | 1 failed) 225ms
+   ❯ src/utils/__tests__/swMessageHandler.test.ts > service worker message handler > posts UPDATE_AVAILABLE when versions differ
+     → The parameter 'entries' passed into 'workbox-precaching.PrecacheController.addToCacheList()' must be an array.
+ ✓ src/utils/__tests__/debounce.test.ts  (2 tests) 8ms
+ ✓ src/utils/__tests__/storageHelpers.test.ts  (2 tests) 5ms
+
+ Test Files  1 failed | 4 passed (5)
+      Tests  1 failed | 9 passed (10)
+   Start at  06:30:58
+   Duration  2.69s (transform 301ms, setup 0ms, collect 482ms, tests 325ms, environment 2.05s, prepare 725ms)
+
+
+ FAIL  Tests failed. Watching for file changes...
+       press h to show help, press q to quit
+Cancelling test run. Press CTRL+c again to exit forcefully.
+
+```
