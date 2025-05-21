@@ -5,6 +5,7 @@ let mockPostMessage: any;
 
 // Setup a faux service worker environment before importing the script
 beforeEach(async () => {
+  vi.resetModules();
   mockPostMessage = vi.fn();
 
   (global as any).self = {
@@ -54,5 +55,18 @@ describe('service worker message handler', () => {
       type: 'UPDATE_AVAILABLE',
       version: '2',
     });
+  });
+
+  it('does nothing when versions match', async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue({ json: () => Promise.resolve({ version: '1' }) }) as any;
+
+    await messageHandler({ data: { type: 'CURRENT_VERSION', version: '1' } });
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    expect(global.fetch).toHaveBeenCalled();
+    expect((global as any).caches.delete).not.toHaveBeenCalled();
+    expect(mockPostMessage).not.toHaveBeenCalled();
   });
 });
