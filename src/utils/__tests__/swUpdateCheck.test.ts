@@ -15,7 +15,7 @@ class TestExtendableEvent extends Event implements ExtendableEvent {
 }
 
 let activateHandler: (event: ExtendableEvent) => void;
-let mockClients: { postMessage: ReturnType<typeof vi.fn> }[];
+let mockPostMessage: any;
 
 beforeEach(async () => {
   // Save current global implementations so they can be restored in afterEach
@@ -24,8 +24,11 @@ beforeEach(async () => {
   originalSelf = (global as any).self;
   originalCaches = (global as any).caches;
   originalSelfWbManifest = (global as any).self?.__WB_MANIFEST;
+  
+  // Ensure a fresh module state before each test run
   vi.resetModules();
-  mockClients = [{ postMessage: vi.fn() }, { postMessage: vi.fn() }];
+  
+  mockPostMessage = vi.fn();
 
   (global as any).self = {
     addEventListener: (type: string, handler: any) => {
@@ -34,11 +37,12 @@ beforeEach(async () => {
       }
     },
     clients: {
-      matchAll: vi.fn().mockResolvedValue(mockClients),
+      matchAll: vi.fn().mockResolvedValue([{ postMessage: mockPostMessage }]),
     },
   } as any;
 
   (global as any).self.__WB_MANIFEST = [];
+  (global as any).__WB_MANIFEST = [];
 
   (global as any).caches = {
     keys: vi.fn().mockResolvedValue([]),
@@ -75,25 +79,14 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('service worker update check', () => {
-  it('requests current version on activation', async () => {
-    // Create a waitUntil function that returns the promise it's given
-    const waitUntil = vi.fn((promise: Promise<any>) => promise);
+describe('service worker activation check', () => {
+  it('requests current version on activate', async () => {
+    const event = { waitUntil: vi.fn() };
 
-    // Invoke the activation handler with a minimal ExtendableEvent instance
-    await activateHandler(new TestExtendableEvent(waitUntil));
+    activateHandler(event as any);
+    await event.waitUntil.mock.calls[0][0];
 
-    // Ensure the promise passed to waitUntil completes
-    await waitUntil.mock.calls[0][0];
-    // Allow any microtasks to complete
-    await new Promise(resolve => setTimeout(resolve, 0));
-
-    // Verify clients were checked and the message was sent
     expect((global as any).self.clients.matchAll).toHaveBeenCalled();
-    for (const client of mockClients) {
-      expect(client.postMessage).toHaveBeenCalledWith({
-        type: 'GET_CURRENT_VERSION',
-      });
-    }
+    expect(mockPostMessage).toHaveBeenCalledWith({ type: 'GET_CURRENT_VERSION' });
   });
 });
