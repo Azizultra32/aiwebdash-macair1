@@ -22,7 +22,8 @@ beforeEach(async () => {
   originalGlobalWbManifest = (global as any).__WB_MANIFEST;
   originalSelfWbManifest = (global as any).self?.__WB_MANIFEST;
   
-  // Ensure a fresh module state before each test run
+  // Reset the module registry to ensure a fresh import of the service worker
+  // script for each test run. This avoids state leakage across tests.
   vi.resetModules();
   mockPostMessage = vi.fn();
 
