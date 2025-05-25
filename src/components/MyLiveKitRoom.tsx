@@ -1,4 +1,5 @@
 import supabase from '@/supabase';
+import { logger } from '@/utils/logger';
 import { AnimatePresence, motion } from "framer-motion";
 import {
   LiveKitRoom,
@@ -42,7 +43,7 @@ export function MyLiveKitRoom({ mid, onDisconnected, selectPatient } : LiveKitRo
     room.localParticipant?.registerRpcMethod(
       'end_call',
       async (data: RpcInvocationData) => {
-          console.log(`Received end_call from ${data.callerIdentity}: ${data.payload}`);
+          logger.debug(`Received end_call`, { caller: data.callerIdentity, payload: data.payload });
           try {
               room.disconnect(true);
               return JSON.stringify({});
@@ -54,10 +55,10 @@ export function MyLiveKitRoom({ mid, onDisconnected, selectPatient } : LiveKitRo
     room.localParticipant?.registerRpcMethod(
       'select_patient',
       async (data: RpcInvocationData) => {
-          console.log(`select_patient ${data.callerIdentity}: ${data.payload}`);
+          logger.debug('select_patient request', { caller: data.callerIdentity, payload: data.payload });
           try {
               const params = JSON.parse(data.payload);
-              console.log('select_patient', params);
+              logger.debug('select_patient params', params);
               selectPatient(params.patientTag);
               return JSON.stringify({});
           } catch (error) {
@@ -75,7 +76,7 @@ export function MyLiveKitRoom({ mid, onDisconnected, selectPatient } : LiveKitRo
   }, []);
 
   useEffect(() => {
-    console.log(`agentState = ${agentState}`)
+    logger.debug('agentState update', { state: agentState });
   }, [agentState]);
 
   return (
@@ -96,7 +97,7 @@ export function MyLiveKitRoom({ mid, onDisconnected, selectPatient } : LiveKitRo
           setTimeout(() => onDisconnected(), 3000);
         }}
         onConnected={async () => {
-          console.log('onConnected', 'room', room.name, 'localParticipant', room.localParticipant);
+          logger.debug('onConnected', { room: room.name, participant: room.localParticipant?.identity });
         }}
         className="grid grid-rows-[1fr_auto] items-center gap-1 p-2 scale-80"
         room={room}

@@ -1,4 +1,5 @@
 import supabase from '@/supabase';
+import { logger } from '@/utils/logger';
 import { LoginData, UserData, PasswordData } from '@/types/types';
 import { User, Session } from '@supabase/supabase-js';
 import { UseQueryResult, UseMutationResult, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -111,7 +112,7 @@ const AuthProvider = ({ children }: Props) => {
 
   const signUpWithPhone = async (phone: string, password: string) => {
     try {
-      console.log('Starting new phone signup process...');
+      logger.debug('Starting new phone signup process...');
 
       await supabase.auth.signOut();
       localStorage.removeItem('sb-access-token');
@@ -119,7 +120,7 @@ const AuthProvider = ({ children }: Props) => {
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      console.log('Attempting signup for:', phone);
+      logger.debug('Attempting signup', { phone });
 
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         phone,
@@ -129,7 +130,7 @@ const AuthProvider = ({ children }: Props) => {
         },
       });
 
-      console.log('Signup response:', { signUpData, signUpError });
+      logger.debug('Signup response', { signUpData, signUpError });
 
       if (signUpError) {
         if (signUpError.message.includes('already registered')) {
@@ -142,7 +143,7 @@ const AuthProvider = ({ children }: Props) => {
         }
       }
 
-      console.log('Attempting to send OTP...');
+      logger.debug('Attempting to send OTP...');
       const { error: otpError } = await supabase.auth.signInWithOtp({
         phone,
         options: {
@@ -150,7 +151,7 @@ const AuthProvider = ({ children }: Props) => {
         },
       });
 
-      console.log('OTP response:', { otpError });
+      logger.debug('OTP response', { otpError });
 
       if (otpError?.status === 429) {
         throw new Error('RATE_LIMIT_BUT_SENT');
@@ -167,7 +168,7 @@ const AuthProvider = ({ children }: Props) => {
 
   const verifyOtp = async (phone: string, token: string) => {
     try {
-      console.log('Starting OTP verification...');
+      logger.debug('Starting OTP verification...');
 
       // Clear existing session
       await supabase.auth.signOut();
@@ -210,7 +211,7 @@ const AuthProvider = ({ children }: Props) => {
 
   const resendOtp = async (phone: string) => {
     try {
-      console.log('Starting OTP resend...');
+      logger.debug('Starting OTP resend...');
 
       // Clear existing session
       await supabase.auth.signOut();

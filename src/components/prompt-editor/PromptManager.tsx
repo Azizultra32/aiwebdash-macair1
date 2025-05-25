@@ -6,6 +6,7 @@ import {
   type FormHTMLAttributes,
 } from 'react';
 import supabase from '@/supabase';
+import { logger } from '@/utils/logger';
 import PromptVisualizer from './PromptVisualizer';
 
 const Container = ({ children }: PropsWithChildren) => (
@@ -81,14 +82,14 @@ const PromptManager = () => {
       try {
         setIsLoading(true);
         const { data: { user } } = await supabase.auth.getUser();
-        console.log('Current user:', user);
+        logger.debug('Current user', user);
         setUser(user);
         
         if (user?.id === SUPERUSER_ID) {
-          console.log('User is superuser, fetching data...');
+          logger.debug('User is superuser, fetching data...');
           await Promise.all([fetchPrompts(), fetchRecentMeetings()]);
         } else {
-          console.log('User is not superuser, skipping data fetch');
+          logger.debug('User is not superuser, skipping data fetch');
         }
       } catch (error) {
         console.error('Error initializing component:', error);
@@ -122,7 +123,7 @@ const PromptManager = () => {
   };
 
   const fetchPrompts = async () => {
-    console.log('Fetching prompts...');
+    logger.debug('Fetching prompts...');
     const { data, error } = await supabase
       .from('system_prompt_components')
       .select('*')
@@ -133,13 +134,13 @@ const PromptManager = () => {
       return;
     }
 
-    console.log('Received prompts:', data);
+    logger.debug('Received prompts', data);
     setPrompts(data);
     fetchAssembledPrompt();
   };
 
   const fetchAssembledPrompt = async () => {
-    console.log('Fetching assembled prompt...');
+    logger.debug('Fetching assembled prompt...');
     const { data, error } = await supabase
       .rpc('assemble_system_prompt', {
         test_transcript: 'Doctor: Hello, how are you feeling today?\nPatient: I have been having headaches.',
@@ -151,7 +152,7 @@ const PromptManager = () => {
       return;
     }
 
-    console.log('Received assembled prompt:', data);
+    logger.debug('Received assembled prompt', data);
     if (data) {
       setAssembledPrompt(data);
     }
@@ -229,11 +230,10 @@ const PromptManager = () => {
 
   // Only show component if user is superuser
   if (user?.id !== SUPERUSER_ID) {
-    console.log('User is not superuser. Current user ID:', user?.id);
-    console.log('Expected superuser ID:', SUPERUSER_ID);
+    logger.debug('User is not superuser', { currentId: user?.id, expected: SUPERUSER_ID });
     return <div>Access denied. You must be a superuser to view this page.</div>;
   }
-  console.log('User is superuser, rendering component');
+  logger.debug('User is superuser, rendering component');
 
   return (
     <Container>
