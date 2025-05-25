@@ -1,0 +1,276 @@
+name: PR Conflict Analysis and Reporting
+
+on:
+  # Run daily at midnight
+  schedule:
+    - cron: '0 0 * * *'
+  # Run when the fully automated merge workflow completes
+  workflow_run:
+    workflows: ["Fully Automated PR Merge"]
+    types:
+      - completed
+  # Manual trigger for on-demand reports
+  workflow_dispatch:
+
+jobs:
+  analyze-conflicting-prs:
+    runs-on: ubuntu-latest
+    outputs:
+      conflict_report: ${{ steps.create-report.outputs.conflict_report }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Analyze conflicting PRs
+        id: create-report
+        run: |
+          # Install required tools
+          npm install -g @octokit/core
+          
+          # Create a Node.js script to analyze PRs
+          cat > analyze-conflicts.js << 'EOF'
+          const { Octokit } = require('@octokit/core');
+          
+          // Create Octokit instance
+          const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+          
+          async function analyzeConflicts() {
+            const owner = process.env.GITHUB_REPOSITORY.split('/')[0];
+            const repo = process.env.GITHUB_REPOSITORY.split('/')[1];
+            
+            // Get all open PRs with conflicts
+            const response = await octokit.request('GET /repos/{owner}/{repo}/pulls', {
+              owner,
+              repo,
+              state: 'open',
+              per_page: 100
+            });
+            
+            // Filter PRs with the 'codex' label that have conflicts
+            const prs = response.data;
+            const conflictingPrs = [];
+            
+            for (const pr of prs) {
+              // Check if PR has 'codex' label
+              const hasCodexLabel = pr.labels.some(label => label.name === 'codex');
+              if (!hasCodexLabel) continue;
+              
+              // Check mergeable status
+              const prDetails = await octokit.request('GET /repos/{owner}/{repo}/pulls/{pull_number}', {
+                owner,
+                repo,
+                pull_number: pr.number
+              });
+              
+              if (prDetails.data.mergeable === false) {
+                // Get files with conflicts
+                const conflictFiles = [];
+                try {
+                  // Try to simulate merge to identify conflicting files
+                  const compareResponse = await octokit.request('GET /repos/{owner}/{repo}/compare/{basehead}', {
+                    owner,
+                    repo,
+                    basehead: `${pr.base.ref}...${pr.head.ref}`
+                  });
+                  
+                  for (const file of compareResponse.data.files) {
+                    // Files that show as 'conflicting' in the UI
+                    if (file.status === 'modified' && file.changes > 0) {
+                      conflictFiles.push(file.filename);
+                    }
+                  }
+                } catch (error) {
+                  console.error(`Error analyzing conflicts for PR #${pr.number}:`, error);
+                }
+                
+                conflictingPrs.push({
+                  number: pr.number,
+                  title: pr.title,
+                  branch: pr.head.ref,
+                  url: pr.html_url,
+                  conflictFiles: conflictFiles.length > 0 ? conflictFiles : ['Could not determine specific files']
+                });
+              }
+            }
+            
+            // Create conflict report
+            const report = {
+              timestamp: new Date().toISOString(),
+              totalConflictingPrs: conflictingPrs.length,
+              prs: conflictingPrs
+            };
+            
+            // Output the report in GitHub Actions format
+            console.log(`::set-output name=conflict_report::${JSON.stringify(report)}`);
+            
+            // Create detailed markdown report
+            let markdownReport = `# PR Conflict Analysis Report\n\n`;
+            markdownReport += `Generated: ${new Date().toISOString()}\n\n`;
+            markdownReport += `## Summary\n\n`;
+            markdownReport += `- Total PRs with conflicts: ${conflictingPrs.length}\n\n`;
+            
+            if (conflictingPrs.length > 0) {
+              markdownReport += `## Conflicting PRs\n\n`;
+              
+              for (const pr of conflictingPrs) {
+                markdownReport += `### PR #${pr.number}: ${pr.title}\n\n`;
+                markdownReport += `- Branch: \`${pr.branch}\`\n`;
+                markdownReport += `- URL: ${pr.url}\n`;
+                markdownReport += `- Files with conflicts:\n`;
+                
+                for (const file of pr.conflictFiles) {
+                  markdownReport += `  - \`${file}\`\n`;
+                }
+                
+                markdownReport += `\n`;
+              }
+            }
+            
+            // Write the report to a file
+            require('fs').writeFileSync('conflict-report.md', markdownReport);
+          }
+          
+          analyzeConflicts().catch(error => {
+            console.error('Error:', error);
+            process.exit(1);
+          });
+          EOF
+          
+          # Run the analysis script
+          node analyze-conflicts.js
+          
+      - name: Upload conflict report
+        uses: actions/upload-artifact@v3
+        with:
+          name: pr-conflict-report
+          path: conflict-report.md
+          
+      - name: Create issue with conflict report
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Check if report contains conflicts
+          if grep -q "Total PRs with conflicts: 0" conflict-report.md; then
+            echo "No conflicts detected, skipping issue creation"
+            exit 0
+          fi
+          
+          # Create or update issue with conflict report
+          ISSUE_TITLE="PR Conflict Analysis Report"
+          ISSUE_BODY=$(cat conflict-report.md)
+          
+          # Check if issue already exists
+          EXISTING_ISSUE=$(gh issue list --search "$ISSUE_TITLE" --json number --jq '.[0].number')
+          
+          if [ -n "$EXISTING_ISSUE" ]; then
+            # Update existing issue
+            gh issue comment "$EXISTING_ISSUE" --body "## Updated Conflict Report\n\n$ISSUE_BODY"
+          else
+            # Create new issue
+            gh issue create --title "$ISSUE_TITLE" --body "$ISSUE_BODY" --label "conflict-report"
+          fi
+          
+  create-conflict-resolution-prs:
+    needs: analyze-conflicting-prs
+    runs-on: ubuntu-latest
+    if: fromJson(needs.analyze-conflicting-prs.outputs.conflict_report).totalConflictingPrs > 0
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Set up Git identity
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          
+      - name: Create conflict resolution PRs
+        env:
+          CONFLICT_REPORT: ${{ needs.analyze-conflicting-prs.outputs.conflict_report }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Parse conflict report
+          CONFLICTING_PRS=$(echo $CONFLICT_REPORT | jq -r '.prs')
+          
+          # Process each conflicting PR
+          echo $CONFLICTING_PRS | jq -c '.[]' | while read -r pr; do
+            PR_NUMBER=$(echo $pr | jq -r '.number')
+            PR_BRANCH=$(echo $pr | jq -r '.branch')
+            PR_TITLE=$(echo $pr | jq -r '.title')
+            
+            echo "Creating resolution PR for PR #$PR_NUMBER ($PR_TITLE)"
+            
+            # Create a resolution branch
+            RESOLUTION_BRANCH="conflict-resolution/pr-$PR_NUMBER"
+            git checkout -b $RESOLUTION_BRANCH main
+            
+            # Try to merge the PR branch
+            git fetch origin $PR_BRANCH
+            
+            # Create a suggested resolution
+            if ! git merge origin/$PR_BRANCH --no-commit; then
+              # Get files with conflicts
+              CONFLICT_FILES=$(git diff --name-only --diff-filter=U)
+              
+              # Add conflict information to a resolution file
+              mkdir -p .github/conflict-resolutions
+              cat > .github/conflict-resolutions/PR-$PR_NUMBER-resolution.md << EOF
+          # Conflict Resolution for PR #$PR_NUMBER
+          
+          This document provides guidance for resolving conflicts in PR #$PR_NUMBER.
+          
+          ## Files with Conflicts
+          
+          $(for file in $CONFLICT_FILES; do echo "- \`$file\`"; done)
+          
+          ## Suggested Resolution
+          
+          $(for file in $CONFLICT_FILES; do 
+              echo "### \`$file\`"
+              echo '```'
+              git show origin/main:$file 2>/dev/null || echo "File does not exist in main"
+              echo '```'
+              
+              echo "vs."
+              
+              echo '```'
+              git show origin/$PR_BRANCH:$file 2>/dev/null || echo "File does not exist in PR branch"
+              echo '```'
+              
+              echo "#### Suggested Resolution Approach:"
+              if grep -q "__WB_MANIFEST" $file 2>/dev/null; then
+                echo "This file contains service worker manifest configuration. Ensure both the global and self __WB_MANIFEST are properly defined."
+              elif grep -q "useState<Boolean>" $file 2>/dev/null; then
+                echo "This file contains type definitions. Change 'Boolean' to lowercase 'boolean' for proper TypeScript typing."
+              else
+                echo "Carefully review the changes in both branches and combine the functionality while maintaining code quality."
+              fi
+            done)
+          EOF
+              
+              # Stage and commit the resolution file
+              git add .github/conflict-resolutions/PR-$PR_NUMBER-resolution.md
+              git commit -m "Add conflict resolution guidance for PR #$PR_NUMBER"
+              
+              # Push the resolution branch
+              git push origin $RESOLUTION_BRANCH
+              
+              # Create a PR with the resolution guidance
+              BODY="This PR provides guidance for resolving conflicts in PR #$PR_NUMBER.\n\nPlease review the conflict resolution document and apply the suggested changes."
+              gh pr create --title "Conflict Resolution for PR #$PR_NUMBER" --body "$BODY" --base main --head $RESOLUTION_BRANCH --label "conflict-resolution"
+              
+              # Abort the merge attempt
+              git merge --abort
+            else
+              # No conflicts occurred (unusual but possible if conflict status changed)
+              git reset --hard HEAD
+              echo "No conflicts detected for PR #$PR_NUMBER"
+            fi
+            
+            # Return to main branch
+            git checkout main
+          done
