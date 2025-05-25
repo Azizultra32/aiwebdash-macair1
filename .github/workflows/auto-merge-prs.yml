@@ -1,0 +1,76 @@
+name: Auto Merge Pull Requests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  pull_request_review:
+    types: [submitted]
+  check_suite:
+    types: [completed]
+  status: {}
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    if: github.actor != 'dependabot[bot]'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Auto-merge conditions check
+        id: check-conditions
+        run: |
+          # Extract PR details
+          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          PR_STATE=$(jq --raw-output .pull_request.state "$GITHUB_EVENT_PATH")
+          PR_DRAFT=$(jq --raw-output .pull_request.draft "$GITHUB_EVENT_PATH")
+          
+          # Check if PR exists and is not in draft mode
+          if [[ "$PR_NUMBER" != "null" && "$PR_STATE" == "open" && "$PR_DRAFT" == "false" ]]; then
+            echo "PR #$PR_NUMBER is eligible for auto-merge"
+            echo "pr_eligible=true" >> $GITHUB_OUTPUT
+          else
+            echo "PR is not eligible for auto-merge"
+            echo "pr_eligible=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check required status checks
+        id: status-checks
+        if: steps.check-conditions.outputs.pr_eligible == 'true'
+        run: |
+          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          
+          # Get all status checks for the PR
+          CHECKS_STATUS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                        "https://api.github.com/repos/${{ github.repository }}/commits/$(jq --raw-output .pull_request.head.sha "$GITHUB_EVENT_PATH")/status")
+          
+          # Check if all status checks are successful
+          if [[ $(echo "$CHECKS_STATUS" | jq -r '.state') == "success" ]]; then
+            echo "All status checks passed"
+            echo "checks_passed=true" >> $GITHUB_OUTPUT
+          else
+            echo "Not all status checks have passed"
+            echo "checks_passed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Enable auto-merge
+        if: steps.check-conditions.outputs.pr_eligible == 'true' && steps.status-checks.outputs.checks_passed == 'true'
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pull-request-number: ${{ github.event.pull_request.number }}
+          merge-method: squash
+
+      - name: Report status
+        if: always()
+        run: |
+          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          if [[ "$PR_NUMBER" != "null" ]]; then
+            if [[ "${{ steps.check-conditions.outputs.pr_eligible }}" == "true" && "${{ steps.status-checks.outputs.checks_passed }}" == "true" ]]; then
+              echo "Auto-merge enabled for PR #$PR_NUMBER"
+            else
+              echo "Auto-merge not enabled for PR #$PR_NUMBER. Conditions not met."
+            fi
+          else
+            echo "No PR number found in event payload"
+          fi

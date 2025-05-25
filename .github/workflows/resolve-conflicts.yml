@@ -1,0 +1,195 @@
+name: Resolve PR Conflicts
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Pull request number to resolve conflicts for'
+        required: true
+        type: string
+      conflict_resolution_strategy:
+        description: 'How to handle conflicts'
+        required: true
+        default: 'ours'
+        type: choice
+        options:
+          - ours
+          - theirs
+          - manual
+
+jobs:
+  resolve-conflicts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Git identity
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+      
+      - name: Fetch PR details
+        id: pr-details
+        run: |
+          PR_NUMBER="${{ github.event.inputs.pr_number }}"
+          RESOLUTION="${{ github.event.inputs.conflict_resolution_strategy }}"
+          
+          # Get PR details using GitHub API
+          PR_DETAILS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                       "https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER")
+          
+          HEAD_REF=$(echo "$PR_DETAILS" | jq -r '.head.ref')
+          HEAD_REPO=$(echo "$PR_DETAILS" | jq -r '.head.repo.full_name')
+          BASE_REF=$(echo "$PR_DETAILS" | jq -r '.base.ref')
+          PR_TITLE=$(echo "$PR_DETAILS" | jq -r '.title')
+          
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "head_ref=$HEAD_REF" >> $GITHUB_OUTPUT
+          echo "head_repo=$HEAD_REPO" >> $GITHUB_OUTPUT
+          echo "base_ref=$BASE_REF" >> $GITHUB_OUTPUT
+          echo "pr_title=$PR_TITLE" >> $GITHUB_OUTPUT
+          echo "resolution=$RESOLUTION" >> $GITHUB_OUTPUT
+          
+          echo "Processing PR #$PR_NUMBER: $PR_TITLE"
+          echo "Head branch: $HEAD_REF in $HEAD_REPO"
+          echo "Base branch: $BASE_REF"
+          echo "Resolution strategy: $RESOLUTION"
+      
+      - name: Check if PR has conflicts
+        id: check-conflicts
+        run: |
+          PR_NUMBER="${{ steps.pr-details.outputs.pr_number }}"
+          
+          # Check mergeable state using GitHub API
+          PR_MERGEABLE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                         "https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER" | \
+                         jq -r '.mergeable_state')
+          
+          echo "mergeable_state=$PR_MERGEABLE" >> $GITHUB_OUTPUT
+          
+          if [[ "$PR_MERGEABLE" == "clean" ]]; then
+            echo "PR #$PR_NUMBER is already mergeable, no conflicts to resolve!"
+            echo "has_conflicts=false" >> $GITHUB_OUTPUT
+          else
+            echo "PR #$PR_NUMBER has conflicts that need to be resolved."
+            echo "has_conflicts=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Resolve conflicts automatically
+        if: steps.check-conflicts.outputs.has_conflicts == 'true' && steps.pr-details.outputs.resolution != 'manual'
+        run: |
+          PR_NUMBER="${{ steps.pr-details.outputs.pr_number }}"
+          HEAD_REF="${{ steps.pr-details.outputs.head_ref }}"
+          HEAD_REPO="${{ steps.pr-details.outputs.head_repo }}"
+          BASE_REF="${{ steps.pr-details.outputs.base_ref }}"
+          RESOLUTION="${{ steps.pr-details.outputs.resolution }}"
+          
+          # Add remote for PR if it's from a fork
+          if [[ "$HEAD_REPO" != "${{ github.repository }}" ]]; then
+            git remote add pr-head "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$HEAD_REPO.git"
+            git fetch pr-head "$HEAD_REF"
+          else
+            git fetch origin "$HEAD_REF"
+          fi
+          
+          # Create a new branch for conflict resolution
+          RESOLUTION_BRANCH="resolve-conflicts-$PR_NUMBER"
+          git checkout -b "$RESOLUTION_BRANCH" "origin/$HEAD_REF" || git checkout -b "$RESOLUTION_BRANCH" "pr-head/$HEAD_REF"
+          
+          # Try to merge the base branch
+          echo "Attempting to merge $BASE_REF into $HEAD_REF..."
+          if git merge "origin/$BASE_REF"; then
+            echo "No conflicts detected during merge!"
+          else
+            echo "Conflicts detected during merge, resolving with strategy: $RESOLUTION"
+            
+            if [[ "$RESOLUTION" == "ours" ]]; then
+              # Keep our changes (PR branch changes)
+              git checkout --ours .
+              git add .
+            elif [[ "$RESOLUTION" == "theirs" ]]; then
+              # Keep their changes (base branch changes)
+              git checkout --theirs .
+              git add .
+            fi
+            
+            # Commit the resolution
+            git commit -m "Resolve merge conflicts (strategy: $RESOLUTION)"
+          fi
+          
+          # Push the changes
+          git push origin "$RESOLUTION_BRANCH"
+          
+          # Create a new PR or update the existing one
+          PR_BODY="This PR resolves conflicts in #$PR_NUMBER using the '$RESOLUTION' strategy.
+          
+          Please review the conflict resolution before merging."
+          
+          # Check if a resolution PR already exists
+          EXISTING_PR=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                       "https://api.github.com/repos/${{ github.repository }}/pulls?head=${{ github.repository_owner }}:$RESOLUTION_BRANCH" | \
+                       jq -r '.[0].number')
+          
+          if [[ "$EXISTING_PR" == "null" ]]; then
+            # Create a new PR
+            NEW_PR=$(curl -s -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                    -d "{\"title\":\"Resolve conflicts for #$PR_NUMBER\", \"body\":\"$PR_BODY\", \"head\":\"$RESOLUTION_BRANCH\", \"base\":\"$HEAD_REF\"}" \
+                    "https://api.github.com/repos/${{ github.repository }}/pulls")
+            
+            NEW_PR_NUMBER=$(echo "$NEW_PR" | jq -r '.number')
+            echo "Created resolution PR #$NEW_PR_NUMBER"
+          else
+            echo "Resolution PR #$EXISTING_PR already exists, updating it..."
+          fi
+
+      - name: Generate manual conflict resolution instructions
+        if: steps.check-conflicts.outputs.has_conflicts == 'true' && steps.pr-details.outputs.resolution == 'manual'
+        run: |
+          PR_NUMBER="${{ steps.pr-details.outputs.pr_number }}"
+          HEAD_REF="${{ steps.pr-details.outputs.head_ref }}"
+          HEAD_REPO="${{ steps.pr-details.outputs.head_repo }}"
+          BASE_REF="${{ steps.pr-details.outputs.base_ref }}"
+          
+          echo "## Manual Conflict Resolution Instructions for PR #$PR_NUMBER" > resolution_instructions.md
+          echo "" >> resolution_instructions.md
+          echo "This PR has conflicts that need to be resolved manually. Follow these steps:" >> resolution_instructions.md
+          echo "" >> resolution_instructions.md
+          echo "1. Clone the repository: \`git clone https://github.com/${{ github.repository }}.git\`" >> resolution_instructions.md
+          echo "2. Navigate to the repository: \`cd $(echo "${{ github.repository }}" | cut -d '/' -f 2)\`" >> resolution_instructions.md
+          echo "3. Fetch the PR branch: \`git fetch origin $HEAD_REF\`" >> resolution_instructions.md
+          echo "4. Create a local branch: \`git checkout -b resolve-$PR_NUMBER origin/$HEAD_REF\`" >> resolution_instructions.md
+          echo "5. Try to merge the base branch: \`git merge origin/$BASE_REF\`" >> resolution_instructions.md
+          echo "6. Resolve conflicts in your editor" >> resolution_instructions.md
+          echo "7. Mark files as resolved: \`git add <conflicted-files>\`" >> resolution_instructions.md
+          echo "8. Complete the merge: \`git commit -m \"Resolve conflicts\"\`" >> resolution_instructions.md
+          echo "9. Push the changes: \`git push origin resolve-$PR_NUMBER\`" >> resolution_instructions.md
+          echo "10. Create a PR from \`resolve-$PR_NUMBER\` to \`$HEAD_REF\`" >> resolution_instructions.md
+          echo "" >> resolution_instructions.md
+          echo "### Files with conflicts:" >> resolution_instructions.md
+          
+          # Try to detect conflicted files
+          git fetch origin "$HEAD_REF"
+          git checkout -b "temp-$PR_NUMBER" "origin/$HEAD_REF" || true
+          git fetch origin "$BASE_REF"
+          
+          if git merge-tree $(git merge-base HEAD "origin/$BASE_REF") HEAD "origin/$BASE_REF" | grep -A3 "changed in both"; then
+            git merge-tree $(git merge-base HEAD "origin/$BASE_REF") HEAD "origin/$BASE_REF" | grep -A3 "changed in both" | grep "^\+" | cut -c 2- >> resolution_instructions.md
+          else
+            echo "Could not automatically detect conflicted files." >> resolution_instructions.md
+          fi
+          
+          git checkout main || true
+          git branch -D "temp-$PR_NUMBER" || true
+          
+          cat resolution_instructions.md
+      
+      - name: Upload conflict resolution instructions
+        if: steps.check-conflicts.outputs.has_conflicts == 'true' && steps.pr-details.outputs.resolution == 'manual'
+        uses: actions/upload-artifact@v3
+        with:
+          name: conflict-resolution-instructions
+          path: resolution_instructions.md

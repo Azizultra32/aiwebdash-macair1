@@ -1,0 +1,91 @@
+name: Batch Merge Existing PRs
+
+on:
+  # Manual trigger
+  workflow_dispatch:
+    inputs:
+      merge_method:
+        description: 'Merge method to use (merge, squash, rebase)'
+        required: true
+        default: 'squash'
+        type: choice
+        options:
+          - merge
+          - squash
+          - rebase
+      pr_label:
+        description: 'Only merge PRs with this label (leave empty for all)'
+        required: false
+        default: 'codex'
+        type: string
+
+jobs:
+  batch-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Set up GitHub CLI
+        uses: crazy-max/ghaction-setup-gh@v1
+        with:
+          version: latest
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fetch open pull requests
+        id: fetch-prs
+        run: |
+          # Initialize PR list
+          echo "pr_list=[]" >> $GITHUB_OUTPUT
+          
+          # Set label filter
+          LABEL_FILTER=""
+          if [[ -n "${{ inputs.pr_label }}" ]]; then
+            LABEL_FILTER="label:${{ inputs.pr_label }}"
+          fi
+          
+          # Get all open PRs
+          PR_DATA=$(gh pr list --state open --json number,title,labels --limit 100 $LABEL_FILTER)
+          
+          # Extract PR numbers and store as JSON array
+          PR_NUMBERS=$(echo "$PR_DATA" | jq -c '[.[] | .number]')
+          echo "pr_list=$PR_NUMBERS" >> $GITHUB_OUTPUT
+          
+          # Log PRs found
+          PR_COUNT=$(echo "$PR_DATA" | jq '. | length')
+          echo "Found $PR_COUNT open pull requests"
+          echo "$PR_DATA" | jq -r '.[] | "PR #\(.number): \(.title)"'
+      
+      - name: Merge pull requests
+        env:
+          PR_LIST: ${{ steps.fetch-prs.outputs.pr_list }}
+          MERGE_METHOD: ${{ inputs.merge_method }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Convert PR list from JSON to bash array
+          PR_NUMBERS=$(echo "$PR_LIST" | jq -r '.[]')
+          
+          # Process each PR
+          for PR_NUMBER in $PR_NUMBERS; do
+            echo "Processing PR #$PR_NUMBER"
+            
+            # Check if PR is mergeable
+            MERGEABLE=$(gh pr view $PR_NUMBER --json mergeable | jq -r '.mergeable')
+            
+            if [[ "$MERGEABLE" == "MERGEABLE" ]]; then
+              echo "Merging PR #$PR_NUMBER"
+              gh pr merge $PR_NUMBER --$MERGE_METHOD --auto
+            else
+              echo "PR #$PR_NUMBER is not mergeable, skipping"
+              # Optionally add a comment to the PR
+              gh pr comment $PR_NUMBER --body "This PR was skipped during batch merge because it's not in a mergeable state."
+            fi
+          done
+          
+      - name: Summary
+        run: |
+          echo "## Batch Merge Results" >> $GITHUB_STEP_SUMMARY
+          echo "Attempted to merge PRs from the list using ${{ inputs.merge_method }} method." >> $GITHUB_STEP_SUMMARY
+          echo "Check the logs for details on which PRs were successfully merged and which were skipped." >> $GITHUB_STEP_SUMMARY
