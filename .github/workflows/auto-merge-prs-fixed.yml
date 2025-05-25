@@ -1,0 +1,86 @@
+name: Auto Merge PRs (Fixed)
+
+on:
+  # Run automatically every hour
+  schedule:
+    - cron: '0 * * * *'
+  # Run when pushed to main
+  push:
+    branches:
+      - main
+  # Manual trigger
+  workflow_dispatch:
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        
+      - name: Merge PRs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get all open PRs with the 'codex' label
+          echo "Fetching open PRs with 'codex' label..."
+          
+          # Get the PR numbers
+          PR_NUMBERS=$(gh pr list --label codex --state open --json number --jq '.[].number')
+          
+          echo "Found PRs: $PR_NUMBERS"
+          
+          # Process each PR
+          for PR_NUMBER in $PR_NUMBERS; do
+            echo "Processing PR #$PR_NUMBER"
+            
+            # Check if PR is mergeable
+            MERGEABLE=$(gh pr view $PR_NUMBER --json mergeable --jq '.mergeable')
+            
+            if [[ "$MERGEABLE" == "MERGEABLE" ]]; then
+              echo "PR #$PR_NUMBER is mergeable, merging it now..."
+              gh pr merge $PR_NUMBER --squash --delete-branch
+              echo "Successfully merged PR #$PR_NUMBER"
+            else
+              echo "PR #$PR_NUMBER has conflicts and cannot be automatically merged"
+              gh pr comment $PR_NUMBER --body "This PR has conflicts and cannot be automatically merged. Please resolve the conflicts manually."
+            fi
+          done
+          
+      - name: Create conflict report
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Creating conflict report..."
+          
+          # Get PRs with conflicts
+          CONFLICTING_PRS=$(gh pr list --label codex --state open --json number,title,mergeable --jq '[.[] | select(.mergeable != "MERGEABLE")]')
+          CONFLICT_COUNT=$(echo "$CONFLICTING_PRS" | jq '. | length')
+          
+          if [[ "$CONFLICT_COUNT" == "0" ]]; then
+            echo "No PRs with conflicts found!"
+            exit 0
+          fi
+          
+          # Create a markdown report
+          REPORT="# PR Conflict Report\n\n"
+          REPORT+="The following PRs have conflicts and need manual resolution:\n\n"
+          
+          echo "$CONFLICTING_PRS" | jq -c '.[]' | while read -r PR; do
+            PR_NUMBER=$(echo "$PR" | jq -r '.number')
+            PR_TITLE=$(echo "$PR" | jq -r '.title')
+            
+            REPORT+="- PR #$PR_NUMBER: $PR_TITLE\n"
+          done
+          
+          # Look for existing issue or create a new one
+          ISSUE_NUMBER=$(gh issue list --label "conflict-report" --json number --jq '.[0].number')
+          
+          if [[ -n "$ISSUE_NUMBER" ]]; then
+            echo "Updating existing issue #$ISSUE_NUMBER"
+            gh issue comment "$ISSUE_NUMBER" --body "$REPORT"
+          else
+            echo "Creating new issue for conflict report"
+            gh issue create --title "PR Conflict Report" --body "$REPORT" --label "conflict-report"
+          fi
