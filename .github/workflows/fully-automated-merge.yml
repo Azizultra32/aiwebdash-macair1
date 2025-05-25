@@ -1,0 +1,77 @@
+name: Fully Automated PR Merge
+
+on:
+  # Run automatically every 15 minutes
+  schedule:
+    - cron: '*/15 * * * *'
+  # Also run when the workflow file is pushed
+  push:
+    paths:
+      - '.github/workflows/fully-automated-merge.yml'
+
+jobs:
+  auto-merge-all-prs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Set up Git identity
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+      
+      - name: Auto-merge all PRs with 'codex' label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get all open PRs with the 'codex' label
+          PR_LIST=$(gh pr list --state open --label codex --json number,title,mergeable --limit 100)
+          
+          echo "Found PRs:"
+          echo "$PR_LIST" | jq -r '.[] | "PR #\(.number): \(.title) - Mergeable: \(.mergeable)"'
+          
+          # Process each PR
+          echo "$PR_LIST" | jq -c '.[]' | while read -r pr; do
+            PR_NUMBER=$(echo "$pr" | jq -r '.number')
+            PR_TITLE=$(echo "$pr" | jq -r '.title')
+            MERGEABLE=$(echo "$pr" | jq -r '.mergeable')
+            
+            echo "Processing PR #$PR_NUMBER: $PR_TITLE"
+            
+            if [[ "$MERGEABLE" == "MERGEABLE" ]]; then
+              echo "Merging PR #$PR_NUMBER"
+              gh pr merge "$PR_NUMBER" --squash --auto
+              echo "Successfully merged PR #$PR_NUMBER"
+            else
+              echo "PR #$PR_NUMBER is not mergeable, attempting to resolve conflicts"
+              
+              # Try to resolve conflicts
+              git fetch origin "pull/$PR_NUMBER/head:pr-$PR_NUMBER"
+              git checkout "pr-$PR_NUMBER"
+              
+              # Try to merge main into the PR branch
+              if git merge origin/main --no-commit; then
+                echo "Resolved conflicts automatically"
+                git commit -m "Resolve conflicts for PR #$PR_NUMBER"
+                git push origin "pr-$PR_NUMBER"
+                
+                # Try to merge again
+                gh pr merge "$PR_NUMBER" --squash --auto
+              else
+                echo "Could not auto-resolve conflicts for PR #$PR_NUMBER"
+                git merge --abort
+                git checkout main
+                
+                # Add comment to PR
+                gh pr comment "$PR_NUMBER" --body "This PR has conflicts that could not be automatically resolved. Please resolve conflicts manually."
+              fi
+            fi
+          done
+          
+      - name: Summary
+        run: |
+          echo "## Automatic PR Merge Complete" >> $GITHUB_STEP_SUMMARY
+          echo "Attempted to merge all open PRs with the 'codex' label" >> $GITHUB_STEP_SUMMARY
