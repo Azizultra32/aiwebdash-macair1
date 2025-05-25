@@ -1,0 +1,69 @@
+name: Merge All Open PRs
+
+on:
+  # Run hourly instead of every 15 minutes
+  schedule:
+    - cron: '0 * * * *'
+  # Also run when pushed to main
+  push:
+    branches:
+      - main
+  # Manual trigger option
+  workflow_dispatch:
+
+jobs:
+  merge-all-prs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        
+      - name: Setup GitHub CLI
+        run: |
+          # GitHub CLI is pre-installed on GitHub Actions runners
+          gh --version
+          
+      - name: Merge all mergeable PRs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Finding all open PRs to merge..."
+          
+          # Get ALL open PRs (no label filter)
+          PRS=$(gh pr list --state open --json number,title,mergeable --limit 100)
+          
+          # Check if we found any PRs
+          if [ "$(echo "$PRS" | jq length)" -eq 0 ]; then
+            echo "No open PRs found."
+            exit 0
+          fi
+          
+          echo "Found $(echo "$PRS" | jq length) open PRs."
+          
+          # Process each PR
+          echo "$PRS" | jq -c '.[]' | while read -r PR; do
+            PR_NUMBER=$(echo "$PR" | jq -r '.number')
+            PR_TITLE=$(echo "$PR" | jq -r '.title')
+            MERGEABLE=$(echo "$PR" | jq -r '.mergeable')
+            
+            echo "Processing PR #$PR_NUMBER: $PR_TITLE (Mergeable: $MERGEABLE)"
+            
+            if [ "$MERGEABLE" = "MERGEABLE" ]; then
+              echo "Merging PR #$PR_NUMBER..."
+              
+              # Attempt to merge the PR
+              if gh pr merge "$PR_NUMBER" --squash --delete-branch; then
+                echo "Successfully merged PR #$PR_NUMBER"
+              else
+                echo "Failed to merge PR #$PR_NUMBER"
+              fi
+            else
+              echo "PR #$PR_NUMBER has conflicts and cannot be automatically merged."
+              
+              # Comment on the PR about the conflicts
+              gh pr comment "$PR_NUMBER" --body "This PR has conflicts that must be resolved before it can be merged automatically."
+            fi
+          done
