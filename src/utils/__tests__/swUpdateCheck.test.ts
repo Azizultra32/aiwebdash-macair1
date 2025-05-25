@@ -45,11 +45,11 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
-  vi.restoreAllMocks();
   global.fetch = originalFetch;
   global.setInterval = originalSetInterval;
   delete (global as any).self;
   delete (global as any).caches;
+  vi.restoreAllMocks();
 });
 
 describe('service worker update check', () => {
