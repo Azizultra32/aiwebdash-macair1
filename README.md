@@ -138,3 +138,13 @@ fi
 
 Codex will execute this script automatically during environment initialization.
 
+## Environment variables
+
+The application relies on several environment variables for Supabase and Stripe integration. Copy `.env.example` to `.env` and fill in the values.
+
+- `VITE_APP_SUPABASE_URL` - URL of your Supabase project.
+- `VITE_APP_SUPABASE_ANON_KEY` - Supabase anon (public) API key.
+- `VITE_SUPABASE_URL` - same as `VITE_APP_SUPABASE_URL` for build-time use.
+- `VITE_SUPABASE_ANON_KEY` - same as `VITE_APP_SUPABASE_ANON_KEY` for build-time use.
+- `VITE_STRIPE_PUBLISHABLE_KEY` - public Stripe API key used by the client.
+- `STRIPE_SECRET_KEY` - secret Stripe key required by the serverless function.
