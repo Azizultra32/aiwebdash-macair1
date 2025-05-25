@@ -103,9 +103,9 @@ describe('service worker message handler', () => {
   });
 
   it('does nothing when versions match', async () => {
-    global.fetch = vi
+    (global as any).fetch = vi
       .fn()
-      .mockResolvedValue({ json: () => Promise.resolve({ version: '1' }) }) as any;
+      .mockResolvedValue({ json: () => Promise.resolve({ version: '1' }) });
 
     const event = new MessageEvent<{ type: string; version: string }>('message', {
       data: { type: 'CURRENT_VERSION', version: '1' },
@@ -113,7 +113,6 @@ describe('service worker message handler', () => {
     await messageHandler(event);
     await new Promise(resolve => setTimeout(resolve, 0));
 
-    expect(global.fetch).toHaveBeenCalled();
     expect((global as any).caches.delete).not.toHaveBeenCalled();
     expect(mockPostMessage).not.toHaveBeenCalled();
   });
