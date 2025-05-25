@@ -1,0 +1,125 @@
+name: Complete PR Solution
+
+on:
+  # Run on schedule (daily)
+  schedule:
+    - cron: '0 0 * * *'
+  # Run on push to main
+  push:
+    branches:
+      - main
+  # Manual trigger
+  workflow_dispatch:
+
+jobs:
+  rebase-and-prepare-prs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install Dependencies
+        run: |
+          if [ -f ".codex/setup.sh" ]; then
+            bash .codex/setup.sh
+          else
+            npm ci
+          fi
+      
+      - name: Process Open PRs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Finding all open PRs with 'codex' label..."
+          
+          # Get all open PRs with the 'codex' label
+          PRS=$(gh pr list --label codex --state open --json number,title,headRefName,baseRefName,mergeable --limit 100)
+          
+          # Check if we found any PRs
+          if [ "$(echo "$PRS" | jq length)" -eq 0 ]; then
+            echo "No open PRs with 'codex' label found."
+            exit 0
+          fi
+          
+          echo "Found $(echo "$PRS" | jq length) open PRs with 'codex' label."
+          
+          # Process each PR
+          echo "$PRS" | jq -c '.[]' | while read -r PR; do
+            PR_NUMBER=$(echo "$PR" | jq -r '.number')
+            PR_TITLE=$(echo "$PR" | jq -r '.title')
+            HEAD_BRANCH=$(echo "$PR" | jq -r '.headRefName')
+            BASE_BRANCH=$(echo "$PR" | jq -r '.baseRefName')
+            MERGEABLE=$(echo "$PR" | jq -r '.mergeable')
+            
+            echo "Processing PR #$PR_NUMBER: $PR_TITLE (Mergeable: $MERGEABLE)"
+            
+            # If PR is mergeable, try to merge it
+            if [ "$MERGEABLE" = "MERGEABLE" ]; then
+              echo "PR #$PR_NUMBER is mergeable, attempting to merge..."
+              
+              # Check if the PR passes all checks
+              STATUS=$(gh pr view $PR_NUMBER --json statusCheckRollup --jq '.statusCheckRollup[].state' 2>/dev/null || echo "UNKNOWN")
+              FAILING_CHECKS=$(echo "$STATUS" | grep -c "FAILURE" || true)
+              
+              if [ "$FAILING_CHECKS" -eq 0 ]; then
+                echo "All status checks passing for PR #$PR_NUMBER, merging..."
+                
+                if gh pr merge $PR_NUMBER --squash --delete-branch; then
+                  echo "Successfully merged PR #$PR_NUMBER"
+                  continue
+                else
+                  echo "Failed to merge PR #$PR_NUMBER despite being reported as mergeable"
+                fi
+              else
+                echo "PR #$PR_NUMBER has failing checks, cannot merge automatically"
+                gh pr comment $PR_NUMBER --body "This PR has failing checks that need to be fixed before it can be merged."
+              fi
+            else
+              echo "PR #$PR_NUMBER is not mergeable, attempting to rebase..."
+              
+              # Try to rebase the PR onto the latest main
+              git fetch origin $HEAD_BRANCH
+              git checkout $HEAD_BRANCH || (git fetch origin $HEAD_BRANCH:$HEAD_BRANCH && git checkout $HEAD_BRANCH)
+              
+              # Update from origin to ensure we have the latest
+              git pull origin $HEAD_BRANCH
+              
+              # Rebase onto the latest main
+              if git rebase origin/$BASE_BRANCH; then
+                echo "Successfully rebased PR #$PR_NUMBER"
+                git push --force-with-lease origin $HEAD_BRANCH
+                
+                # Wait for checks to run after rebase
+                echo "Pushed rebased changes for PR #$PR_NUMBER, checks will run automatically"
+                gh pr comment $PR_NUMBER --body "I've rebased this PR onto the latest $BASE_BRANCH branch to resolve conflicts. Please check if the changes look good."
+              else
+                # Rebase failed, likely due to conflicts
+                git rebase --abort
+                echo "Couldn't automatically rebase PR #$PR_NUMBER due to conflicts"
+                gh pr comment $PR_NUMBER --body "This PR has conflicts with the latest $BASE_BRANCH branch that couldn't be resolved automatically. Please rebase manually."
+              fi
+            fi
+          done
+      
+      - name: Clean up invalid workflow files
+        run: |
+          # Check for invalid workflow files
+          if [ -f ".github/workflows/my-workflow.ym" ]; then
+            echo "Removing invalid workflow file: my-workflow.ym"
+            rm .github/workflows/my-workflow.ym
+            git add .github/workflows/my-workflow.ym
+            git commit -m "Remove invalid workflow file" || true
+            git push origin main || true
+          fi
