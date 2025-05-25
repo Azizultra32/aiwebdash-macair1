@@ -3,6 +3,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // Hold originals of globals that will be mocked during tests
 let originalFetch: typeof global.fetch;
 let originalSetInterval: typeof global.setInterval;
+let originalSelf: any;
+let originalCaches: any;
+let originalSelfWbManifest: any;
 
 // Minimal representation of the service worker `activate` event used in tests
 interface ActivateEvent {
@@ -16,6 +19,9 @@ beforeEach(async () => {
   // Save current global implementations so they can be restored in afterEach
   originalFetch = global.fetch;
   originalSetInterval = global.setInterval;
+  originalSelf = (global as any).self;
+  originalCaches = (global as any).caches;
+  originalSelfWbManifest = (global as any).self?.__WB_MANIFEST;
   vi.resetModules();
   mockClients = [{ postMessage: vi.fn() }, { postMessage: vi.fn() }];
 
@@ -47,8 +53,23 @@ beforeEach(async () => {
 afterEach(() => {
   global.fetch = originalFetch;
   global.setInterval = originalSetInterval;
-  delete (global as any).self;
-  delete (global as any).caches;
+  if (originalSelf === undefined) {
+    delete (global as any).self;
+  } else {
+    (global as any).self = originalSelf;
+  }
+  if (originalCaches === undefined) {
+    delete (global as any).caches;
+  } else {
+    (global as any).caches = originalCaches;
+  }
+  if ((global as any).self) {
+    if (originalSelfWbManifest === undefined) {
+      delete (global as any).self.__WB_MANIFEST;
+    } else {
+      (global as any).self.__WB_MANIFEST = originalSelfWbManifest;
+    }
+  }
   vi.restoreAllMocks();
 });
 
