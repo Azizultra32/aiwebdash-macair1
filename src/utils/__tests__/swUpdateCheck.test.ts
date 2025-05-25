@@ -5,7 +5,7 @@ let originalFetch: typeof global.fetch;
 let originalSetInterval: typeof global.setInterval;
 
 // Minimal representation of the service worker `activate` event used in tests
-interface ActivateEvent {
+interface ActivateEvent extends Event {
   waitUntil(promise: Promise<void>): void;
 }
 
@@ -58,7 +58,7 @@ describe('service worker update check', () => {
     const waitUntil = vi.fn((promise: Promise<any>) => promise);
 
     // Call the activation handler with a mock event containing the waitUntil function
-    await activateHandler({ waitUntil } as ActivateEvent);
+    await activateHandler({ waitUntil } as unknown as ActivateEvent);
 
     // Ensure the promise passed to waitUntil completes
     await waitUntil.mock.calls[0][0];

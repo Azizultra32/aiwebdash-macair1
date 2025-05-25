@@ -3,10 +3,16 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // Will hold the original fetch so we can restore it after each test
 let originalFetch: typeof global.fetch;
 
-// Explicitly type the expected shape of the message event handled by the
-// service worker. This mirrors the structure used in `public/sw.js` when
+// Define the expected data payload for service worker messages.
+// This mirrors the structure used in `public/sw.js` when
 // checking the current application version.
-let messageHandler: (event: MessageEvent<{ type: string; version: string }>) => Promise<void>;
+interface VersionMessage {
+  type: string;
+  version: string;
+}
+
+// Handler for incoming messages from the service worker.
+let messageHandler: (event: MessageEvent<VersionMessage>) => Promise<void>;
 let mockPostMessage: any;
 
 // Setup a faux service worker environment before importing the script
