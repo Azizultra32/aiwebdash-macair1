@@ -4,12 +4,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 let originalFetch: typeof global.fetch;
 let originalSetInterval: typeof global.setInterval;
 
-// Minimal representation of the service worker `activate` event used in tests
-interface ActivateEvent {
-  waitUntil(promise: Promise<void>): void;
-}
-
-let activateHandler: (event: ActivateEvent) => void;
+// Type for the service worker `activate` event handler
+let activateHandler: (event: ExtendableEvent) => void;
 let mockClients: { postMessage: ReturnType<typeof vi.fn> }[];
 
 beforeEach(async () => {
@@ -57,8 +53,17 @@ describe('service worker update check', () => {
     // Create a waitUntil function that returns the promise it's given
     const waitUntil = vi.fn((promise: Promise<any>) => promise);
 
-    // Call the activation handler with a mock event containing the waitUntil function
-    await activateHandler({ waitUntil } as ActivateEvent);
+    // Create an ExtendableEvent instance and attach waitUntil
+    const EventCtor =
+      (global as any).ExtendableEvent ??
+      class ExtendableEvent extends Event {
+        waitUntil(_p: Promise<any>): void {}
+      };
+    const event = new EventCtor('activate') as ExtendableEvent;
+    (event as any).waitUntil = waitUntil;
+
+    // Call the activation handler with the constructed event
+    await activateHandler(event);
 
     // Ensure the promise passed to waitUntil completes
     await waitUntil.mock.calls[0][0];
