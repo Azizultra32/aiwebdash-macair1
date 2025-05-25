@@ -55,8 +55,14 @@ If you are developing a production application, we recommend updating the config
 
 ### Running ESLint
 
-Before running the linter, ensure the development dependencies have been
-installed. If `node_modules/` is missing, execute:
+Before running the linter, ensure development dependencies are installed. Run
+the preflight check to verify:
+
+```bash
+npm run preflight
+```
+
+If the script reports that `node_modules` is missing, install dependencies with:
 
 ```bash
 bash .codex/setup.sh
@@ -70,8 +76,14 @@ npm run lint
 
 ### Running tests
 
-Before running tests, make sure dependencies are installed with `bash .codex/setup.sh`.
-Then execute the test suite using:
+Before running tests, verify dependencies with the preflight script and install
+them if necessary:
+
+```bash
+npm run preflight
+```
+
+If `node_modules` is missing, run `bash .codex/setup.sh` before executing the test suite:
 
 ```bash
 npm run test
