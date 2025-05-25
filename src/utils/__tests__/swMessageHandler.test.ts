@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// Will hold the original fetch so we can restore it after each test
+// Store originals for globals we mock so they can be restored after each test
 let originalFetch: typeof global.fetch;
+let originalSelf: any;
+let originalCaches: any;
+let originalGlobalWbManifest: any;
+let originalSelfWbManifest: any;
 
 // Explicitly type the expected shape of the message event handled by the
 // service worker. This mirrors the structure used in `public/sw.js` when
@@ -11,8 +15,12 @@ let mockPostMessage: any;
 
 // Setup a faux service worker environment before importing the script
 beforeEach(async () => {
-  // Capture the current global fetch implementation so we can restore it later
+  // Capture current global implementations so we can restore them later
   originalFetch = global.fetch;
+  originalSelf = (global as any).self;
+  originalCaches = (global as any).caches;
+  originalGlobalWbManifest = (global as any).__WB_MANIFEST;
+  originalSelfWbManifest = (global as any).self?.__WB_MANIFEST;
   vi.resetModules();
   mockPostMessage = vi.fn();
 
@@ -46,10 +54,28 @@ beforeEach(async () => {
 
 afterEach(() => {
   global.fetch = originalFetch;
-  // Cleanup globals
-  delete (global as any).self;
-  delete (global as any).caches;
-  delete (global as any).__WB_MANIFEST;
+  if (originalSelf === undefined) {
+    delete (global as any).self;
+  } else {
+    (global as any).self = originalSelf;
+  }
+  if (originalCaches === undefined) {
+    delete (global as any).caches;
+  } else {
+    (global as any).caches = originalCaches;
+  }
+  if (originalGlobalWbManifest === undefined) {
+    delete (global as any).__WB_MANIFEST;
+  } else {
+    (global as any).__WB_MANIFEST = originalGlobalWbManifest;
+  }
+  if ((global as any).self) {
+    if (originalSelfWbManifest === undefined) {
+      delete (global as any).self.__WB_MANIFEST;
+    } else {
+      (global as any).self.__WB_MANIFEST = originalSelfWbManifest;
+    }
+  }
   vi.restoreAllMocks();
 });
 
