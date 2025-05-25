@@ -11,9 +11,9 @@ let mockPostMessage: any;
 
 // Setup a faux service worker environment before importing the script
 beforeEach(async () => {
-  vi.resetModules();
   // Capture the current global fetch implementation so we can restore it later
   originalFetch = global.fetch;
+  vi.resetModules();
   mockPostMessage = vi.fn();
 
   (global as any).self = {
@@ -44,12 +44,12 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
-  vi.restoreAllMocks();
   global.fetch = originalFetch;
   // Cleanup globals
   delete (global as any).self;
   delete (global as any).caches;
   delete (global as any).__WB_MANIFEST;
+  vi.restoreAllMocks();
 });
 
 describe('service worker message handler', () => {
