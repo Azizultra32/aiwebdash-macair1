@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import AudioContext from '@/lib/react-mic/libs/AudioContext';
+import { logger } from '@/utils/logger';
 
 interface MicReactiveScannerProps {
   isActivated: boolean;
@@ -32,7 +33,7 @@ const MicReactiveScanner = ({ isActivated }: MicReactiveScannerProps) => {
         setAudioData(data);
       }
       else {
-        console.log('no analyzer');
+        logger.debug('no analyzer');
       }
       animationRef.current = window.requestAnimationFrame(updateAudioData);
     };

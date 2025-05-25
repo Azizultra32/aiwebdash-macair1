@@ -8,6 +8,7 @@ import ReactFlow, {
   applyNodeChanges,
   MarkerType
 } from 'reactflow';
+import { logger } from '@/utils/logger';
 import 'reactflow/dist/style.css';
 import styled from '@emotion/styled';
 import supabase from '@/supabase';
@@ -71,7 +72,7 @@ const PromptFlow = () => {
 
   const fetchPrompts = async () => {
     try {
-      console.log('Fetching prompts...');
+      logger.debug('Fetching prompts...');
       const { data, error } = await supabase
         .from('system_prompt_components')
         .select('*')
@@ -83,7 +84,7 @@ const PromptFlow = () => {
         return;
       }
 
-      console.log('Fetched prompts:', data);
+      logger.debug('Fetched prompts', data);
       setPrompts(data || []);
       createNodesAndEdges(data || []);
     } catch (err) {
@@ -93,7 +94,7 @@ const PromptFlow = () => {
   };
 
   const createNodesAndEdges = (promptData: PromptComponent[]) => {
-    console.log('Creating nodes and edges for:', promptData);
+    logger.debug('Creating nodes and edges for', promptData);
     const newNodes: Node[] = [];
     const newEdges: Edge[] = [];
     
@@ -147,8 +148,8 @@ const PromptFlow = () => {
       }
     });
 
-    console.log('Setting nodes:', newNodes);
-    console.log('Setting edges:', newEdges);
+    logger.debug('Setting nodes', newNodes);
+    logger.debug('Setting edges', newEdges);
     setNodes(newNodes);
     setEdges(newEdges);
   };

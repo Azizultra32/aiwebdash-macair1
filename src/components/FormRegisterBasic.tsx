@@ -11,6 +11,7 @@ import { useToast } from './ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import supabase from '@/supabase';
+import { logger } from '@/utils/logger';
 
 const formSchema = z.object({
   name: z.string().min(3),
@@ -68,7 +69,7 @@ const FormRegisterBasic = () => {
 
   const handleRegistrationSubmit = async (values: z.infer<typeof formSchema>) => {
     const phoneNumber = `${values.countryCode}${values.phone}`;
-    console.log('Starting registration with:', {
+    logger.debug('Starting registration', {
       phone: phoneNumber,
       email: values.email,
     });
@@ -81,7 +82,7 @@ const FormRegisterBasic = () => {
         password: values.password,
         email: values.email,
       };
-      console.log('Storing registration data:', registrationData);
+      logger.debug('Storing registration data', registrationData);
 
       localStorage.setItem('registrationData', JSON.stringify(registrationData));
 
@@ -149,7 +150,7 @@ const FormRegisterBasic = () => {
       if (!registrationData) throw new Error('Registration data not found');
 
       const { phone, email, password } = JSON.parse(registrationData);
-      console.log('Retrieved registration data:', { phone, email, password }); // Debug log
+      logger.debug('Retrieved registration data', { phone, email });
 
       const result = await verifyOtp(phone, values.otp);
 
@@ -159,7 +160,7 @@ const FormRegisterBasic = () => {
           phone: phone, // Use phone instead of email
           password: password,
         };
-        console.log('Storing login credentials:', loginCredentials);
+        logger.debug('Storing login credentials');
 
         localStorage.setItem('loginCredentials', JSON.stringify(loginCredentials));
 
@@ -176,7 +177,7 @@ const FormRegisterBasic = () => {
 
         // Log right before navigation to verify data is still in localStorage
         const savedLoginCredentials = localStorage.getItem('loginCredentials');
-        console.log('Final login credentials in storage:', savedLoginCredentials);
+        logger.debug('Final login credentials stored', { present: !!savedLoginCredentials });
 
         navigate('/login');
       }

@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import supabase from '@/supabase';
 import MicRecorder from '@/lib/react-mic/libs/mic-recorder';
 import AudioContext from '@/lib/react-mic/libs/AudioContext';
+import { logger } from '@/utils/logger';
 import { ChunkNumberWrapper } from '@/types/types';
 import { uuidv4 } from '@/lib/utils';
 
@@ -60,7 +61,7 @@ export default function useAudioRecorder(onTranscription: RecordCallback) {
             AudioContext.setSoundDetected(false);
             transcribe(blob, soundDetected, data.session?.user?.id);
           })
-          .catch((e: any) => console.log(e));
+          .catch((e: any) => logger.error('Recorder error', e));
       }, 3000);
     } else {
       if (intervalRef.current) {
@@ -75,7 +76,7 @@ export default function useAudioRecorder(onTranscription: RecordCallback) {
           AudioContext.setSoundDetected(false);
           transcribe(blob, soundDetected, data.session?.user?.id);
         })
-        .catch((e: any) => console.log(e));
+        .catch((e: any) => logger.error('Recorder stop error', e));
     }
     setIsRecording(!isRecording);
   }, [isRecording, transcribe]);
