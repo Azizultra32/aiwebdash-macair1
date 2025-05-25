@@ -21,6 +21,8 @@ beforeEach(async () => {
   originalCaches = (global as any).caches;
   originalGlobalWbManifest = (global as any).__WB_MANIFEST;
   originalSelfWbManifest = (global as any).self?.__WB_MANIFEST;
+  
+  // Ensure a fresh module state before each test run
   vi.resetModules();
   mockPostMessage = vi.fn();
 
