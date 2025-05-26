@@ -155,3 +155,8 @@ Codex will execute this script automatically during environment initialization.
 When the service worker activates it broadcasts `GET_CURRENT_VERSION` to every connected client. Each client replies with its current version so the worker can compare it to the latest value from `version.json`.
 
 After activation the worker repeats this broadcast every five minutes to detect updates without requiring a page reload. The interval ID is stored internally and cleared on `controllerchange` or `statechange` events when the worker is replaced, preventing orphaned timers.
+
+## Prompt Playground
+
+The `/prompt-playground` route offers a focused environment to test and refine prompts before using them in the dashboard.
+Open the settings menu (gear icon) in the header and select **Prompt Playground** to navigate to this page.
