@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// Preserve originals for globals we mock
-const originalFetch = global.fetch;
+// Store originals for globals we mock. They are assigned in beforeEach so that
+// tests always start from a clean slate even if previous tests modified them.
+let originalFetch: typeof global.fetch;
 
 // Explicitly type the expected shape of the message event handled by the
 // service worker. This mirrors the structure used in `public/sw.js` when
@@ -13,6 +14,10 @@ let mockPostMessage: any;
 beforeEach(async () => {
   vi.resetModules();
   mockPostMessage = vi.fn();
+
+  // Capture the current global.fetch before it is mocked so it can be restored
+  // in afterEach. This prevents test pollution if other suites modify fetch.
+  originalFetch = global.fetch;
 
   (global as any).self = {
     addEventListener: (type: string, handler: any) => {
