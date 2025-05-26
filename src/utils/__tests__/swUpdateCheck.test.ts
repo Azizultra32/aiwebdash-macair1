@@ -19,14 +19,8 @@ class TestExtendableEvent extends Event implements ExtendableEvent {
     super('activate');
   }
 }
-<<<<<<< HEAD
-
-let activateHandler: (event: ExtendableEvent) => void;
-let mockPostMessage: any;
-=======
 let activateHandler: (event: TestExtendableEvent) => void;
-let mockClients: { postMessage: ReturnType<typeof vi.fn> }[];
->>>>>>> main
+let mockPostMessage: any;
 
 beforeEach(async () => {
   // Capture the current implementations so they can be restored in afterEach.
