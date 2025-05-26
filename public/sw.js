@@ -50,10 +50,10 @@ self.addEventListener('activate', (event) => {
   const cleanup = () => {
     if (self.__versionCheckInterval) {
       clearInterval(self.__versionCheckInterval);
-      delete self.__versionCheckInterval;
     }
   };
 
+  // Listen for controllerchange/statechange to detect replacement
   self.addEventListener('controllerchange', cleanup);
   self.addEventListener('statechange', cleanup);
 });

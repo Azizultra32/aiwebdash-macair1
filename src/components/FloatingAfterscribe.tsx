@@ -7,6 +7,7 @@ import { CornerDownLeft, Terminal, Mic, Copy, Check, ChevronLeft, ChevronRight, 
 import { motion } from "framer-motion"
 import { useSpeechRecognition } from 'react-speech-recognition'
 import { useToast } from './ui/use-toast'
+import { logger } from '@/utils/logger'
 
 // This is a mock function. In a real application, you would replace this with an actual API call.
 const mockGrammarCheck = async (text: string): Promise<string> => {
@@ -55,7 +56,7 @@ export default function FloatingAfterscribe() {
         return newHistory
       })
       setHistoryIndex(-1)
-      console.log("Submitted:", inputValue)
+      logger.debug('Submitted input', { value: inputValue })
       setInputValue("")
       resetTranscript()
       setIsActive(false)

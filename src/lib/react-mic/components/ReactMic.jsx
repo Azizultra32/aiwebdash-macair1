@@ -12,6 +12,7 @@ import AudioPlayer            from '../libs/AudioPlayer'
 import Visualizer             from '../libs/Visualizer'
 import MicRecorder            from '../libs/mic-recorder'
 import AudioContext           from '../libs/AudioContext'
+import { logger } from '@/utils/logger'
 
 let chunkInterval = null
 
@@ -47,7 +48,7 @@ export default class ReactMic extends Component {
               AudioContext.setSoundDetected(false)
               onData(blob, soundDetected)
             }).catch((e) => {
-              console.log(e)
+              logger.error('getMp3 error', e)
             })
           }, 120*1000)
         }
@@ -62,7 +63,7 @@ export default class ReactMic extends Component {
           onStop(blob, soundDetected)
           this.clear()
         }).catch((e) => {
-          console.log(e)
+          logger.error('stop getMp3 error', e)
         })
       }
     }

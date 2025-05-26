@@ -4,19 +4,28 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // in one test do not leak into another.
 let originalFetch: typeof global.fetch;
 let originalSetInterval: typeof global.setInterval;
+let originalSelf: any;
+let originalCaches: any;
+let originalSelfWbManifest: any;
 
-// Minimal representation of the service worker `activate` event used in tests.
-interface ActivateEvent {
-  waitUntil(promise: Promise<void>): void;
+// Minimal ExtendableEvent implementation used for testing the activate handler
+class TestExtendableEvent extends Event implements ExtendableEvent {
+  constructor(public waitUntil: (promise: Promise<any>) => void) {
+    super('activate');
+  }
 }
 
-let activateHandler: (event: ActivateEvent) => void;
-let mockClients: any[];
+let activateHandler: (event: ExtendableEvent) => void;
+let mockClients: { postMessage: ReturnType<typeof vi.fn> }[];
 
 beforeEach(async () => {
   // Capture the current implementations so they can be restored in afterEach.
   originalFetch = global.fetch;
   originalSetInterval = global.setInterval;
+  originalSelf = (global as any).self;
+  originalCaches = (global as any).caches;
+  originalSelfWbManifest = (global as any).self?.__WB_MANIFEST;
+  vi.resetModules();
   mockClients = [{ postMessage: vi.fn() }, { postMessage: vi.fn() }];
 
   (global as any).self = {
@@ -45,21 +54,43 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
-  vi.restoreAllMocks();
   global.fetch = originalFetch;
   global.setInterval = originalSetInterval;
-  delete (global as any).self;
-  delete (global as any).caches;
+  if (originalSelf === undefined) {
+    delete (global as any).self;
+  } else {
+    (global as any).self = originalSelf;
+  }
+  if (originalCaches === undefined) {
+    delete (global as any).caches;
+  } else {
+    (global as any).caches = originalCaches;
+  }
+  if ((global as any).self) {
+    if (originalSelfWbManifest === undefined) {
+      delete (global as any).self.__WB_MANIFEST;
+    } else {
+      (global as any).self.__WB_MANIFEST = originalSelfWbManifest;
+    }
+  }
+  vi.restoreAllMocks();
 });
 
-describe('checkForUpdates', () => {
-  it('sends GET_CURRENT_VERSION to all matched clients', async () => {
-    await new Promise<void>((resolve) => {
-      activateHandler({
-        waitUntil: (p: Promise<void>) => p.then(resolve),
-      } as unknown as ActivateEvent);
-    });
+describe('service worker update check', () => {
+  it('requests current version on activation', async () => {
+    // Create a waitUntil function that returns the promise it's given
+    const waitUntil = vi.fn((promise: Promise<any>) => promise);
 
+    // Invoke the activation handler with a minimal ExtendableEvent instance
+    await activateHandler(new TestExtendableEvent(waitUntil));
+
+    // Ensure the promise passed to waitUntil completes
+    await waitUntil.mock.calls[0][0];
+    // Allow any microtasks to complete
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    // Verify clients were checked and the message was sent
+    expect((global as any).self.clients.matchAll).toHaveBeenCalled();
     for (const client of mockClients) {
       expect(client.postMessage).toHaveBeenCalledWith({
         type: 'GET_CURRENT_VERSION',

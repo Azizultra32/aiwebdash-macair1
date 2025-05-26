@@ -3,6 +3,7 @@ import supabase from '@/supabase';
 import NoSleep from 'nosleep.js';
 import { getAudioMimeType } from '@/lib/utils';
 import { ChunkNumberWrapper, TranscriptData } from '@/types/types';
+import { logger } from '@/utils/logger';
 import { useIndexedDbUpload } from './useIndexedDbUpload';
 
 interface UseRecorderStateProps {
@@ -71,7 +72,7 @@ export function useRecorderState({
         if (isOnline) {
           await finalizeUploads(patient.mid);
         } else {
-          console.log(`Recording completed offline for patient ${patient.mid}`);
+          logger.debug('Recording completed offline', { patientId: patient.mid });
         }
         if (onUploadComplete) {
           onUploadComplete(patient);
