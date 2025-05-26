@@ -19,8 +19,13 @@ export default function useSubscribe() {
           return;
         }
 
+        // Ensure the Stripe checkout URL is configured
+        if (!import.meta.env.VITE_STRIPE_CHECKOUT_URL) {
+          throw new Error('Missing STRIPE_CHECKOUT_URL');
+        }
+
         const response = await fetch(
-          'https://ooctgxeqdjvscpdcqvan.supabase.co/functions/v1/stripe-checkout',
+          import.meta.env.VITE_STRIPE_CHECKOUT_URL,
           {
             method: 'POST',
             headers: {
