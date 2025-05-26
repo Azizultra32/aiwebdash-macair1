@@ -143,15 +143,30 @@ const TranscriptList = ({
             </Button>
           )}
           {patient.mid === recordingPatientMidUUID ? (
-            <Mic className="h-4 w-4 text-blue-500" />
+            <>
+              <Mic className="h-4 w-4 text-blue-500" />
+              <span className="sr-only">Recording</span>
+            </>
           ) : patient.mid === uploadingPatientMidUUID ? (
-            <Upload className="h-4 w-4 text-blue-500" />
+            <>
+              <Upload className="h-4 w-4 text-blue-500" />
+              <span className="sr-only">Uploading</span>
+            </>
           ) : isFinal(patient) ? (
-            <div className="h-4 w-4 rounded-full bg-green-500" />
+            <>
+              <div className="h-4 w-4 rounded-full bg-green-500" />
+              <span className="sr-only">Finalized</span>
+            </>
           ) : patient.error ? (
-            <ShieldAlert className="h-4 w-4 text-orange-500" />
+            <>
+              <ShieldAlert className="h-4 w-4 text-orange-500" />
+              <span className="sr-only">Error</span>
+            </>
           ) : (
-            <ArrowRight className="h-4 w-4" />
+            <>
+              <ArrowRight className="h-4 w-4" />
+              <span className="sr-only">In progress</span>
+            </>
           )}
         </div>
       </div>
