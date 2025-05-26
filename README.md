@@ -150,3 +150,16 @@ npm run prepare-pr [target-branch]
 This will fetch the latest changes from `origin`, rebase your current branch, and
 execute the preflight, lint, and test steps.
 
+### Managing Multiple Pull Requests
+
+Maintainers can manage several open pull requests efficiently with GitHub's tools
+or the `gh` CLI:
+
+- Review each pull request from GitHub's PR page or use the `gh` commands
+  `gh pr status` and `gh pr checkout <PR#>`.
+- Rebase or merge the PR branch locally with `./prepare-pr.sh main` to detect
+  merge conflicts.
+- If conflicts arise, leave a comment asking the contributor to rebase their
+  branch on `main`.
+- Close stale pull requests that have not been updated in a long time.
+
