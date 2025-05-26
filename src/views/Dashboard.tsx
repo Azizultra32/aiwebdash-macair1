@@ -17,11 +17,16 @@ import { useToast } from '@/components/ui/use-toast';
 import 'regenerator-runtime/runtime'
 import { useSpeechRecognition } from 'react-speech-recognition';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { debounce } from '@/utils/debounce';
+import { unregisterServiceWorker } from '@/utils/serviceWorker';
 import {
-  useOfflineQueue,
-  loadTranscriptsFromLocalStorage,
-  saveTranscriptsToLocalStorage,
-} from '@/hooks/useOfflineQueue';
+  clearOfflineQueue,
+  loadFromLocalStorage,
+  loadOfflineQueue,
+  saveToLocalStorage,
+  saveToOfflineQueue,
+} from '@/utils/storageHelpers';
+import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import { useServiceWorkerReload } from '@/hooks/useServiceWorkerReload';
 import { useTranscriptSelection } from '@/hooks/useTranscriptSelection';
 import SpeechCommandDialog from '@/components/SpeechCommandDialog';
@@ -142,7 +147,7 @@ const Dashboard = () => {
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
-    const localStorageTranscripts = loadTranscriptsFromLocalStorage();
+    const localStorageTranscripts = loadFromLocalStorage();
     setClientTranscripts(localStorageTranscripts);
     setIsInitializing(false);
 
@@ -172,7 +177,7 @@ const Dashboard = () => {
       }
       const updatedTranscripts = clientTranscripts?.filter(t => t.mid !== mid) || [];
       setClientTranscripts(updatedTranscripts);
-      saveTranscriptsToLocalStorage(updatedTranscripts);
+      saveToLocalStorage(updatedTranscripts);
       setSelectedTranscript(undefined);
       if (clientSideMid === mid) {
         clientSideMid = undefined;
@@ -189,7 +194,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     // Initialize with local storage data immediately
-    const localStorageTranscripts = loadTranscriptsFromLocalStorage();
+    const localStorageTranscripts = loadFromLocalStorage();
     setClientTranscripts(localStorageTranscripts);
 
     if (!isDesktop) {
@@ -244,7 +249,7 @@ const Dashboard = () => {
     );
 
     setClientTranscripts(sortedClientTranscripts);
-    saveTranscriptsToLocalStorage(sortedClientTranscripts);
+    saveToLocalStorage(sortedClientTranscripts);
 
     if (!sortedClientTranscripts.length || !isDesktop || (selectedTranscript && !didCreateClientPatient && !didClearClientPatient)) {
       return;
@@ -351,7 +356,7 @@ const Dashboard = () => {
 
   // Load initial data from localStorage
   useEffect(() => {
-    const localStorageTranscripts = loadTranscriptsFromLocalStorage();
+    const localStorageTranscripts = loadFromLocalStorage();
     setClientTranscripts(localStorageTranscripts);
   }, []);
 

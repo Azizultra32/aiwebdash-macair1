@@ -1,11 +1,27 @@
-import type { TranscriptData } from '@/types/types';
+import type { Transcript as TranscriptT, TranscriptData } from '@/types/types';
+
+const LOCALSTORAGE_KEY = 'offlineTranscripts';
+const OFFLINE_QUEUE_KEY = 'offlineQueue';
 
 export type OfflineAction =
   | { type: 'create'; data: TranscriptData }
   | { type: 'update'; data: { mid: string; token_count: number } }
   | { type: 'delete'; data: { mid: string } };
 
-const OFFLINE_QUEUE_KEY = 'offlineQueue';
+/**
+ * Save transcripts to local storage.
+ */
+export const saveToLocalStorage = (transcripts: TranscriptT[]): void => {
+  localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(transcripts));
+};
+
+/**
+ * Load transcripts from local storage.
+ */
+export const loadFromLocalStorage = (): TranscriptT[] => {
+  const storedData = localStorage.getItem(LOCALSTORAGE_KEY);
+  return storedData ? JSON.parse(storedData) : [];
+};
 
 /**
  * Save an action to the offline queue stored in localStorage.
