@@ -7,14 +7,18 @@ let originalSelf: any;
 let originalCaches: any;
 let originalSelfWbManifest: any;
 
+// Define ExtendableEvent interface for TypeScript
+interface ExtendableEvent extends Event {
+  waitUntil: (promise: Promise<any>) => void;
+}
+
 // Minimal ExtendableEvent implementation used for testing the activate handler
 class TestExtendableEvent extends Event implements ExtendableEvent {
   constructor(public waitUntil: (promise: Promise<any>) => void) {
     super('activate');
   }
 }
-
-let activateHandler: (event: ExtendableEvent) => void;
+let activateHandler: (event: TestExtendableEvent) => void;
 let mockClients: { postMessage: ReturnType<typeof vi.fn> }[];
 
 beforeEach(async () => {
