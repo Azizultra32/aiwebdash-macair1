@@ -62,6 +62,7 @@ The application relies on several environment variables for Supabase and Stripe 
 - `VITE_SUPABASE_URL` - same as `VITE_APP_SUPABASE_URL` for build-time use.
 - `VITE_SUPABASE_ANON_KEY` - same as `VITE_APP_SUPABASE_ANON_KEY` for build-time use.
 - `VITE_STRIPE_PUBLISHABLE_KEY` - public Stripe API key used by the client.
+- `VITE_STRIPE_CHECKOUT_URL` - URL of the Stripe checkout serverless function.
 - `STRIPE_SECRET_KEY` - secret Stripe key required by the serverless function.
 
 ### Running ESLint
