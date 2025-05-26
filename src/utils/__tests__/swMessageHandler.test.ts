@@ -22,12 +22,8 @@ beforeEach(async () => {
   originalCaches = (global as any).caches;
   originalGlobalWbManifest = (global as any).__WB_MANIFEST;
   originalSelfWbManifest = (global as any).self?.__WB_MANIFEST;
-<<<<<<< HEAD
-  
   // Reset the module registry to ensure a fresh import of the service worker
   // script for each test run. This avoids state leakage across tests.
-=======
->>>>>>> main
   vi.resetModules();
   mockPostMessage = vi.fn();
 
@@ -111,15 +107,9 @@ describe('service worker message handler', () => {
   });
 
   it('does nothing when versions match', async () => {
-<<<<<<< HEAD
-    (global as any).fetch = vi
-      .fn()
-      .mockResolvedValue({ json: () => Promise.resolve({ version: '1' }) });
-=======
     global.fetch = vi
       .fn()
       .mockResolvedValue({ json: () => Promise.resolve({ version: '1' }) }) as any;
->>>>>>> main
 
     const event = new MessageEvent<{ type: string; version: string }>('message', {
       data: { type: 'CURRENT_VERSION', version: '1' },
@@ -127,10 +117,7 @@ describe('service worker message handler', () => {
     await messageHandler(event);
     await new Promise(resolve => setTimeout(resolve, 0));
 
-<<<<<<< HEAD
-=======
     expect(global.fetch).toHaveBeenCalled();
->>>>>>> main
     expect((global as any).caches.delete).not.toHaveBeenCalled();
     expect(mockPostMessage).not.toHaveBeenCalled();
   });

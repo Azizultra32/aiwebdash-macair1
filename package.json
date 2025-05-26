@@ -9,7 +9,7 @@
     "build": "tsc && vite build && node update-appcache.cjs",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest",
+    "test": "vitest run",
     "generate-types": "npx supabase gen types typescript --project-id 'VITE_SUPABASE_URL' --schema public > src/types/supabase.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
