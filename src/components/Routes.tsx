@@ -8,6 +8,7 @@ import ChangePassword from '@/views/ChangePassword';
 import Reset from '@/views/Reset';
 import MoaDashboard from '@/views/MoaDashboard';
 import PromptEditor from '@/views/PromptEditor';
+import PromptPlayground from '@/views/PromptPlayground';
 import Billing from '@/views/Billing';
 
 const router = createBrowserRouter([
@@ -41,6 +42,10 @@ const router = createBrowserRouter([
       {
         path: '/prompt-editor',
         Component: PromptEditor,
+      },
+      {
+        path: '/prompt-playground',
+        Component: PromptPlayground,
       },
       {
         path: '/billing',

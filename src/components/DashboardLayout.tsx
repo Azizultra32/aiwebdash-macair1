@@ -221,6 +221,14 @@ const DashboardHeader = ({
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
+                  to="/prompt-playground"
+                  className="cursor-pointer"
+                >
+                  Prompt Playground
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link
                   to="/"
                   className="cursor-pointer"
                 >
