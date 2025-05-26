@@ -6,11 +6,7 @@ import { ScrollArea } from './ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { Switch } from './ui/switch';
 import { AI_Summary, Transcript } from '@/types/types';
-import supabase from '@/supabase';
-import MicRecorder from '@/lib/react-mic/libs/mic-recorder';
-import AudioContext from '@/lib/react-mic/libs/AudioContext';
-import { ChunkNumberWrapper } from '@/types/types';
-import { uuidv4 } from '@/lib/utils';
+import useAudioRecorder from '@/hooks/useAudioRecorder';
 import moment from 'moment';
 
 type Summary = AI_Summary['arguments']['summaries'][0];
@@ -20,36 +16,25 @@ type Props = {
   transcript: Transcript;
 };
 
-type Transcription = {
-  text: string;
-};
-
-type RecordCallback = (_:Transcription) => void;
-
-let chunkInterval : any = null;
-const microphoneRecorder = new MicRecorder({ bitRate: 128 });
 const segments : Array<string> = [];
-
-const doUpload = function(path : string, blb : Blob) {
-  return supabase.storage
-    .from('armada-flash')
-    .upload(path, blb, {
-      cacheControl: '3600',
-      upsert: false,
-    });
-};
 
 const TranscriptSummary = forwardRef(({ summary, transcript }: Props, ref) => {
   const [isMaximized, setIsMaximized] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [isRecordClicked, setIsRecordClicked] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [chunkNumberWrapper, setChunkNumberWrapper] = useState<ChunkNumberWrapper>({ chunkNumber: 0 });
   const editableRef = useRef<HTMLParagraphElement>(null);
   const [editedText, setEditedText] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [summaryCopy, setSummaryCopy] = useState(summary);
-  let flashUUID : string|null = null;
+  const { isRecording, handleRecord: recordAudio } = useAudioRecorder((transcription) => {
+    segments.push(transcription.text);
+    if (summary.number === -1) {
+      setSummaryCopy({
+        ...summaryCopy,
+        summary: segments.join(' '),
+      });
+    }
+  });
 
   // Determine if this summary should show edit toggle
   const showEditToggle = ![2, 4, 6, 9].includes(summary.number);
@@ -71,69 +56,11 @@ const TranscriptSummary = forwardRef(({ summary, transcript }: Props, ref) => {
     setTimeout(() => setIsCopied(false), 500);
   }, [copy]);
 
-  const transcribe = useCallback(async (blob: Blob, soundDetected: boolean, user_id: any, callback : RecordCallback) => {
-    if (!soundDetected) return;
-    chunkNumberWrapper.chunkNumber++;
-    setChunkNumberWrapper({...chunkNumberWrapper});
-    const path = `${flashUUID}-${chunkNumberWrapper.chunkNumber}.mp3`;
-    const key = `${user_id}/${path}`;
-    await doUpload(key, blob);
-    const { data } = await supabase.functions.invoke('flash', {
-      body: JSON.stringify({ path }),
-    });
-    callback(data);
-  }, [chunkNumberWrapper]);
-
-  const record = useCallback(async (uuid : string, callback : RecordCallback) => {
-    const { data } = await supabase.auth.getSession();
-    if (!isRecording) {
-      flashUUID = uuid;
-      if (microphoneRecorder) {
-        microphoneRecorder.start().catch((e : any) => console.error(e));
-        if (chunkInterval) {
-          clearInterval(chunkInterval);
-          chunkInterval = null;
-        }
-        chunkInterval = setInterval(() => {
-          microphoneRecorder.getMp3().then(([_, blob] : [any, Blob]) => {
-            const soundDetected = AudioContext.getSoundDetected();
-            AudioContext.setSoundDetected(false);
-            transcribe(blob, soundDetected, data.session?.user?.id, callback);
-          }).catch((e : any) => console.log(e));
-        }, 3000);
-      }
-    } else if (microphoneRecorder) {
-      if (chunkInterval) {
-        clearInterval(chunkInterval);
-        chunkInterval = null;
-      }
-      microphoneRecorder.stop().getMp3().then(([_, blob] : [any, Blob]) => {
-        const soundDetected = AudioContext.getSoundDetected();
-        AudioContext.setSoundDetected(false);
-        transcribe(blob, soundDetected, data.session?.user?.id, callback);
-      }).catch((e : any) => console.log(e));
-    }
-    setIsRecording(!isRecording);
-  }, [isRecording, transcribe]);
-
-  const useTranscriptionText = useCallback(() => {
-    if (summary.number !== -1 || setSummaryCopy == null) return;
-    setSummaryCopy({
-      ...summaryCopy,
-      summary: segments.join(' '),
-    });
-  }, [summaryCopy]);
-
-  const appendTranscriptionText = useCallback((transcription: Transcription) => {
-    segments.push(transcription.text);
-    useTranscriptionText();
-  }, [useTranscriptionText]);
-
   const handleRecord = useCallback(() => {
-    record(uuidv4(), appendTranscriptionText);
+    recordAudio();
     setIsRecordClicked(true);
     setTimeout(() => setIsRecordClicked(false), 1000);
-  }, [record, appendTranscriptionText]);
+  }, [recordAudio]);
 
   const saveEdit = useCallback(() => {
     if (editMode && editableRef.current) {
@@ -162,11 +89,6 @@ const TranscriptSummary = forwardRef(({ summary, transcript }: Props, ref) => {
       document.body.style.overflow = '';
     }
   }, [isMaximized]);
-
-  useEffect(() => {
-    useTranscriptionText();
-  }, [useTranscriptionText]);
-
   // Effect to handle patient changes and edit mode
   useEffect(() => {
     const storedEdit = localStorage.getItem(`summary-${transcript.mid}-${summary.number}`);
@@ -206,8 +128,11 @@ const TranscriptSummary = forwardRef(({ summary, transcript }: Props, ref) => {
     const dateOfVisit = momentOfVisit.format('DD-MMM-YY');
     const timeOfVisit = momentOfVisit.format('HH:mm');
 
-    const statusColor = isFinal ? '#0B9E0E' : '#FFA500';
-    const headerColor = isFinal ? statusColor : '#0141C8';
+    // Use project-defined color variables instead of hard-coded values
+    const statusColor = isFinal
+      ? 'hsl(var(--success))'
+      : 'hsl(var(--destructive))';
+    const headerColor = isFinal ? statusColor : 'hsl(var(--primary))';
 
     if (summaryCopy.number === 1 && (editedText === null || !editMode)) {
       return <>
@@ -216,7 +141,7 @@ const TranscriptSummary = forwardRef(({ summary, transcript }: Props, ref) => {
         <span>Date of visit: {dateOfVisit}</span><br />
         <span>Time: {timeOfVisit}</span><br /><br />
         <span>{text}</span><br /><br />
-        <b style={{color: "#8c8c8c"}}>
+        <b style={{color: 'hsl(var(--muted-foreground))'}}>
           CoPilot: Armada AssistMD & AssistPRO<br />
           With Ambient Scribe and Evolved Solutions (AS|ES) (TM)<br />
           {"{MPE-ARM-P24.1}"}
@@ -256,7 +181,7 @@ const TranscriptSummary = forwardRef(({ summary, transcript }: Props, ref) => {
               suppressContentEditableWarning={true}
               onBlur={saveEdit}
               onClick={() => handleCopy(summaryCopy.summary)}
-              style={isCopied ? { backgroundColor: '#CF9FFF' } : {}}
+              style={isCopied ? { backgroundColor: 'hsl(var(--accent))' } : {}}
             >
               {processedText}
             </p>
@@ -289,7 +214,11 @@ const TranscriptSummary = forwardRef(({ summary, transcript }: Props, ref) => {
                     size="sm"
                     onClick={handleRecord}
                   >
-                    <Mic size={16} color={isRecording ? 'red' : 'black'} />
+                    <Mic
+                      size={16}
+                      className={isRecording ? 'text-destructive' : 'text-foreground'}
+                    />
+                    <span className="sr-only">{isRecording ? 'Stop recording' : 'Record summary'}</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
@@ -308,7 +237,7 @@ const TranscriptSummary = forwardRef(({ summary, transcript }: Props, ref) => {
           suppressContentEditableWarning={true}
           onBlur={saveEdit}
           onClick={() => handleCopy(summaryCopy.summary)}
-          style={isCopied ? { backgroundColor: '#CF9FFF' } : {}}
+          style={isCopied ? { backgroundColor: 'hsl(var(--accent))' } : {}}
         >
           {processedText}
         </p>

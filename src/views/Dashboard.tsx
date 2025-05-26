@@ -3,9 +3,10 @@ import { useMediaQuery } from 'usehooks-ts';
 import DashboardLayout from '@/components/DashboardLayout';
 import FormCreateTranscript from '@/components/FormCreateTranscript';
 import TranscriptList from '@/components/TranscriptList';
+import { logger } from '@/utils/logger';
 import useTranscripts from '@/hooks/useTranscripts';
-import useCreateTransript from '@/hooks/useCreateTranscript';
-import { realtimeTranscripts, deleteTranscriptAsync, createTranscriptAsync, updateTranscriptAsync } from '@/hooks/useCreateTranscript';
+import useCreateTranscript from '@/hooks/useCreateTranscript';
+import { realtimeTranscripts, deleteTranscriptAsync, updateTranscriptAsync } from '@/hooks/useCreateTranscript';
 import Transcript from '@/components/Transcript';
 import { Loading } from '@/components/Loading';
 import type { Transcript as TranscriptT, TranscriptData } from '@/types/types';
@@ -13,7 +14,6 @@ import AudioRecorder from '@/components/ui/recorder';
 import { useQueryClient } from '@tanstack/react-query';
 import { checkMicrophonePermissions, uuidv4 } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
-import * as Dialog from '@radix-ui/react-dialog';
 import 'regenerator-runtime/runtime'
 import { useSpeechRecognition } from 'react-speech-recognition';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
@@ -26,19 +26,21 @@ import {
   saveToLocalStorage,
   saveToOfflineQueue,
 } from '@/utils/storageHelpers';
+import { useOfflineQueue } from '@/hooks/useOfflineQueue';
+import { useServiceWorkerReload } from '@/hooks/useServiceWorkerReload';
+import { useTranscriptSelection } from '@/hooks/useTranscriptSelection';
+import SpeechCommandDialog from '@/components/SpeechCommandDialog';
+import StatusBanner from '@/components/StatusBanner';
 
 let clientSideMid: string | undefined = undefined;
 
 const Dashboard = () => {
-  const [selectedTranscript, setSelectedTranscript] = useState<TranscriptT>();
   const [clientTranscripts, setClientTranscripts] = useState<TranscriptT[]>();
   const { data: onlineTranscripts, isLoading: isLoadingTranscripts } = useTranscripts();
   const { toast } = useToast();
   const isOnline = useOnlineStatus();
-  const [prevOnlineStatus, setPrevOnlineStatus] = useState<Boolean>(isOnline);
-  const [offlineQueueCount, setOfflineQueueCount] = useState(0);
-  const [isProcessingOfflineQueue, setIsProcessingOfflineQueue] = useState(false);
-  const { mutateAsync: createTranscript } = useCreateTransript();
+  // Hook for creating new transcripts on the server
+  const { mutateAsync: createTranscript } = useCreateTranscript();
 
   const patientTag = useMemo(() => {
     // Combine online and local transcripts, removing duplicates by mid
@@ -52,10 +54,36 @@ const Dashboard = () => {
     return Math.max(...tags) + 1;
   }, [onlineTranscripts, clientTranscripts]);
 
+  const mergedTranscripts = useMemo(() => {
+    if (!onlineTranscripts && !clientTranscripts) return [] as TranscriptT[];
+    const merged = [...(onlineTranscripts || []), ...(clientTranscripts || [])];
+    return merged
+      .filter((transcript, index, self) =>
+        index === self.findIndex(t => t.mid === transcript.mid),
+      )
+      .sort(
+        (a: TranscriptT, b: TranscriptT) =>
+          +new Date(b.created_at) - +new Date(a.created_at),
+      );
+  }, [onlineTranscripts, clientTranscripts]);
+
+  const {
+    offlineQueueCount,
+    isProcessingOfflineQueue,
+    queueAction,
+    processQueue,
+  } = useOfflineQueue(mergedTranscripts, isOnline);
+
   const defaultPatientData = { patient_code: 'Patient', patient_tag: patientTag, mid: uuidv4(), language: 'auto', token_count: 0 };
-  const [patientData, setPatientData] = useState<TranscriptData>(defaultPatientData);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const [showSidebar, setShowSidebar] = useState<boolean>(true);
+  // Duplicate toggleSidebar removed; see implementation below
+  // const toggleSidebar = useCallback(() => {
+  //   setShowSidebar((prev) => !prev);
+  // }, [showSidebar]);
+  const toggleSidebar = useCallback(() => {
+    setShowSidebar((prev) => !prev);
+  }, [isDesktop, showSidebar]);
   const [newPatient, setNewPatient] = useState<TranscriptData>();
   const [defaultPatientCode, setDefaultPatientCode] = useState<string>("");
   const [status, setStatus] = useState<string>("Ready");
@@ -63,12 +91,25 @@ const Dashboard = () => {
   const [recordingPatientMidUUID, setRecordingPatientMidUUID] = useState<string>('');
   const [uploadingPatientMidUUID, setUploadingPatientMidUUID] = useState<string>('');
   const [speechCommandActivated, setSpeechCommandActivated] = useState<number>(0);
+  const {
+    selectedTranscript,
+    patientData,
+    setSelectedTranscript,
+    setPatientData,
+    selectTranscript,
+  } = useTranscriptSelection(
+    isDesktop,
+    recordingPatientMidUUID,
+    uploadingPatientMidUUID,
+    setStatus,
+    toggleSidebar,
+    defaultPatientData,
+  );
 
   const terminateRecording = useCallback(async ({ mid, token_count }: { mid: string, token_count: number }) => {
-    console.log(`completing transcript for patient ${mid}...`);
+    logger.debug('completing transcript', { patientId: mid });
     const saveOffline = () => {
-      saveToOfflineQueue({ type: 'update', data: { mid, token_count } });
-      setOfflineQueueCount(prev => prev + 1);
+      queueAction({ type: 'update', data: { mid, token_count } });
     };
     const updateData = {
       mid,
@@ -115,31 +156,6 @@ const Dashboard = () => {
     }
   }, []);
 
-  const toggleSidebar = useCallback(() => {
-    setShowSidebar((prev) => !prev);
-  }, [isDesktop, showSidebar]);
-
-  const selectTranscript = useCallback(
-    (transcript: any) => {
-      setSelectedTranscript(transcript);
-      setPatientData(transcript);
-      if (transcript && transcript.ai_summary == null) {
-        setStatus('Analyzing...');
-      }
-      else if ((isDesktop && transcript && transcript?.mid === recordingPatientMidUUID) || (!isDesktop && recordingPatientMidUUID)) {
-        setStatus("Listening...");
-      }
-      else if ((isDesktop && transcript && transcript?.mid === uploadingPatientMidUUID) || (!isDesktop && uploadingPatientMidUUID)) {
-        setStatus("Uploading...");
-      }
-      else {
-        setStatus('Ready');
-      }
-      !isDesktop && toggleSidebar();
-    },
-    [isDesktop, recordingPatientMidUUID, uploadingPatientMidUUID],
-  );
-
   const queryClient = useQueryClient();
 
   const onDeleteTranscript = async ({ mid, patient_code }: TranscriptData) => {
@@ -157,8 +173,7 @@ const Dashboard = () => {
           return;
         }
       } else {
-        saveToOfflineQueue({ type: 'delete', data: { mid } });
-        setOfflineQueueCount(prev => prev + 1);
+        queueAction({ type: 'delete', data: { mid } });
       }
       const updatedTranscripts = clientTranscripts?.filter(t => t.mid !== mid) || [];
       setClientTranscripts(updatedTranscripts);
@@ -229,7 +244,9 @@ const Dashboard = () => {
       }
     }
 
-    const sortedClientTranscripts = updatedTranscripts.sort((a: any, b: any) => +new Date(b.created_at) - +new Date(a.created_at));
+    const sortedClientTranscripts = updatedTranscripts.sort((a: TranscriptT, b: TranscriptT) =>
+      +new Date(b.created_at) - +new Date(a.created_at)
+    );
 
     setClientTranscripts(sortedClientTranscripts);
     saveToLocalStorage(sortedClientTranscripts);
@@ -271,13 +288,11 @@ const Dashboard = () => {
         }
         catch (error) {
           console.error('Error creating transcript:', error);
-          saveToOfflineQueue({ type: 'create', data: patient });
-          setOfflineQueueCount(prev => prev + 1);
+          queueAction({ type: 'create', data: patient });
         }
       }
       else {
-        saveToOfflineQueue({ type: 'create', data: patient });
-        setOfflineQueueCount(prev => prev + 1);
+        queueAction({ type: 'create', data: patient });
       }
     }
   }, [isOnline]);
@@ -343,17 +358,8 @@ const Dashboard = () => {
   useEffect(() => {
     const localStorageTranscripts = loadFromLocalStorage();
     setClientTranscripts(localStorageTranscripts);
-    setOfflineQueueCount(loadOfflineQueue().length);
   }, []);
 
-  // 1. Memoize the merged transcripts calculation
-  const mergedTranscripts = useMemo(() => {
-    if (!onlineTranscripts && !clientTranscripts) return [];
-    const merged = [...(onlineTranscripts || []), ...(clientTranscripts || [])];
-    return merged.filter((transcript, index, self) =>
-      index === self.findIndex((t) => t.mid === transcript.mid)
-    ).sort((a: any, b: any) => +new Date(b.created_at) - +new Date(a.created_at));
-  }, [onlineTranscripts, clientTranscripts]);
 
   useEffect(() => {
     const mid = selectedTranscript?.mid;
@@ -364,113 +370,7 @@ const Dashboard = () => {
     }
   }, [mergedTranscripts, selectedTranscript?.mid]);
 
-  const debouncedSync = useMemo(
-    () =>
-      debounce(() => {
-        if (mergedTranscripts && mergedTranscripts.length) {
-          saveToLocalStorage(mergedTranscripts);
-
-          // Process offline queue
-          const offlineQueue = loadOfflineQueue();
-          if (offlineQueue.length > 0) {
-            processOfflineQueue(offlineQueue);
-          }
-        }
-      }, 1000),
-    [mergedTranscripts]
-  );
-
-  // Sync local data with online data when connection is restored
-  useEffect(() => {
-    if (isOnline !== prevOnlineStatus) {
-      if (isOnline) {
-        toast({
-          title: 'Online',
-          description: 'Your connection has been restored.',
-          variant: 'default',
-        });
-
-        debouncedSync();
-      } else {
-        toast({
-          title: 'Offline',
-          description: 'You are currently offline. Changes will be synced when your connection is restored.',
-          variant: 'default',
-        });
-      }
-      setPrevOnlineStatus(isOnline);
-    }
-  }, [isOnline, debouncedSync, prevOnlineStatus]);
-
-  const processOfflineQueue = async (queue: any[]) => {
-    setIsProcessingOfflineQueue(true);
-    let shouldClearQueue = true;
-    for (const action of queue) {
-      try {
-        switch (action.type) {
-          case 'create':
-            await createTranscriptAsync(action.data);
-            break;
-          case 'update':
-            await updateTranscriptAsync(action.data);
-            break;
-          case 'delete':
-            await deleteTranscriptAsync(action.data.mid);
-            break;
-        }
-      } catch (error) {
-        shouldClearQueue = false;
-        console.error('Error processing offline action:', error);
-        toast({
-          title: 'Sync Error',
-          description: `Failed to sync ${action.type} action. Please try again later.`,
-          variant: 'destructive',
-        });
-        break;
-      }
-    }
-    if (shouldClearQueue) {
-      clearOfflineQueue();
-      setOfflineQueueCount(0);
-    }
-    setIsProcessingOfflineQueue(false);
-    queryClient.invalidateQueries(['transcripts2']);
-  };
-
-  //useEffect(() => debouncedSync(), [debouncedSync]);
-
-  const reloadIfNotRecording = useCallback(async () => {
-    const isRecording = recordingPatientMidUUID !== '';
-    toast({
-      title: 'Update Available',
-      description: isRecording ? 'Reload to get the latest version.' : 'Reloading in 3 seconds to get the latest version.',
-    });
-    await unregisterServiceWorker();
-    if (!isRecording) {
-      // Reload the page to get new version
-      setTimeout(() => window.location.reload(), 3000);
-    }
-  }, [recordingPatientMidUUID]);
-
-  const reloadHandler = useCallback((event: any) => {
-    if (event.data.type === 'UPDATE_AVAILABLE') {
-      reloadIfNotRecording();
-    }
-  }, [reloadIfNotRecording]);
-
-  const [previousReloadHandler, setPreviousReloadHandler] = useState<(event: any) => void>();
-
-  useEffect(() => {
-    if (previousReloadHandler !== reloadHandler) {
-      if ('serviceWorker' in navigator) {
-        if (previousReloadHandler) {
-          navigator.serviceWorker.removeEventListener('message', previousReloadHandler);
-        }
-        setPreviousReloadHandler(() => reloadHandler);
-        navigator.serviceWorker.addEventListener('message', reloadHandler);
-      }
-    }
-  }, [reloadHandler, previousReloadHandler]);
+  useServiceWorkerReload(recordingPatientMidUUID);
 
   const MemoizedTranscriptList = memo(TranscriptList);
 
@@ -478,23 +378,7 @@ const Dashboard = () => {
 
   return (
     <>
-      <Dialog.Root open={(speechCommandActivated !== 0)}>
-        <Dialog.Trigger />
-        <Dialog.Portal>
-          <Dialog.Overlay className="DialogOverlay z-20">
-            <Dialog.Content className="DialogContent" style={(speechCommandActivated === 0)
-              ? {}
-              : (speechCommandActivated === 1 || speechCommandActivated === 4)
-                ? { backgroundColor: "#4CBB17", width: "100%", height: "100%", opacity: 0.5 }
-                : (speechCommandActivated === 2)
-                  ? { backgroundColor: "#FFBF00", width: "100%", height: "100%", opacity: 0.5 }
-                  : (speechCommandActivated === 3)
-                    ? { backgroundColor: "#D22B2B", width: "100%", height: "100%", opacity: 0.5 }
-                    : {}}>
-            </Dialog.Content>
-          </Dialog.Overlay>
-        </Dialog.Portal>
-      </Dialog.Root>
+      <SpeechCommandDialog speechCommandActivated={speechCommandActivated} />
       <DashboardLayout
         recording={recordingPatientMidUUID !== ''}
         showSidebar={showSidebar}
@@ -538,7 +422,8 @@ const Dashboard = () => {
               }}
             />
             <div className="flex-grow-0 px-4 lg:px-6 pb-4 lg:pb-6">
-              <FormCreateTranscript status={`${status} ${speechStatus} ${isOnline ? '(Online)' : '(Offline)'}`} patient_code={defaultPatientCode} onUpdate={(pc: string, language: string) => {
+              <StatusBanner status={status} speechStatus={speechStatus} isOnline={isOnline} />
+              <FormCreateTranscript status="" patient_code={defaultPatientCode} onUpdate={(pc: string, language: string) => {
                 const newPatientData = { patient_code: pc, patient_tag: patientTag, mid: uuidv4(), language, token_count: 0 };
                 setNewPatientData(newPatientData);
               }} disabled={false} />

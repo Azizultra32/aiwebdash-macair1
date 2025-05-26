@@ -6,31 +6,23 @@ async function checkForUpdates() {
   try {
     // Request current version from client
     const clients = await self.clients.matchAll();
-    if (clients.length > 0) {
-      clients[0].postMessage({ type: 'GET_CURRENT_VERSION' });
+    for (const client of clients) {
+      client.postMessage({ type: 'GET_CURRENT_VERSION' });
     }
   } catch (err) {
     console.log('Version check failed:', err);
   }
 }
 
-const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/logo1.png',
-  '/record.png',
-  '/stop.png',
-  '/vite.svg',
-  '/assets/index-[hash].css',
-  '/assets/index-[hash].js',
-];
+import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 
-// Install event - cache static assets
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(ASSETS_TO_CACHE))
-  );
+// Precache assets injected by Workbox during the build
+cleanupOutdatedCaches();
+precacheAndRoute(self.__WB_MANIFEST);
+
+// Install event - immediately activate the new service worker
+self.addEventListener('install', () => {
+  self.skipWaiting();
 });
 
 // Activate event - cleanup old caches
@@ -53,6 +45,17 @@ self.addEventListener('activate', (event) => {
   const intervalId = setInterval(checkForUpdates, VERSION_CHECK_INTERVAL);
   // Store the interval ID if needed for cleanup
   self.__versionCheckInterval = intervalId;
+
+  // Cleanup interval when this service worker is being replaced
+  const cleanup = () => {
+    if (self.__versionCheckInterval) {
+      clearInterval(self.__versionCheckInterval);
+    }
+  };
+
+  // Listen for controllerchange/statechange to detect replacement
+  self.addEventListener('controllerchange', cleanup);
+  self.addEventListener('statechange', cleanup);
 });
 
 // Message event - handle version checks

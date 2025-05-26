@@ -1,8 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const distDir = path.join(".", 'dist');
-const appcachePath = path.join(distDir, 'sw.js');
+const distDir = path.join('.', 'dist');
 const versionPath = path.join(distDir, 'version.json');
 
 const publicDir = path.join(".", 'public');
@@ -19,31 +18,6 @@ const updateVersion = () => {
   console.log('Version updated to:', versionData.version);
 };
 
-// Read the contents of the dist directory
-fs.readdir(distDir, {recursive: true}, (err, files) => {
-  if (err) throw err;
 
-  console.log(files.join('\n'))
-
-  // Find the CSS and JS files
-  const cssFile = files.find(file => file.startsWith('assets\\index-') && file.endsWith('.css'));
-  const jsFiles = files.filter(file => file.startsWith('assets\\index-') && file.endsWith('.js'));
-
-  // Update version first
-  updateVersion();
-
-  // Read the appcache file
-  fs.readFile(appcachePath, 'utf8', (err, data) => {
-    if (err) throw err;
-
-    // Replace the placeholders with actual file names
-    let updatedData = data.replace('assets/index-[hash].css', cssFile?.replace('\\', '/'));
-    updatedData = updatedData.replace('assets/index-[hash].js', jsFiles.map(jsFile => jsFile?.replace('\\', '/')).join('\', \''));
-
-    // Write the updated content back to the file
-    fs.writeFile(appcachePath, updatedData, 'utf8', (err) => {
-      if (err) throw err;
-      console.log('AppCache manifest updated successfully.');
-    });
-  });
-});
+// Only update the application version number. Asset precaching is handled by Workbox.
+updateVersion();

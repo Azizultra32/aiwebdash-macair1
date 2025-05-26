@@ -4,16 +4,16 @@ import { Switch } from "@/components/ui/switch";
 import { Copy, Maximize2 } from 'lucide-react';
 import { Button } from './ui/button';
 import TranscriptSummary from './TranscriptSummary';
-import type { Transcript } from '@/types/types';
+import type { Transcript, SummaryRef, AI_Summary } from '@/types/types';
 
 interface TranscriptSoapProps {
   transcript: Transcript;
-  summaryMap: any;
+  summaryMap: Record<string, AI_Summary['arguments']['summaries'][0]>;
   showDetail: boolean;
   setShowDetail: (show: boolean) => void;
-  summaryRef: React.RefObject<any>;
-  handleCopy: (ref: any) => void;
-  handleMaximize: (ref: any) => void;
+  summaryRef: React.RefObject<SummaryRef>;
+  handleCopy: (ref: React.RefObject<SummaryRef>) => void;
+  handleMaximize: (ref: React.RefObject<SummaryRef>) => void;
 }
 
 const TranscriptSoap: React.FC<TranscriptSoapProps> = ({
@@ -41,6 +41,7 @@ const TranscriptSoap: React.FC<TranscriptSoapProps> = ({
                   onClick={() => handleCopy(summaryRef)}
                 >
                   <Copy className="h-5 w-5" />
+                  <span className="sr-only">Copy summary</span>
                 </Button>
                 <Button
                   variant="ghost"
@@ -48,6 +49,7 @@ const TranscriptSoap: React.FC<TranscriptSoapProps> = ({
                   onClick={() => handleMaximize(summaryRef)}
                 >
                   <Maximize2 className="h-5 w-5" />
+                  <span className="sr-only">Maximize summary</span>
                 </Button>
               </div>
               <div className="flex items-center gap-2">

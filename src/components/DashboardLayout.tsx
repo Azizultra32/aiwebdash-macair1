@@ -19,7 +19,7 @@ import supabase from '@/supabase';
 type Props = {
   children: React.ReactNode;
   sidebar: React.ReactNode;
-  selectedTranscript?: any;
+  selectedTranscript?: Transcript;
   showSidebar: boolean;
   isDesktop: boolean;
   toggleSidebar: () => void;
@@ -207,6 +207,7 @@ const DashboardHeader = ({
                     className="transform scale-90 sm:scale-100"
                   />
                 </span>
+                <span className="sr-only">Settings</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">

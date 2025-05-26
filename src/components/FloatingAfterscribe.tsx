@@ -6,6 +6,8 @@ import { Button } from "./ui/button"
 import { CornerDownLeft, Terminal, Mic, Copy, Check, ChevronLeft, ChevronRight, Sparkles, Minimize2, Maximize2 } from 'lucide-react'
 import { motion } from "framer-motion"
 import { useSpeechRecognition } from 'react-speech-recognition'
+import { useToast } from './ui/use-toast'
+import { logger } from '@/utils/logger'
 
 // This is a mock function. In a real application, you would replace this with an actual API call.
 const mockGrammarCheck = async (text: string): Promise<string> => {
@@ -24,6 +26,8 @@ export default function FloatingAfterscribe() {
   const [history, setHistory] = useState<string[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
   const [isMinimized, setIsMinimized] = useState(false)
+
+  const { toast } = useToast()
   
   // Use the shared speech recognition instance
   const { transcript, listening, resetTranscript } = useSpeechRecognition()
@@ -52,7 +56,7 @@ export default function FloatingAfterscribe() {
         return newHistory
       })
       setHistoryIndex(-1)
-      console.log("Submitted:", inputValue)
+      logger.debug('Submitted input', { value: inputValue })
       setInputValue("")
       resetTranscript()
       setIsActive(false)
@@ -68,19 +72,52 @@ export default function FloatingAfterscribe() {
 
   const handleCopy = useCallback(() => {
     const textToCopy = inputValue
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(textToCopy).then(() => {
-        setIsCopied(true)
-        setShowNotification(true)
-        setTimeout(() => {
-          setIsCopied(false)
-          setShowNotification(false)
-        }, 2000)
-      }).catch((err: Error) => {
-        console.error('Failed to copy text: ', err)
-      })
+
+    const showSuccess = () => {
+      setIsCopied(true)
+      setShowNotification(true)
+      setTimeout(() => {
+        setIsCopied(false)
+        setShowNotification(false)
+      }, 2000)
     }
-  }, [inputValue])
+
+    const fallbackCopy = () => {
+      try {
+        const textarea = document.createElement('textarea')
+        textarea.value = textToCopy
+        textarea.setAttribute('readonly', '')
+        textarea.style.position = 'absolute'
+        textarea.style.left = '-9999px'
+        document.body.appendChild(textarea)
+        textarea.select()
+        const successful = document.execCommand('copy')
+        document.body.removeChild(textarea)
+        if (successful) {
+          showSuccess()
+        } else {
+          throw new Error('execCommand failed')
+        }
+      } catch (err) {
+        console.error('Fallback copy failed:', err)
+        toast({
+          description: 'Copying to clipboard was not permitted.',
+          variant: 'destructive'
+        })
+      }
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        showSuccess()
+      }).catch((err: Error) => {
+        console.error('Failed to copy text via clipboard API:', err)
+        fallbackCopy()
+      })
+    } else {
+      fallbackCopy()
+    }
+  }, [inputValue, toast])
 
   const navigateHistory = (direction: 'back' | 'forward') => {
     if (direction === 'back' && historyIndex < history.length - 1) {

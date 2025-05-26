@@ -1,7 +1,8 @@
 import supabase from '@/supabase';
+import { logger } from '@/utils/logger';
 import { LoginData, UserData, PasswordData } from '@/types/types';
 import { User, Session } from '@supabase/supabase-js';
-import { UseQueryResult, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { UseQueryResult, UseMutationResult, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, useContext, useEffect } from 'react';
 
 type Props = {
@@ -9,17 +10,29 @@ type Props = {
 };
 
 type AuthContextType = {
-  login: any;
-  register: any;
-  logout: any;
+  /** login mutation returned from useMutation */
+  login: UseMutationResult<{ user: User | null; session: Session | null }, Error, { phone: string; password: string }>;
+  /** register mutation returned from useMutation */
+  register: UseMutationResult<{ user: User | null; session: Session | null }, Error, LoginData>;
+  /** logout the current user */
+  logout: () => Promise<void>;
+  /** currently logged in user */
   getUser: UseQueryResult<User | null, unknown>;
-  reset: any;
-  changePassword: any;
-  signUpWithPhone: (phone: string, password: string) => Promise<{
+  /** request password reset */
+  reset: (data: UserData) => Promise<void>;
+  /** change the current user's password */
+  changePassword: (data: PasswordData) => Promise<void>;
+  signUpWithPhone: (
+    phone: string,
+    password: string,
+  ) => Promise<{
     user: User | null;
     session: Session | null;
   }>;
-  verifyOtp: (phone: string, token: string) => Promise<{
+  verifyOtp: (
+    phone: string,
+    token: string,
+  ) => Promise<{
     user: User | null;
     session: Session | null;
   }>;
@@ -27,12 +40,16 @@ type AuthContextType = {
 };
 
 const AuthContext = createContext<AuthContextType>({
-  login: () => {},
-  register: () => {},
-  logout: () => {},
+  login: {} as UseMutationResult<
+    { user: User | null; session: Session | null },
+    Error,
+    { phone: string; password: string }
+  >,
+  register: {} as UseMutationResult<{ user: User | null; session: Session | null }, Error, LoginData>,
+  logout: async () => {},
   getUser: {} as UseQueryResult<User | null, unknown>,
-  reset: () => {},
-  changePassword: () => {},
+  reset: async () => {},
+  changePassword: async () => {},
   signUpWithPhone: () => Promise.resolve({ user: null, session: null }),
   verifyOtp: () => Promise.resolve({ user: null, session: null }),
   resendOtp: () => Promise.resolve(),
@@ -51,26 +68,30 @@ const AuthProvider = ({ children }: Props) => {
     },
   });
 
-  const login = useMutation({
-    mutationFn: async (credentials: { phone: string; password: string }) => {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        phone: credentials.phone,
-        password: credentials.password,
-      });
+  const login = useMutation<{ user: User | null; session: Session | null }, Error, { phone: string; password: string }>(
+    {
+      mutationFn: async (credentials: { phone: string; password: string }) => {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          phone: credentials.phone,
+          password: credentials.password,
+        });
 
+        if (error) throw error;
+        return data;
+      },
+    },
+  );
+
+  const register = useMutation<{ user: User | null; session: Session | null }, Error, LoginData>(
+    async ({ email, password }: LoginData) => {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
       if (error) throw error;
       return data;
-    }
-  });
-
-  const register = useMutation(async ({ email, password }: LoginData) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-    if (error) throw error;
-    return data;
-  });
+    },
+  );
 
   const logout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -79,7 +100,7 @@ const AuthProvider = ({ children }: Props) => {
 
   const reset = async ({ email }: UserData) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://app.assistmd.ai/password'
+      redirectTo: 'https://app.assistmd.ai/password',
     });
     if (error) throw error;
   };
@@ -91,80 +112,80 @@ const AuthProvider = ({ children }: Props) => {
 
   const signUpWithPhone = async (phone: string, password: string) => {
     try {
-      console.log("Starting new phone signup process...");
-      
+      logger.debug('Starting new phone signup process...');
+
       await supabase.auth.signOut();
       localStorage.removeItem('sb-access-token');
       localStorage.removeItem('sb-refresh-token');
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      console.log("Attempting signup for:", phone);
-      
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      logger.debug('Attempting signup', { phone });
+
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         phone,
         password,
         options: {
-          data: { phone_confirmed: false }
-        }
+          data: { phone_confirmed: false },
+        },
       });
-      
-      console.log("Signup response:", { signUpData, signUpError });
+
+      logger.debug('Signup response', { signUpData, signUpError });
 
       if (signUpError) {
         if (signUpError.message.includes('already registered')) {
           const { data: sessionData } = await supabase.auth.getSession();
           const isPhoneConfirmed = sessionData?.session?.user?.phone_confirmed_at;
-          
+
           if (isPhoneConfirmed) {
             throw new Error('already registered');
           }
         }
       }
 
-      console.log("Attempting to send OTP...");
-      const { error: otpError } = await supabase.auth.signInWithOtp({ 
+      logger.debug('Attempting to send OTP...');
+      const { error: otpError } = await supabase.auth.signInWithOtp({
         phone,
         options: {
-          shouldCreateUser: false
-        }
+          shouldCreateUser: false,
+        },
       });
-      
-      console.log("OTP response:", { otpError });
-      
+
+      logger.debug('OTP response', { otpError });
+
       if (otpError?.status === 429) {
         throw new Error('RATE_LIMIT_BUT_SENT');
       } else if (otpError) {
         throw otpError;
       }
-      
+
       return signUpData;
     } catch (error: any) {
-      console.error("Final error:", error);
+      console.error('Final error:', error);
       throw error;
     }
   };
 
   const verifyOtp = async (phone: string, token: string) => {
     try {
-      console.log("Starting OTP verification...");
-      
+      logger.debug('Starting OTP verification...');
+
       // Clear existing session
       await supabase.auth.signOut();
       localStorage.removeItem('sb-access-token');
       localStorage.removeItem('sb-refresh-token');
-      
+
       // Wait for cleanup
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       const { data, error } = await supabase.auth.verifyOtp({
         phone,
         token,
-        type: 'sms'
+        type: 'sms',
       });
 
       if (error) {
-        console.error("OTP verification error:", error);
+        console.error('OTP verification error:', error);
         throw error;
       }
 
@@ -175,7 +196,7 @@ const AuthProvider = ({ children }: Props) => {
       // Set new session
       await supabase.auth.setSession({
         access_token: data.session.access_token,
-        refresh_token: data.session.refresh_token
+        refresh_token: data.session.refresh_token,
       });
 
       // Update query cache
@@ -183,37 +204,37 @@ const AuthProvider = ({ children }: Props) => {
 
       return data;
     } catch (error: any) {
-      console.error("Final verification error:", error);
+      console.error('Final verification error:', error);
       throw error;
     }
   };
 
   const resendOtp = async (phone: string) => {
     try {
-      console.log("Starting OTP resend...");
-      
+      logger.debug('Starting OTP resend...');
+
       // Clear existing session
       await supabase.auth.signOut();
       localStorage.removeItem('sb-access-token');
       localStorage.removeItem('sb-refresh-token');
-      
-      // Wait for cleanup
-      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const { error } = await supabase.auth.signInWithOtp({ 
+      // Wait for cleanup
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const { error } = await supabase.auth.signInWithOtp({
         phone,
         options: {
           shouldCreateUser: false,
-          captchaToken: undefined
-        }
+          captchaToken: undefined,
+        },
       });
-      
+
       if (error) {
-        console.error("Resend OTP error:", error);
+        console.error('Resend OTP error:', error);
         throw error;
       }
     } catch (error: any) {
-      console.error("Final resend error:", error);
+      console.error('Final resend error:', error);
       throw error;
     }
   };
@@ -233,17 +254,19 @@ const AuthProvider = ({ children }: Props) => {
   }, [queryClient]);
 
   return (
-    <AuthContext.Provider value={{
-      login,
-      register,
-      logout,
-      getUser,
-      reset,
-      changePassword,
-      signUpWithPhone,
-      verifyOtp,
-      resendOtp,
-    }}>
+    <AuthContext.Provider
+      value={{
+        login,
+        register,
+        logout,
+        getUser,
+        reset,
+        changePassword,
+        signUpWithPhone,
+        verifyOtp,
+        resendOtp,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

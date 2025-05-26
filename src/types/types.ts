@@ -54,3 +54,8 @@ export type Transcript = {
 export type ChunkNumberWrapper = {
   chunkNumber: number;
 };
+
+export interface SummaryRef {
+  toggleMaximize: () => void;
+  getSummary: () => string;
+}

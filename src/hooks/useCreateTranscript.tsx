@@ -4,6 +4,7 @@ import { TranscriptData, TranscriptTokenCount } from '@/types/types';
 import { uuidv4 } from '@/lib/utils';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { debounce } from '@/utils/debounce';
+import { logger } from '@/utils/logger';
 
 let _didSubscribe: Boolean = false;
 let _onRealtimeUpdate: Function | undefined = undefined;
@@ -27,7 +28,7 @@ export function realtimeTranscripts(queryClient: QueryClient, onRealtimeUpdate: 
       _mySubscription?.unsubscribe();
       _mySubscription = undefined;
     }
-    console.log('disconnect', status);
+    logger.debug('disconnect', { status });
     if (document.visibilityState === 'visible') {
         start_up(); // got an error, but tab still running so restart
     }
@@ -39,7 +40,7 @@ export function realtimeTranscripts(queryClient: QueryClient, onRealtimeUpdate: 
   }, 1000);
 
   const startStream = debounce(async () => {
-    console.log('subscribing to realtime...');
+    logger.debug('subscribing to realtime...');
     _mySubscription = supabase
       .channel('room1')
       .on(
@@ -52,7 +53,7 @@ export function realtimeTranscripts(queryClient: QueryClient, onRealtimeUpdate: 
         eventHandler
       )
       .subscribe((status) => {
-        console.log(`subscribed ==> ${status}`);
+        logger.debug('subscribed', { status });
         if (status === 'SUBSCRIBED') {
           // Connection established
         }
@@ -65,17 +66,17 @@ export function realtimeTranscripts(queryClient: QueryClient, onRealtimeUpdate: 
   startStream();
 
   const start_up = async () => {
-    console.log('start_up');
+    logger.debug('start_up');
     eventHandler();
     if (document.visibilityState === 'visible' && _restart) {
-      console.log('start stream');
+      logger.debug('start stream');
       startStream();
       _restart = false;
     }
   };
 
   document.onvisibilitychange = () => {
-    console.log('visibility change', document.visibilityState)
+    logger.debug('visibility change', { state: document.visibilityState })
     if (document.visibilityState === 'visible') {
         start_up();
     }
@@ -140,7 +141,8 @@ export async function updateTranscriptAsync(transcript: TranscriptTokenCount) {
   return transcript.mid;
 }
 
-export default function useCreateTransript() {
+// Hook used to create a new transcript and keep the query cache in sync
+export default function useCreateTranscript() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -151,7 +153,8 @@ export default function useCreateTransript() {
   });
 }
 
-export function useUpdateTransript() {
+// Hook used to update a transcript and keep the query cache in sync
+export function useUpdateTranscript() {
   const queryClient = useQueryClient();
 
   return useMutation({
