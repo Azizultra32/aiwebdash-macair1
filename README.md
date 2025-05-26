@@ -148,3 +148,9 @@ fi
 ```
 
 Codex will execute this script automatically during environment initialization.
+
+## Service Worker Version Checks
+
+When the service worker activates it broadcasts `GET_CURRENT_VERSION` to every connected client. Each client replies with its current version so the worker can compare it to the latest value from `version.json`.
+
+After activation the worker repeats this broadcast every five minutes to detect updates without requiring a page reload. The interval ID is stored internally and cleared on `controllerchange` or `statechange` events when the worker is replaced, preventing orphaned timers.
