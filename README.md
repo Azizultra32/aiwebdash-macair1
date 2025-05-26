@@ -55,8 +55,14 @@ If you are developing a production application, we recommend updating the config
 
 ### Running ESLint
 
-Before running the linter, ensure the development dependencies have been
-installed. If `node_modules/` is missing, execute:
+Before running the linter, ensure development dependencies are installed. Run
+the preflight check to verify:
+
+```bash
+npm run preflight
+```
+
+If the script reports that `node_modules` is missing, install dependencies with:
 
 ```bash
 bash .codex/setup.sh
@@ -70,8 +76,14 @@ npm run lint
 
 ### Running tests
 
-Before running tests, make sure dependencies are installed with `bash .codex/setup.sh`.
-Then execute the test suite using:
+Before running tests, verify dependencies with the preflight script and install
+them if necessary:
+
+```bash
+npm run preflight
+```
+
+If `node_modules` is missing, run `bash .codex/setup.sh` before executing the test suite:
 
 ```bash
 npm run test
@@ -126,15 +138,28 @@ fi
 
 Codex will execute this script automatically during environment initialization.
 
-### Running Supabase locally
+### Preparing a Pull Request
 
-To spin up a local Supabase instance for development:
+Before opening a pull request, synchronize your branch with the target branch
+(defaults to `main`) and run the project's checks. Use the provided script:
 
-1. Install the [Supabase CLI](https://supabase.com/docs/guides/cli).
-2. From the `supabase` directory, start the services:
+```bash
+npm run prepare-pr [target-branch]
+```
 
-   ```bash
-   supabase start
-   ```
-3. Point your environment variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to the local instance.
-4. Stop the services with `supabase stop` or by pressing `Ctrl+C`.
+This will fetch the latest changes from `origin`, rebase your current branch, and
+execute the preflight, lint, and test steps.
+
+### Managing Multiple Pull Requests
+
+Maintainers can manage several open pull requests efficiently with GitHub's tools
+or the `gh` CLI:
+
+- Review each pull request from GitHub's PR page or use the `gh` commands
+  `gh pr status` and `gh pr checkout <PR#>`.
+- Rebase or merge the PR branch locally with `./prepare-pr.sh main` to detect
+  merge conflicts.
+- If conflicts arise, leave a comment asking the contributor to rebase their
+  branch on `main`.
+- Close stale pull requests that have not been updated in a long time.
+

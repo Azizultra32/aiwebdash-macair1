@@ -3,15 +3,31 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // Hold originals of globals that will be mocked during tests
 let originalFetch: typeof global.fetch;
 let originalSetInterval: typeof global.setInterval;
+let originalSelf: any;
+let originalCaches: any;
+let originalSelfWbManifest: any;
 
-// Type for the service worker `activate` event handler
-let activateHandler: (event: ExtendableEvent) => void;
+// Define ExtendableEvent interface for TypeScript
+interface ExtendableEvent extends Event {
+  waitUntil: (promise: Promise<any>) => void;
+}
+
+// Minimal ExtendableEvent implementation used for testing the activate handler
+class TestExtendableEvent extends Event implements ExtendableEvent {
+  constructor(public waitUntil: (promise: Promise<any>) => void) {
+    super('activate');
+  }
+}
+let activateHandler: (event: TestExtendableEvent) => void;
 let mockClients: { postMessage: ReturnType<typeof vi.fn> }[];
 
 beforeEach(async () => {
   // Save current global implementations so they can be restored in afterEach
   originalFetch = global.fetch;
   originalSetInterval = global.setInterval;
+  originalSelf = (global as any).self;
+  originalCaches = (global as any).caches;
+  originalSelfWbManifest = (global as any).self?.__WB_MANIFEST;
   vi.resetModules();
   mockClients = [{ postMessage: vi.fn() }, { postMessage: vi.fn() }];
 
@@ -41,11 +57,26 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
-  vi.restoreAllMocks();
   global.fetch = originalFetch;
   global.setInterval = originalSetInterval;
-  delete (global as any).self;
-  delete (global as any).caches;
+  if (originalSelf === undefined) {
+    delete (global as any).self;
+  } else {
+    (global as any).self = originalSelf;
+  }
+  if (originalCaches === undefined) {
+    delete (global as any).caches;
+  } else {
+    (global as any).caches = originalCaches;
+  }
+  if ((global as any).self) {
+    if (originalSelfWbManifest === undefined) {
+      delete (global as any).self.__WB_MANIFEST;
+    } else {
+      (global as any).self.__WB_MANIFEST = originalSelfWbManifest;
+    }
+  }
+  vi.restoreAllMocks();
 });
 
 describe('service worker update check', () => {
@@ -53,17 +84,8 @@ describe('service worker update check', () => {
     // Create a waitUntil function that returns the promise it's given
     const waitUntil = vi.fn((promise: Promise<any>) => promise);
 
-    // Create an ExtendableEvent instance and attach waitUntil
-    const EventCtor =
-      (global as any).ExtendableEvent ??
-      class ExtendableEvent extends Event {
-        waitUntil(_p: Promise<any>): void {}
-      };
-    const event = new EventCtor('activate') as ExtendableEvent;
-    (event as any).waitUntil = waitUntil;
-
-    // Call the activation handler with the constructed event
-    await activateHandler(event);
+    // Invoke the activation handler with a minimal ExtendableEvent instance
+    await activateHandler(new TestExtendableEvent(waitUntil));
 
     // Ensure the promise passed to waitUntil completes
     await waitUntil.mock.calls[0][0];
