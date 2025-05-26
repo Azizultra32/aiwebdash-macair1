@@ -12,7 +12,7 @@ let originalSelfWbManifest: any;
 // service worker. This mirrors the structure used in `public/sw.js` when
 // checking the current application version.
 let messageHandler: (event: MessageEvent<{ type: string; version: string }>) => Promise<void>;
-let mockPostMessage: any;
+let mockPostMessage: ReturnType<typeof vi.fn>;
 
 // Setup a faux service worker environment before importing the script
 beforeEach(async () => {
