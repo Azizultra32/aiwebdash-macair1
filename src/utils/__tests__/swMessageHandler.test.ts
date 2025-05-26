@@ -11,7 +11,8 @@ let originalSelfWbManifest: any;
 // Explicitly type the expected shape of the message event handled by the
 // service worker. This mirrors the structure used in `public/sw.js` when
 // checking the current application version.
-let messageHandler: (event: MessageEvent<{ type: string; version: string }>) => Promise<void>;
+type VersionMessage = { type: string; version: string };
+let messageHandler: (event: MessageEvent<VersionMessage>) => Promise<void>;
 let mockPostMessage: ReturnType<typeof vi.fn>;
 
 // Setup a faux service worker environment before importing the script
