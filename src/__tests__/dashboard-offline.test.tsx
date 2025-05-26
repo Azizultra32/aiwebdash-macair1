@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import * as transcriptModule from '@/hooks/useCreateTranscript';
 
 vi.mock('@/hooks/useCreateTranscript', () => ({
   __esModule: true,
@@ -62,8 +63,11 @@ describe('Dashboard offline queue', () => {
     await waitFor(() => expect(screen.getByTestId('count').textContent).toBe('1'));
 
     navigatorSpy.mockReturnValue(true);
-    window.dispatchEvent(new Event('online'));
+    await act(async () => {
+      window.dispatchEvent(new Event('online'));
+    });
 
     await waitFor(() => expect(screen.getByTestId('count').textContent).toBe('0'));
+    expect(transcriptModule.createTranscriptAsync).toHaveBeenCalledTimes(1);
   });
 });

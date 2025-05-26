@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useForm, useFormState, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { getCountryCallingCode } from 'libphonenumber-js';
 import {
   Form,
   FormControl,
@@ -14,6 +13,8 @@ import { Input } from '@/components/ui/input';
 import { useToast } from './ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { useDetectCountryCode } from '@/hooks/useDetectCountryCode';
+import { formatPhoneNumber, unformatPhoneNumber } from '@/utils/phone';
 
 const countryCodeRegex = /^\+\d{1,4}$/;
 
@@ -34,7 +35,6 @@ const FormLogin = () => {
 
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [detectedCountryCode, setDetectedCountryCode] = useState('');
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -45,25 +45,12 @@ const FormLogin = () => {
     },
   });
 
+  useDetectCountryCode((code) => form.setValue('countryCode', code));
+
   const { isSubmitting } = useFormState({
     control: form.control,
   });
 
-  useEffect(() => {
-    const detectCountryCode = async () => {
-      try {
-        const response = await fetch('https://ipapi.co/json/');
-        const data = await response.json();
-        const countryCode = getCountryCallingCode(data.country_code);
-        setDetectedCountryCode(`+${countryCode}`);
-        form.setValue('countryCode', `+${countryCode}`);
-      } catch (error) {
-        console.error('Error detecting country code:', error);
-      }
-    };
-
-    detectCountryCode();
-  }, [form]);
 
   useEffect(() => {
     const savedCredentials = localStorage.getItem('loginCredentials');
@@ -78,22 +65,6 @@ const FormLogin = () => {
     }
   }, [form]);
 
-  const formatPhoneNumber = (value: string) => {
-    const phoneNumber = value.replace(/\D/g, '');
-    const phoneNumberLength = phoneNumber.length;
-    if (phoneNumberLength < 4) return phoneNumber;
-    if (phoneNumberLength < 7) {
-      return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
-    }
-    return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(
-      3,
-      6
-    )}-${phoneNumber.slice(6, 10)}`;
-  };
-
-  const unformatPhoneNumber = (value: string) => {
-    return value.replace(/\D/g, '');
-  };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -117,15 +88,7 @@ const FormLogin = () => {
             name="countryCode"
             render={({ field }) => (
               <FormItem className="flex-shrink-0 w-24">
-                <p
-                  style={{
-                    fontWeight: 900,
-                    fontFamily: 'Satoshi", sans-serif',
-                    fontSize: '12px',
-                    letterSpacing: '0.04em',
-                    lineHeight: 1.2,
-                  }}
-                >
+                <p className="font-bold text-xs tracking-[0.04em] leading-[1.2]">
                   Code
                 </p>
                 <FormControl>
@@ -140,15 +103,7 @@ const FormLogin = () => {
             name="phone"
             render={({ field }) => (
               <FormItem className="flex-grow">
-                <p
-                  style={{
-                    fontWeight: 900,
-                    fontFamily: 'Satoshi", sans-serif',
-                    fontSize: '12px',
-                    letterSpacing: '0.04em',
-                    lineHeight: 1.2,
-                  }}
-                >
+                <p className="font-bold text-xs tracking-[0.04em] leading-[1.2]">
                   Phone
                 </p>
                 <FormControl>
@@ -179,15 +134,7 @@ const FormLogin = () => {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <p
-                style={{
-                  fontWeight: 900,
-                  fontFamily: 'Satoshi", sans-serif',
-                  fontSize: '12px',
-                  letterSpacing: '0.04em',
-                  lineHeight: 1.2,
-                }}
-              >
+              <p className="font-bold text-xs tracking-[0.04em] leading-[1.2]">
                 Password
               </p>
               <FormControl>
@@ -200,14 +147,7 @@ const FormLogin = () => {
         <button
           type="submit"
           disabled={isSubmitting}
-          style={{
-            fontWeight: 900,
-            fontFamily: 'Satoshi", sans-serif',
-            fontSize: '16px',
-            letterSpacing: '0.04em',
-            lineHeight: 1.2,
-          }}
-          className="w-full bg-[#20226D] text-white text-center m-4 p-2 -ml-[2px] rounded-md h-12 mt-4"
+          className="w-full bg-[#20226D] text-white text-center m-4 p-2 -ml-[2px] rounded-md h-12 mt-4 font-bold text-base tracking-[0.04em] leading-[1.2]"
         >
           Submit
         </button>

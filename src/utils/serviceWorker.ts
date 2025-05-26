@@ -1,8 +1,10 @@
+import { logger } from './logger';
+
 export const registerServiceWorker = async () => {
   if ('serviceWorker' in navigator) {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('Service Worker registered with scope:', registration.scope);
+      logger.info('Service Worker registered', { scope: registration.scope });
       
       // Handle updates
       registration.addEventListener('updatefound', () => {
@@ -11,7 +13,7 @@ export const registerServiceWorker = async () => {
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               // New content is available, notify the user if needed
-              console.log('New content is available; please refresh.');
+              logger.info('New content is available; please refresh.');
             }
           });
         }

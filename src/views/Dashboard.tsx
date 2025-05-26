@@ -3,6 +3,7 @@ import { useMediaQuery } from 'usehooks-ts';
 import DashboardLayout from '@/components/DashboardLayout';
 import FormCreateTranscript from '@/components/FormCreateTranscript';
 import TranscriptList from '@/components/TranscriptList';
+import { logger } from '@/utils/logger';
 import useTranscripts from '@/hooks/useTranscripts';
 import useCreateTranscript from '@/hooks/useCreateTranscript';
 import { realtimeTranscripts, deleteTranscriptAsync, updateTranscriptAsync } from '@/hooks/useCreateTranscript';
@@ -101,7 +102,7 @@ const Dashboard = () => {
   );
 
   const terminateRecording = useCallback(async ({ mid, token_count }: { mid: string, token_count: number }) => {
-    console.log(`completing transcript for patient ${mid}...`);
+    logger.debug('completing transcript', { patientId: mid });
     const saveOffline = () => {
       queueAction({ type: 'update', data: { mid, token_count } });
     };

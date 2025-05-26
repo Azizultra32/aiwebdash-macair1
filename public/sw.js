@@ -6,8 +6,8 @@ async function checkForUpdates() {
   try {
     // Request current version from client
     const clients = await self.clients.matchAll();
-    if (clients.length > 0) {
-      clients[0].postMessage({ type: 'GET_CURRENT_VERSION' });
+    for (const client of clients) {
+      client.postMessage({ type: 'GET_CURRENT_VERSION' });
     }
   } catch (err) {
     console.log('Version check failed:', err);
@@ -45,6 +45,17 @@ self.addEventListener('activate', (event) => {
   const intervalId = setInterval(checkForUpdates, VERSION_CHECK_INTERVAL);
   // Store the interval ID if needed for cleanup
   self.__versionCheckInterval = intervalId;
+
+  // Cleanup interval when this service worker is being replaced
+  const cleanup = () => {
+    if (self.__versionCheckInterval) {
+      clearInterval(self.__versionCheckInterval);
+    }
+  };
+
+  // Listen for controllerchange/statechange to detect replacement
+  self.addEventListener('controllerchange', cleanup);
+  self.addEventListener('statechange', cleanup);
 });
 
 // Message event - handle version checks
