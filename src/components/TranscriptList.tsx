@@ -3,7 +3,9 @@ import moment from 'moment';
 import { Lock, Unlock, Trash, Mic, ShieldAlert, Upload, ArrowRight, Check } from 'lucide-react';
 import { ScrollArea } from './ui/scroll-area';
 import { useState, useEffect, useRef } from 'react';
-import VirtualList, { VirtualListRef } from './VirtualList';
+// Virtualized scrolling is implemented manually to avoid adding heavy
+// dependencies. We track scroll position and container height to render
+// only the visible rows plus some overscan buffer.
 import supabase from '@/supabase';
 import { Button } from './ui/button';
 import OnlineStatusIndicator from '@/components/OnlineStatusIndicator';
@@ -31,7 +33,12 @@ const TranscriptList = ({
   const [patientName, setPatientName] = useState<string>("");
   const selectedRef = useRef<HTMLButtonElement>(null);
 
-  const listRef = useRef<VirtualListRef | null>(null);
+  // Ref to the scroll container when virtualization is active
+  const listRef = useRef<HTMLDivElement>(null);
+  // Current scroll offset so we know which rows to render
+  const [scrollTop, setScrollTop] = useState(0);
+  // Height of the container used to calculate visible rows
+  const [containerHeight, setContainerHeight] = useState(0);
 
   const ROW_HEIGHT = 72;
   const OVERSCAN = 5;
@@ -43,6 +50,11 @@ const TranscriptList = ({
       throw new Error(error.message);
     }
     return data;
+  };
+
+  // Track scroll position for virtualization
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    setScrollTop(e.currentTarget.scrollTop);
   };
 
 
@@ -182,14 +194,27 @@ const TranscriptList = ({
 
   useEffect(() => {
     if (transcripts.length > VIRTUAL_THRESHOLD) {
-      const idx = transcripts.findIndex(t => t.mid === selectedTranscript?.mid);
+      const idx = transcripts.findIndex((t) => t.mid === selectedTranscript?.mid);
       if (idx !== -1 && listRef.current) {
-        listRef.current.scrollTo(idx * ROW_HEIGHT);
+        listRef.current.scrollTo({ top: idx * ROW_HEIGHT, behavior: 'smooth' });
       }
     } else if (selectedRef.current) {
       selectedRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }, [selectedTranscript?.mid, transcripts.length]);
+
+  // Update container height on mount and when the window resizes so
+  // virtualization calculations remain accurate.
+  useEffect(() => {
+    const handleResize = () => {
+      if (listRef.current) {
+        setContainerHeight(listRef.current.clientHeight);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
 
   return (
@@ -219,25 +244,28 @@ const TranscriptList = ({
           </div>
         </ScrollArea>
       ) : (
-        <VirtualList
-          ref={listRef}
-          itemCount={transcripts.length}
-          itemSize={ROW_HEIGHT}
-          overscan={OVERSCAN}
-        >
-          {(index, style) => {
-            const patient = transcripts[index];
-            return (
-              <div style={style} key={patient.mid}>
-                <TranscriptRow
-                  index={index}
-                  patient={patient}
-                  isSelected={selectedTranscript?.mid === patient.mid}
-                />
-              </div>
-            );
-          }}
-        </VirtualList>
+        <div ref={listRef} onScroll={handleScroll} className="flex-1 overflow-y-auto">
+          <div style={{ height: transcripts.length * ROW_HEIGHT, position: 'relative' }}>
+            <div style={{ transform: `translateY(${Math.floor(scrollTop / ROW_HEIGHT) * ROW_HEIGHT}px)` }}>
+              {transcripts
+                .slice(
+                  Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN),
+                  Math.floor(scrollTop / ROW_HEIGHT) + Math.ceil(containerHeight / ROW_HEIGHT) + OVERSCAN,
+                )
+                .map((patient, i) => {
+                  const index = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN) + i;
+                  return (
+                    <TranscriptRow
+                      key={patient.mid}
+                      index={index}
+                      patient={patient}
+                      isSelected={selectedTranscript?.mid === patient.mid}
+                    />
+                  );
+                })}
+            </div>
+          </div>
+        </div>
       )}
       {selectedTranscript && (
         <div className="p-4 border-t border-gray-200">
