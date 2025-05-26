@@ -26,18 +26,6 @@ If you are developing a production application, we recommend updating the config
 - Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
 - Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
 
-<<<<<<<<< Temporary merge branch 1
-## Environment variables
-
-The application relies on several environment variables for Supabase and Stripe integration. Copy `.env.example` to `.env` and fill in the values.
-
-- `VITE_APP_SUPABASE_URL` - URL of your Supabase project.
-- `VITE_APP_SUPABASE_ANON_KEY` - Supabase anon (public) API key.
-- `VITE_SUPABASE_URL` - same as `VITE_APP_SUPABASE_URL` for build-time use.
-- `VITE_SUPABASE_ANON_KEY` - same as `VITE_APP_SUPABASE_ANON_KEY` for build-time use.
-- `VITE_STRIPE_PUBLISHABLE_KEY` - public Stripe API key used by the client.
-- `STRIPE_SECRET_KEY` - secret Stripe key required by the serverless function.
-=========
 ## Development Setup
 
 1. After cloning the repository, run the setup script once to install the Node.js dependencies:
@@ -64,10 +52,17 @@ The application relies on several environment variables for Supabase and Stripe 
    ```bash
    npm run dev
    ```
-<<<<<<<<< Temporary merge branch 1
->>>>>>>>> Temporary merge branch 2
-=========
 
+## Environment variables
+
+The application relies on several environment variables for Supabase and Stripe integration. Copy `.env.example` to `.env` and fill in the values.
+
+- `VITE_APP_SUPABASE_URL` - URL of your Supabase project.
+- `VITE_APP_SUPABASE_ANON_KEY` - Supabase anon (public) API key.
+- `VITE_SUPABASE_URL` - same as `VITE_APP_SUPABASE_URL` for build-time use.
+- `VITE_SUPABASE_ANON_KEY` - same as `VITE_APP_SUPABASE_ANON_KEY` for build-time use.
+- `VITE_STRIPE_PUBLISHABLE_KEY` - public Stripe API key used by the client.
+- `STRIPE_SECRET_KEY` - secret Stripe key required by the serverless function.
 ### Running ESLint
 
 Before running the linter, ensure development dependencies are installed. Run
@@ -153,7 +148,6 @@ fi
 
 Codex will execute this script automatically during environment initialization.
 
-<<<<<<<<< Temporary merge branch 1
 ### Running Supabase locally
 
 To spin up a local Supabase instance for development:
@@ -166,6 +160,3 @@ To spin up a local Supabase instance for development:
    ```
 3. Point your environment variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to the local instance.
 4. Stop the services with `supabase stop` or by pressing `Ctrl+C`.
->>>>>>>>> Temporary merge branch 2
-=========
->>>>>>>>> Temporary merge branch 2
