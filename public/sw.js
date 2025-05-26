@@ -16,6 +16,13 @@ async function checkForUpdates() {
 
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 
+// Clear the interval used for checking updates when this worker is replaced
+function cleanup() {
+  if (self.__versionCheckInterval) {
+    clearInterval(self.__versionCheckInterval);
+  }
+}
+
 // Precache assets injected by Workbox during the build
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
@@ -46,14 +53,7 @@ self.addEventListener('activate', (event) => {
   // Store the interval ID if needed for cleanup
   self.__versionCheckInterval = intervalId;
 
-  // Cleanup interval when this service worker is being replaced
-  const cleanup = () => {
-    if (self.__versionCheckInterval) {
-      clearInterval(self.__versionCheckInterval);
-    }
-  };
-
-  // Listen for controllerchange/statechange to detect replacement
+  // When this service worker is superseded, clear the version check interval
   self.addEventListener('controllerchange', cleanup);
   self.addEventListener('statechange', cleanup);
 });
