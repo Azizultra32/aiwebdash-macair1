@@ -23,12 +23,12 @@ describe('PromptPlayground', () => {
     expect(screen.queryByTestId('prompt-manager')).toBeNull();
 
     // Switch to Manage Prompts
-    fireEvent.click(screen.getByText('Manage Prompts'));
+    fireEvent.click(screen.getByRole('button', { name: 'Manage Prompts' }));
     expect(screen.getByTestId('prompt-manager')).toBeTruthy();
     expect(screen.queryByTestId('prompt-flow')).toBeNull();
 
     // Switch back to Workflow Diagram
-    fireEvent.click(screen.getByText('Workflow Diagram'));
+    fireEvent.click(screen.getByRole('button', { name: 'Workflow Diagram' }));
     expect(screen.getByTestId('prompt-flow')).toBeTruthy();
     expect(screen.queryByTestId('prompt-manager')).toBeNull();
   });
