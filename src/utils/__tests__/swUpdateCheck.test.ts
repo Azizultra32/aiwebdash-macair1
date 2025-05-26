@@ -1,11 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// Hold originals of globals that will be mocked during tests
+// References to globals we mock, assigned fresh in beforeEach so modifications
+// in one test do not leak into another.
 let originalFetch: typeof global.fetch;
 let originalSetInterval: typeof global.setInterval;
 let originalSelf: any;
 let originalCaches: any;
 let originalSelfWbManifest: any;
+
+// Define ExtendableEvent interface for TypeScript
+interface ExtendableEvent extends Event {
+  waitUntil: (promise: Promise<any>) => void;
+}
 
 // Minimal ExtendableEvent implementation used for testing the activate handler
 class TestExtendableEvent extends Event implements ExtendableEvent {
@@ -13,12 +19,17 @@ class TestExtendableEvent extends Event implements ExtendableEvent {
     super('activate');
   }
 }
+<<<<<<< HEAD
 
 let activateHandler: (event: ExtendableEvent) => void;
 let mockPostMessage: any;
+=======
+let activateHandler: (event: TestExtendableEvent) => void;
+let mockClients: { postMessage: ReturnType<typeof vi.fn> }[];
+>>>>>>> main
 
 beforeEach(async () => {
-  // Save current global implementations so they can be restored in afterEach
+  // Capture the current implementations so they can be restored in afterEach.
   originalFetch = global.fetch;
   originalSetInterval = global.setInterval;
   originalSelf = (global as any).self;

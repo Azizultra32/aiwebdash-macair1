@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// Store originals for globals we mock so they can be restored after each test
+// Store originals for globals we mock. They are assigned in beforeEach so that
+// tests always start from a clean slate even if previous tests modified them.
 let originalFetch: typeof global.fetch;
 let originalSelf: any;
 let originalCaches: any;
@@ -21,11 +22,18 @@ beforeEach(async () => {
   originalCaches = (global as any).caches;
   originalGlobalWbManifest = (global as any).__WB_MANIFEST;
   originalSelfWbManifest = (global as any).self?.__WB_MANIFEST;
+<<<<<<< HEAD
   
   // Reset the module registry to ensure a fresh import of the service worker
   // script for each test run. This avoids state leakage across tests.
+=======
+>>>>>>> main
   vi.resetModules();
   mockPostMessage = vi.fn();
+
+  // Capture the current global.fetch before it is mocked so it can be restored
+  // in afterEach. This prevents test pollution if other suites modify fetch.
+  originalFetch = global.fetch;
 
   (global as any).self = {
     addEventListener: (type: string, handler: any) => {
@@ -103,9 +111,15 @@ describe('service worker message handler', () => {
   });
 
   it('does nothing when versions match', async () => {
+<<<<<<< HEAD
     (global as any).fetch = vi
       .fn()
       .mockResolvedValue({ json: () => Promise.resolve({ version: '1' }) });
+=======
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue({ json: () => Promise.resolve({ version: '1' }) }) as any;
+>>>>>>> main
 
     const event = new MessageEvent<{ type: string; version: string }>('message', {
       data: { type: 'CURRENT_VERSION', version: '1' },
@@ -113,6 +127,10 @@ describe('service worker message handler', () => {
     await messageHandler(event);
     await new Promise(resolve => setTimeout(resolve, 0));
 
+<<<<<<< HEAD
+=======
+    expect(global.fetch).toHaveBeenCalled();
+>>>>>>> main
     expect((global as any).caches.delete).not.toHaveBeenCalled();
     expect(mockPostMessage).not.toHaveBeenCalled();
   });
