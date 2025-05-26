@@ -40,7 +40,6 @@ beforeEach(async () => {
   } as any;
 
   // Workbox expects this manifest to be defined during tests
-  (global as any).__WB_MANIFEST = [];
   (global as any).self.__WB_MANIFEST = [];
   (global as any).caches = {
     delete: vi.fn().mockResolvedValue(true),
