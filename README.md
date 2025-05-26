@@ -96,6 +96,22 @@ linter and tests together:
 npm run lint && npm run test
 ```
 
+### Preparing a Pull Request
+
+Before opening a pull request, run the `prepare-pr.sh` script to rebase your
+branch on the latest `main` branch and execute lint and test checks. This helps
+resolve conflicts early and ensures code quality:
+
+```bash
+./prepare-pr.sh
+```
+
+If your main branch is named differently, pass it as the first argument:
+
+```bash
+./prepare-pr.sh production
+```
+
 ### Storybook
 
 To develop components in isolation, run Storybook:
