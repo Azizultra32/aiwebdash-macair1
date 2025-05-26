@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// Store originals for globals we mock so they can be restored after each test
+// Store originals for globals we mock. They are assigned in beforeEach so that
+// tests always start from a clean slate even if previous tests modified them.
 let originalFetch: typeof global.fetch;
 let originalSelf: any;
 let originalCaches: any;
@@ -23,6 +24,10 @@ beforeEach(async () => {
   originalSelfWbManifest = (global as any).self?.__WB_MANIFEST;
   vi.resetModules();
   mockPostMessage = vi.fn();
+
+  // Capture the current global.fetch before it is mocked so it can be restored
+  // in afterEach. This prevents test pollution if other suites modify fetch.
+  originalFetch = global.fetch;
 
   (global as any).self = {
     addEventListener: (type: string, handler: any) => {
