@@ -7,6 +7,7 @@ let originalSetInterval: typeof global.setInterval;
 let originalSelf: any;
 let originalCaches: any;
 let originalSelfWbManifest: any;
+let intervalId: ReturnType<typeof setInterval> | undefined;
 
 // Define ExtendableEvent interface for TypeScript
 interface ExtendableEvent extends Event {
@@ -19,14 +20,9 @@ class TestExtendableEvent extends Event implements ExtendableEvent {
     super('activate');
   }
 }
-<<<<<<< HEAD
 
 let activateHandler: (event: ExtendableEvent) => void;
 let mockPostMessage: any;
-=======
-let activateHandler: (event: TestExtendableEvent) => void;
-let mockClients: { postMessage: ReturnType<typeof vi.fn> }[];
->>>>>>> main
 
 beforeEach(async () => {
   // Capture the current implementations so they can be restored in afterEach.
@@ -35,10 +31,10 @@ beforeEach(async () => {
   originalSelf = (global as any).self;
   originalCaches = (global as any).caches;
   originalSelfWbManifest = (global as any).self?.__WB_MANIFEST;
-  
+
   // Ensure a fresh module state before each test run
   vi.resetModules();
-  
+
   mockPostMessage = vi.fn();
 
   (global as any).self = {
@@ -61,7 +57,10 @@ beforeEach(async () => {
   } as any;
 
   // Mock the interval setter used inside the service worker logic
-  global.setInterval = vi.fn() as unknown as typeof setInterval;
+  global.setInterval = vi.fn().mockImplementation(() => {
+    intervalId = 1 as any;
+    return intervalId as any;
+  }) as unknown as typeof setInterval;
   global.fetch = vi.fn().mockResolvedValue({ json: vi.fn() }) as any;
 
   await import('../../../public/sw.js');
@@ -70,6 +69,13 @@ beforeEach(async () => {
 afterEach(() => {
   global.fetch = originalFetch;
   global.setInterval = originalSetInterval;
+  if (intervalId !== undefined) {
+    clearInterval(intervalId as any);
+    intervalId = undefined;
+  }
+  if ((global as any).self && (global as any).self.__versionCheckInterval) {
+    delete (global as any).self.__versionCheckInterval;
+  }
   if (originalSelf === undefined) {
     delete (global as any).self;
   } else {

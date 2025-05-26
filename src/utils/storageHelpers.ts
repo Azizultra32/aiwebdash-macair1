@@ -1,41 +1,17 @@
-<<<<<<< HEAD
-import type { TranscriptData, Transcript as TranscriptT } from '@/types/types';
-=======
 import type { Transcript as TranscriptT, TranscriptData } from '@/types/types';
 
 const LOCALSTORAGE_KEY = 'offlineTranscripts';
 const OFFLINE_QUEUE_KEY = 'offlineQueue';
->>>>>>> main
 
 export type OfflineAction =
   | { type: 'create'; data: TranscriptData }
   | { type: 'update'; data: { mid: string; token_count: number } }
   | { type: 'delete'; data: { mid: string } };
 
-<<<<<<< HEAD
-const LOCALSTORAGE_KEY = 'offlineTranscripts';
-const OFFLINE_QUEUE_KEY = 'offlineQueue';
-=======
-/**
- * Save transcripts to local storage.
- */
-export const saveToLocalStorage = (transcripts: TranscriptT[]): void => {
-  localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(transcripts));
-};
-
-/**
- * Load transcripts from local storage.
- */
-export const loadFromLocalStorage = (): TranscriptT[] => {
-  const storedData = localStorage.getItem(LOCALSTORAGE_KEY);
-  return storedData ? JSON.parse(storedData) : [];
-};
->>>>>>> main
-
 /**
  * Save transcripts to local storage
  */
-export const saveToLocalStorage = (transcripts: TranscriptT[]) => {
+export const saveToLocalStorage = (transcripts: TranscriptT[]): void => {
   localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(transcripts));
 };
 
@@ -51,7 +27,9 @@ export const loadFromLocalStorage = (): TranscriptT[] => {
  * Save an action to the offline queue stored in localStorage.
  */
 export const saveToOfflineQueue = (action: OfflineAction): void => {
-  const queue: OfflineAction[] = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
+  const queue: OfflineAction[] = JSON.parse(
+    localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]'
+  );
   queue.push(action);
   localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
 };
