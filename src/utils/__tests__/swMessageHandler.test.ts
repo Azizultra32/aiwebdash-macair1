@@ -92,7 +92,7 @@ afterEach(() => {
 
 describe('service worker message handler', () => {
   it('posts UPDATE_AVAILABLE when versions differ', async () => {
-    const event = new MessageEvent<{ type: string; version: string }>('message', {
+    const event = new MessageEvent<VersionMessage>('message', {
       data: { type: 'CURRENT_VERSION', version: '1' },
     });
     await messageHandler(event);
@@ -121,7 +121,7 @@ describe('service worker message handler', () => {
       .mockResolvedValue({ json: () => Promise.resolve({ version: '1' }) }) as any;
 >>>>>>> main
 
-    const event = new MessageEvent<{ type: string; version: string }>('message', {
+    const event = new MessageEvent<VersionMessage>('message', {
       data: { type: 'CURRENT_VERSION', version: '1' },
     });
     await messageHandler(event);
