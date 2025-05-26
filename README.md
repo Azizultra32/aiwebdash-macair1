@@ -138,3 +138,15 @@ fi
 
 Codex will execute this script automatically during environment initialization.
 
+### Preparing a Pull Request
+
+Before opening a pull request, synchronize your branch with the target branch
+(defaults to `main`) and run the project's checks. Use the provided script:
+
+```bash
+npm run prepare-pr [target-branch]
+```
+
+This will fetch the latest changes from `origin`, rebase your current branch, and
+execute the preflight, lint, and test steps.
+

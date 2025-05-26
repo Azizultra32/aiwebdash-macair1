@@ -12,7 +12,8 @@
     "test": "vitest",
     "generate-types": "npx supabase gen types typescript --project-id 'VITE_SUPABASE_URL' --schema public > src/types/supabase.ts",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "prepare-pr": "bash prepare-pr.sh"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
