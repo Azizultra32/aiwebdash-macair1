@@ -28,6 +28,10 @@
     padding: 0;
     @apply font-sans;
   }
+
+  html {
+    font-size: var(--font-size-base);
+  }
   
   :root {
     --foreground: 222.2 84% 4.9%;
@@ -67,6 +71,7 @@
     --sidebar-width: 20rem;
     --header-height: 4rem;
     --tabs-offset: 120px;
+    --font-size-base: 16px;
   }
 
   .dark {
