@@ -76,15 +76,11 @@ export default function RecorderControls({
         />
       )}
       <div
-        className="flex items-center justify-between w-full max-w-md"
-        style={{
-          height: '80px',
-          padding: '0 20px',
-        }}
+        className="flex items-center justify-between w-full max-w-md h-[80px] px-5"
       >
         <div className="flex items-center space-x-4">
           {(recording || recordingPaused) && (
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-muted-foreground">
               {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
             </div>
           )}
@@ -115,18 +111,7 @@ export default function RecorderControls({
               <button
                 onClick={recording || recordingPaused ? stopRecording : startRecording}
                 disabled={!hasApiKey}
-                style={{
-                  width: '60px',
-                  height: '60px',
-                  borderRadius: '50%',
-                  border: 'none',
-                  background: 'transparent',
-                  cursor: hasApiKey ? 'pointer' : 'not-allowed',
-                  opacity: hasApiKey ? 1 : 0.5,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
+                className={`w-[60px] h-[60px] rounded-full border-0 bg-transparent flex items-center justify-center ${hasApiKey ? 'cursor-pointer opacity-100' : 'cursor-not-allowed opacity-50'}`}
               >
                 {recording && !recordingPaused ? (
                   <svg height="60px" width="100%" viewBox="0 0 64 64" enableBackground="new 0 0 64 64">
@@ -142,7 +127,11 @@ export default function RecorderControls({
                   </svg>
                 )}
               </button>
-              <button onClick={stopRecording} style={{ width: '60px', height: '60px' }} hidden={!recording && !recordingPaused}>
+              <button
+                onClick={stopRecording}
+                className="w-[60px] h-[60px]"
+                hidden={!recording && !recordingPaused}
+              >
                 <svg height="60px" width="100%" viewBox="0 0 64 64" enableBackground="new 0 0 64 64">
                   <path d="M30,2C15.432,2,2,15.432,2,32c0,16.569,13.432,30,30,30s30-13.431,30-30C62,15.432,48.568,2,32,2z M47,47H17V17h30V47z" fill="hsl(var(--destructive))" />
                 </svg>
@@ -152,12 +141,12 @@ export default function RecorderControls({
         </div>
       </div>
       {microphoneError && (
-        <div className="text-red-500 text-sm text-center max-w-md">
+        <div className="text-destructive text-sm text-center max-w-md">
           {microphoneError}
         </div>
       )}
       {!hasApiKey && (
-        <div className="text-orange-500 text-sm text-center max-w-md">
+        <div className="text-primary text-sm text-center max-w-md">
           Please add your OpenAI API key in settings to start recording.
         </div>
       )}
