@@ -155,7 +155,7 @@ export default function FloatingAfterscribe() {
       <Card className={`w-[453px] ${isMinimized ? 'h-12' : 'h-[214px]'} bg-blue-100 overflow-hidden pt-1.5 px-4 pb-4 flex flex-col relative transition-all duration-300 ease-in-out shadow-lg mx-auto`}>
         <div className="h-[4px]" />
         <div className="flex items-center justify-between mb-1">
-          <h2 className="text-lg font-semibold text-gray-800 font-playfair flex items-start">
+          <h2 className="text-lg font-heading font-semibold text-gray-800 flex items-start">
             Afterscribe
             <span className="text-[0.6em] align-top ml-0.5 -mt-1">TM</span>
           </h2>
