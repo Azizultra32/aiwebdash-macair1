@@ -152,7 +152,7 @@ export default function FloatingAfterscribe() {
 
   return (
     <div className="w-full h-full relative">
-      <Card className={`w-[453px] ${isMinimized ? 'h-12' : 'h-[214px]'} bg-[#d1eeff] overflow-hidden pt-1.5 px-4 pb-4 flex flex-col relative transition-all duration-300 ease-in-out shadow-lg mx-auto`}>
+      <Card className={`w-[453px] ${isMinimized ? 'h-12' : 'h-[214px]'} bg-blue-100 overflow-hidden pt-1.5 px-4 pb-4 flex flex-col relative transition-all duration-300 ease-in-out shadow-lg mx-auto`}>
         <div className="h-[4px]" />
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-lg font-semibold text-gray-800 font-playfair flex items-start">
@@ -251,7 +251,7 @@ export default function FloatingAfterscribe() {
                 onClick={handleSubmit}
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 shrink-0 text-gray-600 hover:text-gray-800 hover:bg-[#bfe3ff]"
+                className="h-8 w-8 shrink-0 text-gray-600 hover:text-gray-800 hover:bg-blue-200"
               >
                 <CornerDownLeft className="h-4 w-4" />
                 <span className="sr-only">Submit</span>
