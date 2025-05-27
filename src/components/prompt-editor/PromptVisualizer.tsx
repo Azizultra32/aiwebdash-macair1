@@ -54,13 +54,15 @@ const NodeContent = styled.div`
   .details {
     margin-top: 8px;
     padding-top: 8px;
-    border-top: 1px solid #eee;
+    /* Use border design token */
+    border-top: 1px solid hsl(var(--border));
   }
 
   .content {
     margin-top: 8px;
     font-size: 0.9em;
-    color: #666;
+    /* Muted foreground for better theme support */
+    color: hsl(var(--muted-foreground));
     max-height: 100px;
     overflow-y: auto;
   }
