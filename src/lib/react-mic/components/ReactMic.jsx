@@ -84,8 +84,9 @@ export class ReactMic extends Component {
         height={height}
         className={className}
         style={{
-          border: '1px solid #ccc',
-          borderRadius: '4px'
+          // Use design tokens for border color and radius
+          border: '1px solid hsl(var(--border))',
+          borderRadius: 'var(--radius)'
         }}
       />
     );
