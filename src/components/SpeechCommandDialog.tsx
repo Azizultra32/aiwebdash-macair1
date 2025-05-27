@@ -1,4 +1,9 @@
-import * as Dialog from '@radix-ui/react-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogOverlay,
+  DialogPortal,
+} from "@/components/ui/dialog"
 
 interface Props {
   speechCommandActivated: number;
@@ -17,14 +22,15 @@ export default function SpeechCommandDialog({ speechCommandActivated }: Props) {
             : {};
 
   return (
-    <Dialog.Root open={speechCommandActivated !== 0}>
-      <Dialog.Trigger />
-      <Dialog.Portal>
-        <Dialog.Overlay className="DialogOverlay z-20">
-          <Dialog.Content className="DialogContent" style={style} />
-        </Dialog.Overlay>
-      </Dialog.Portal>
-    </Dialog.Root>
+    <Dialog open={speechCommandActivated !== 0}>
+      <DialogPortal>
+        <DialogOverlay className="bg-black/50 z-20" />
+        <DialogContent
+          className="fixed inset-0 border-none p-0 shadow-none"
+          style={style}
+        />
+      </DialogPortal>
+    </Dialog>
   );
 }
 
