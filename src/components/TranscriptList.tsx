@@ -81,7 +81,7 @@ const TranscriptList = ({
             <span
               className="font-medium"
               contentEditable={unlock[index]}
-              style={unlock[index] ? { outline: 'none', boxShadow: '0-2px 0 #fff inset' } : {}}
+              style={unlock[index] ? { outline: 'none', boxShadow: '0-2px 0 hsl(var(--primary-foreground)) inset' } : {}}
               spellCheck={false}
               onClick={(e: React.MouseEvent) => {
                 if (unlock[index]) {
