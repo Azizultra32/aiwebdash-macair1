@@ -9,47 +9,12 @@ import ReactFlow, {
   MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import styled from 'styled-components';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import supabase from '@/supabase';
 
-const FlowContainer = styled.div`
-  height: 80vh;
-  width: 100%;
-  border: 1px solid hsl(var(--border));
-  border-radius: 8px;
-`;
-
-const NodeContent = styled.div`
-  padding: 10px;
-  border-radius: 5px;
-  background: white;
-  border: 1px solid hsl(var(--border));
-  max-width: 300px;
-
-  .title {
-    font-weight: bold;
-    margin-bottom: 4px;
-  }
-
-  .key {
-    font-size: 0.8em;
-    color: hsl(var(--muted-foreground));
-    margin-top: 4px;
-  }
-
-  .order {
-    font-size: 0.8em;
-    color: hsl(var(--muted-foreground));
-  }
-
-  .inactive {
-    color: hsl(var(--destructive));
-    font-size: 0.8em;
-    margin-top: 4px;
-  }
-`;
+const FlowContainerClasses = 'h-[80vh] w-full';
 
 interface PromptData {
   mid: string;
@@ -100,15 +65,17 @@ const PromptFlow = () => {
       position: { x: index * 250, y: 100 },
       data: {
         label: (
-          <NodeContent>
-            <div className="title">{prompt.title || prompt.prompt_key}</div>
-            <div className="key">Key: {prompt.prompt_key}</div>
-            <div className="order">Order: {prompt.order}</div>
-            {!prompt.is_active && <div className="inactive">Inactive</div>}
+          <Card className="p-2.5 max-w-[300px]">
+            <div className="font-bold mb-1">{prompt.title || prompt.prompt_key}</div>
+            <div className="text-xs text-muted-foreground">Key: {prompt.prompt_key}</div>
+            <div className="text-xs text-muted-foreground">Order: {prompt.order}</div>
+            {!prompt.is_active && (
+              <div className="text-xs text-destructive mt-1">Inactive</div>
+            )}
             <Badge variant={prompt.is_active ? 'default' : 'secondary'}>
               {prompt.agent_code}
             </Badge>
-          </NodeContent>
+          </Card>
         ),
       },
       type: 'default',
@@ -144,7 +111,7 @@ const PromptFlow = () => {
         <h2 className="text-xl font-semibold">Prompt Flow</h2>
         <Button variant="outline">Refresh</Button>
       </div>
-      <FlowContainer>
+      <Card className={FlowContainerClasses}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -153,7 +120,7 @@ const PromptFlow = () => {
           onConnect={onConnect}
           fitView
         />
-      </FlowContainer>
+      </Card>
     </div>
   );
 };
