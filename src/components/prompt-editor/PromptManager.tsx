@@ -8,6 +8,7 @@ import {
 import supabase from '@/supabase';
 import { logger } from '@/utils/logger';
 import PromptVisualizer from './PromptVisualizer';
+import PromptSuggestions from './PromptSuggestions';
 
 const Container = ({ children }: PropsWithChildren) => (
   <div className="p-5">{children}</div>
@@ -445,6 +446,7 @@ const PromptManager = () => {
                     {message.content}
                   </div>
                 ))}
+                <PromptSuggestions prompt={assembledPrompt.map(m => m.content).join('\n')} />
               </PreviewSection>
             </>
           )}
