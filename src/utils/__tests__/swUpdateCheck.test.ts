@@ -22,7 +22,7 @@ class TestExtendableEvent extends Event implements ExtendableEvent {
 }
 
 let activateHandler: (event: ExtendableEvent) => void;
-let mockPostMessage: any;
+let mockPostMessage: ReturnType<typeof vi.fn>;
 
 beforeEach(async () => {
   // Capture the current implementations so they can be restored in afterEach.
