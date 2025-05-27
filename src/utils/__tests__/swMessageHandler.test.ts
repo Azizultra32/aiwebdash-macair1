@@ -42,6 +42,7 @@ beforeEach(async () => {
 
   // Workbox expects this manifest to be defined during tests
   (global as any).self.__WB_MANIFEST = [];
+  (global as any).__WB_MANIFEST = [];
   (global as any).caches = {
     delete: vi.fn().mockResolvedValue(true),
   } as any;
@@ -54,7 +55,9 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
+  // Restore the original fetch implementation to prevent test pollution
   global.fetch = originalFetch;
+  
   if (originalSelf === undefined) {
     delete (global as any).self;
   } else {
