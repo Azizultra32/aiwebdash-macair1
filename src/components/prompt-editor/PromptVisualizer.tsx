@@ -1,24 +1,23 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import ReactFlow, {
-  Background,
-  Controls,
-  Edge,
   Node,
-  Position,
-  MarkerType,
+  Edge,
+  addEdge,
+  Connection,
   useNodesState,
   useEdgesState,
-  NodeProps,
-  Handle
+  MarkerType,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import styled from '@emotion/styled';
+import styled from 'styled-components';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import supabase from '@/supabase';
 
 const VisualizerContainer = styled.div`
   height: 80vh;
   width: 100%;
-  border: 1px solid #ccc;
+  border: 1px solid hsl(var(--border));
   border-radius: 8px;
 `;
 
@@ -26,7 +25,7 @@ const NodeContent = styled.div`
   padding: 15px;
   border-radius: 8px;
   background: white;
-  border: 1px solid #ccc;
+  border: 1px solid hsl(var(--border));
   min-width: 250px;
   max-width: 300px;
 
@@ -39,254 +38,251 @@ const NodeContent = styled.div`
 
   .title {
     font-weight: bold;
-    color: #333;
+    color: hsl(var(--foreground));
   }
 
   .function {
     font-size: 0.8em;
-    color: #666;
+    color: hsl(var(--muted-foreground));
   }
 
   .model {
     font-size: 0.8em;
-    color: #0070f3;
+    color: hsl(var(--ring));
   }
 
   .details {
     margin-top: 8px;
-    font-size: 0.9em;
+    padding-top: 8px;
+    border-top: 1px solid #eee;
   }
 
-  .actions {
-    margin-top: 12px;
-    display: flex;
-    gap: 8px;
+  .content {
+    margin-top: 8px;
+    font-size: 0.9em;
+    color: #666;
+    max-height: 100px;
+    overflow-y: auto;
   }
 `;
 
 const Button = styled.button`
   padding: 4px 8px;
+  margin: 2px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.8em;
-  background-color: #0070f3;
+  background-color: hsl(var(--ring));
   color: white;
   &:hover {
-    background-color: #0051a2;
+    background-color: hsla(var(--ring) / 0.8);
   }
 `;
 
 const DetailPanel = styled.div<{ show: boolean }>`
   position: fixed;
-  right: ${props => props.show ? '0' : '-400px'};
   top: 0;
+  right: ${(props) => (props.show ? '0' : '-400px')};
   width: 400px;
   height: 100vh;
   background: white;
-  box-shadow: -2px 0 5px rgba(0,0,0,0.1);
-  transition: right 0.3s ease;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
   padding: 20px;
   overflow-y: auto;
+  transition: right 0.3s ease;
+  z-index: 1000;
 
-  .close {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    cursor: pointer;
+  h3 {
+    margin-top: 0;
   }
 
   pre {
-    background: #f5f5f5;
+    background: hsl(var(--muted));
     padding: 10px;
     border-radius: 4px;
     overflow-x: auto;
-    margin: 10px 0;
   }
 `;
 
-interface AICall {
-  id: number;
+interface PromptData {
   mid: string;
-  model: string;
-  provider: string;
-  function_name: string;
-  messages: Array<{ role: string; content: string }>;
-  response_text: string;
-  chunk_number?: number;
-  is_final?: boolean;
-  created_at: string;
+  agent_code: string;
+  prompt_key: string;
+  title?: string;
+  content?: string;
+  function?: string;
+  model?: string;
+  order?: number;
+  is_active?: boolean;
 }
 
-const CustomNode = ({ data }: NodeProps) => {
-  const aiCall: AICall = data.aiCall;
-  const [showDetails, setShowDetails] = useState(false);
-
-  return (
-    <>
-      <Handle type="target" position={Position.Left} />
-      <NodeContent>
-        <div className="header">
-          <div className="title">
-            {aiCall.function_name}
-            {aiCall.chunk_number !== undefined && ` #${aiCall.chunk_number}`}
-          </div>
-          {aiCall.is_final && <span className="final">Final</span>}
-        </div>
-        <div className="model">{aiCall.model}</div>
-        <div className="actions">
-          <Button onClick={() => setShowDetails(true)}>View Details</Button>
-          <Button onClick={data.onEditPrompt}>Edit Prompt</Button>
-        </div>
-      </NodeContent>
-      <Handle type="source" position={Position.Right} />
-
-      <DetailPanel show={showDetails}>
-        <div className="close" onClick={() => setShowDetails(false)}>×</div>
-        <h3>AI Call Details</h3>
-        <div>
-          <h4>Input Messages</h4>
-          {aiCall.messages.map((msg, i) => (
-            <div key={i}>
-              <strong>{msg.role}:</strong>
-              <pre>{msg.content}</pre>
-            </div>
-          ))}
-        </div>
-        <div>
-          <h4>Response</h4>
-          <pre>{aiCall.response_text}</pre>
-        </div>
-      </DetailPanel>
-    </>
-  );
-};
-
 interface Props {
-  mid?: string; // Optional - if not provided, will show live session
-  onEditPrompt: (functionName: string) => void;
+  mid?: string;
+  onEditPrompt?: (promptKey: string) => void;
 }
 
 const PromptVisualizer = ({ mid, onEditPrompt }: Props) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [promptData, setPromptData] = useState<PromptData[]>([]);
+  const [selectedPrompt, setSelectedPrompt] = useState<PromptData | null>(null);
+  const [showDetailPanel, setShowDetailPanel] = useState(false);
 
-  const createNodeFromAICall = useCallback((aiCall: AICall, index: number) => {
-    return {
-      id: aiCall.id.toString(),
-      type: 'custom',
-      position: { x: index * 350, y: 100 },
-      data: {
-        aiCall,
-        onEditPrompt: () => onEditPrompt(aiCall.function_name)
+  const onConnect = useCallback(
+    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
+    [setEdges],
+  );
+
+  const handleNodeClick = (prompt: PromptData) => {
+    setSelectedPrompt(prompt);
+    setShowDetailPanel(true);
+  };
+
+  const handleEditPrompt = (promptKey: string) => {
+    if (onEditPrompt) {
+      onEditPrompt(promptKey);
+    }
+    setShowDetailPanel(false);
+  };
+
+  useEffect(() => {
+    // Fetch prompts from Supabase
+    const fetchPrompts = async () => {
+      let query = supabase
+        .from('prompts')
+        .select('mid, agent_code, prompt_key, title, content, function, model, order, is_active')
+        .order('order', { ascending: true });
+
+      if (mid) {
+        query = query.eq('mid', mid);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching prompts:', error);
+        return;
+      }
+
+      if (data) {
+        setPromptData(data);
       }
     };
-  }, [onEditPrompt]);
 
-  const createEdgeFromNodes = useCallback((sourceId: string, targetId: string) => {
+    fetchPrompts();
+  }, [mid]);
+
+  // Create a connection between two prompts in sequence
+  const createEdge = useCallback((sourceId: string, targetId: string, index: number) => {
     return {
-      id: `${sourceId}-${targetId}`,
+      id: `edge-${index}`,
       source: sourceId,
       target: targetId,
       type: 'smoothstep',
       animated: true,
-      style: { stroke: '#0070f3' },
+      style: { stroke: 'hsl(var(--ring))' },
       markerEnd: {
         type: MarkerType.ArrowClosed,
-        color: '#0070f3',
+        color: 'hsl(var(--ring))',
       },
     };
   }, []);
 
-  const updateGraph = useCallback((aiCalls: AICall[]) => {
-    // Sort by created_at and chunk_number
-    const sortedCalls = [...aiCalls].sort((a, b) => {
-      if (a.chunk_number !== undefined && b.chunk_number !== undefined) {
-        return a.chunk_number - b.chunk_number;
-      }
-      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-    });
+  useEffect(() => {
+    if (promptData.length === 0) return;
 
-    // Create nodes
-    const newNodes = sortedCalls.map((call, index) => createNodeFromAICall(call, index));
+    // Create nodes from prompt data
+    const newNodes: Node[] = promptData.map((prompt, index) => ({
+      id: prompt.prompt_key,
+      position: { x: index * 300, y: 100 },
+      data: {
+        label: (
+          <NodeContent>
+            <div className="header">
+              <div className="title">{prompt.title || prompt.prompt_key}</div>
+              <Badge variant={prompt.is_active ? 'default' : 'secondary'}>
+                {prompt.agent_code}
+              </Badge>
+            </div>
+            {prompt.function && <div className="function">Function: {prompt.function}</div>}
+            {prompt.model && <div className="model">Model: {prompt.model}</div>}
+            <div className="details">
+              <Button onClick={() => handleNodeClick(prompt)}>View Details</Button>
+              <Button onClick={() => handleEditPrompt(prompt.prompt_key)}>Edit</Button>
+            </div>
+            {prompt.content && (
+              <div className="content">
+                {prompt.content.length > 100
+                  ? `${prompt.content.substring(0, 100)}...`
+                  : prompt.content}
+              </div>
+            )}
+          </NodeContent>
+        ),
+      },
+      type: 'default',
+    }));
+
     setNodes(newNodes);
 
-    // Create edges between consecutive nodes
-    const newEdges = sortedCalls.slice(1).map((_, index) => 
-      createEdgeFromNodes(
-        sortedCalls[index].id.toString(),
-        sortedCalls[index + 1].id.toString()
-      )
-    );
-    setEdges(newEdges);
-  }, [createNodeFromAICall, createEdgeFromNodes, setNodes, setEdges]);
-
-  useEffect(() => {
-    // Initial load of historical data
-    const loadHistoricalData = async () => {
-      if (!mid) return;
-
-      const { data, error } = await supabase
-        .from('ai_inputs_outputs')
-        .select('*')
-        .eq('mid', mid)
-        .order('created_at', { ascending: true });
-
-      if (!error && data) {
-        updateGraph(data);
+    // Create edges between consecutive prompts
+    const newEdges: Edge[] = [];
+    for (let index = 0; index < promptData.length - 1; index++) {
+      if (promptData[index].is_active && promptData[index + 1].is_active) {
+        newEdges.push(
+          createEdge(
+            promptData[index].prompt_key,
+            promptData[index + 1].prompt_key,
+            index,
+          ),
+        );
       }
-    };
+    }
 
-    loadHistoricalData();
-
-    // Subscribe to realtime updates
-    const channel = supabase
-      .channel('ai-calls')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'ai_inputs_outputs',
-          filter: mid ? `mid=eq.${mid}` : undefined
-        },
-        async (payload) => {
-          // Fetch all data again to ensure correct ordering
-          const { data, error } = await supabase
-            .from('ai_inputs_outputs')
-            .select('*')
-            .eq('mid', mid || payload.new.mid)
-            .order('created_at', { ascending: true });
-
-          if (!error && data) {
-            updateGraph(data);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      channel.unsubscribe();
-    };
-  }, [mid, updateGraph]);
+    setEdges(newEdges);
+  }, [promptData, setNodes, setEdges, createEdge]);
 
   return (
-    <VisualizerContainer>
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        nodeTypes={{ custom: CustomNode }}
-        fitView
-        minZoom={0.5}
-        maxZoom={1.5}
-        defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
-      >
-        <Background />
-        <Controls />
-      </ReactFlow>
-    </VisualizerContainer>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Prompt Visualizer</h2>
+        <Button variant="outline">Refresh</Button>
+      </div>
+      <VisualizerContainer>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          fitView
+        />
+      </VisualizerContainer>
+      <DetailPanel show={showDetailPanel}>
+        <Button onClick={() => setShowDetailPanel(false)}>Close</Button>
+        {selectedPrompt && (
+          <div>
+            <h3>{selectedPrompt.title || selectedPrompt.prompt_key}</h3>
+            <p><strong>Agent:</strong> {selectedPrompt.agent_code}</p>
+            <p><strong>Key:</strong> {selectedPrompt.prompt_key}</p>
+            {selectedPrompt.function && <p><strong>Function:</strong> {selectedPrompt.function}</p>}
+            {selectedPrompt.model && <p><strong>Model:</strong> {selectedPrompt.model}</p>}
+            <p><strong>Order:</strong> {selectedPrompt.order}</p>
+            <p><strong>Active:</strong> {selectedPrompt.is_active ? 'Yes' : 'No'}</p>
+            {selectedPrompt.content && (
+              <div>
+                <h4>Content:</h4>
+                <pre>{selectedPrompt.content}</pre>
+              </div>
+            )}
+            <Button onClick={() => handleEditPrompt(selectedPrompt.prompt_key)}>
+              Edit Prompt
+            </Button>
+          </div>
+        )}
+      </DetailPanel>
+    </div>
   );
 };
 
