@@ -16,15 +16,7 @@ const Login = () => {
         </div>
         <div className="w-full max-w-md z-10 ">
           <h1
-            className="mb-6 text-center font-bold"
-            style={{
-              fontWeight: 700,
-              fontFamily: 'Panchang, Panchang Placeholder, sans-serif',
-              color: '#1f226d',
-              fontSize: '28px',
-              letterSpacing: '0.06em',
-              lineHeight: 1.2,
-            }}
+            className="mb-6 text-center font-heading font-bold text-[#1f226d] text-[28px] tracking-[0.06em] leading-[1.2]"
           >
             Login
           </h1>
@@ -35,14 +27,7 @@ const Login = () => {
               <p className="text-[#06065E] font-bold text-xs">Not Registered? </p>
               <Link
                 to="/register"
-                style={{
-                  fontWeight: 900,
-                  fontFamily: 'Satoshi, sans-serif',
-                  color: '#2386f8',
-                  fontSize: '12px',
-                  letterSpacing: '0.04em',
-                  lineHeight: 1.2,
-                }}
+                className="font-sans font-black text-[#2386f8] text-[12px] tracking-[0.04em] leading-[1.2]"
               >
                 Create an account
               </Link>
@@ -51,14 +36,7 @@ const Login = () => {
               <p className="text-[#06065E] font-bold">Forgot Password? </p>
               <Link
                 to="/reset"
-                style={{
-                  fontWeight: 900,
-                  fontFamily: 'Satoshi, sans-serif',
-                  color: '#2386f8',
-                  fontSize: '12px',
-                  letterSpacing: '0.04em',
-                  lineHeight: 1.2,
-                }}
+                className="font-sans font-black text-[#2386f8] text-[12px] tracking-[0.04em] leading-[1.2]"
               >
                 Reset password
               </Link>
