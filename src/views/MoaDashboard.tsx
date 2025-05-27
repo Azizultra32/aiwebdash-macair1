@@ -14,6 +14,7 @@ import { Search, ChevronLeft, ChevronRight, Plus, X } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { useNavigate } from 'react-router-dom'
+import DraggableContainer from '@/components/DraggableContainer'
 
 // Types
 type Person = {
@@ -486,7 +487,8 @@ export default function Dashboard() {
           <div className="grid grid-cols-2 gap-4 p-4 h-[calc(100vh-4rem)] overflow-hidden">
             {isDoctorsVisible ? (
               // MOA Assignment Column
-              <Card className="col-span-1 overflow-hidden">
+              <DraggableContainer className="col-span-1">
+              <Card className="overflow-hidden">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0">
                   <CardTitle>Assign MOAs to Doctors</CardTitle>
                   <CreateGroupDialog doctors={doctors} onCreateGroup={handleCreateGroup} />
@@ -514,9 +516,11 @@ export default function Dashboard() {
                   </ScrollArea>
                 </CardContent>
               </Card>
+              </DraggableContainer>
             ) : (
               // Tasks Panel (visible when doctors column is collapsed)
-              <Card className="col-span-1 overflow-hidden">
+              <DraggableContainer className="col-span-1">
+              <Card className="overflow-hidden">
                 <CardHeader>
                   <CardTitle>Tasks</CardTitle>
                   <div className="relative">
@@ -572,9 +576,11 @@ export default function Dashboard() {
                   </Tabs>
                 </CardContent>
               </Card>
+              </DraggableContainer>
             )}
             {/* MOAs Panel */}
-            <Card className="col-span-1 overflow-hidden">
+            <DraggableContainer className="col-span-1">
+            <Card className="overflow-hidden">
               <CardHeader>
                 <CardTitle>MOAs</CardTitle>
                 <div className="relative">
@@ -595,6 +601,7 @@ export default function Dashboard() {
                 </ScrollArea>
               </CardContent>
             </Card>
+            </DraggableContainer>
           </div>
         </div>
       </div>
