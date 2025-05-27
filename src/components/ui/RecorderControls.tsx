@@ -1,59 +1,73 @@
+import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import { ReactMic } from '@/lib/react-mic';
-import { Switch } from '@/components/ui/switch';
-import { MyLiveKitRoom } from '../MyLiveKitRoom';
-import { TranscriptData } from '@/types/types';
-
-interface RecorderControlsProps {
-  recording: boolean;
-  recordingPaused: boolean;
-  isRecordButtonDisabled: boolean;
-  hasMicrophoneAccess: boolean;
-  onStart: () => void;
-  onData: (blob: Blob, soundDetected: boolean) => void;
-  onStop: (blob: Blob, soundDetected: boolean) => void;
-  startRecording: () => void;
-  pauseRecording: () => void;
-  stopRecording: () => void;
-  isAddendum: boolean;
-  setIsAddendum: (v: boolean) => void;
-  isVoiceChat: boolean;
-  setIsVoiceChat: (v: boolean) => void;
-  mimeType: string;
-  patientData: TranscriptData;
-  selectPatient: (patientTag: number) => void;
-}
+import { useEffect, useState } from 'react';
+import { Button } from './button';
 
 export default function RecorderControls({
-  recording,
-  recordingPaused,
-  isRecordButtonDisabled,
-  hasMicrophoneAccess,
-  onStart,
-  onData,
-  onStop,
-  startRecording,
-  pauseRecording,
-  stopRecording,
-  isAddendum,
-  setIsAddendum,
-  isVoiceChat,
-  setIsVoiceChat,
-  mimeType,
-  patientData,
-  selectPatient,
-}: RecorderControlsProps) {
+  isRecording,
+  setIsRecording,
+  isPaused,
+  setIsPaused,
+  recordingBlob,
+  setRecordingBlob,
+  hasApiKey,
+  mid,
+  microphoneError,
+  setMicrophoneError,
+}: {
+  isRecording: boolean;
+  setIsRecording: React.Dispatch<React.SetStateAction<boolean>>;
+  isPaused: boolean;
+  setIsPaused: React.Dispatch<React.SetStateAction<boolean>>;
+  recordingBlob: Blob | null;
+  setRecordingBlob: React.Dispatch<React.SetStateAction<Blob | null>>;
+  hasApiKey: boolean;
+  mid: string;
+  microphoneError: string;
+  setMicrophoneError: React.Dispatch<React.SetStateAction<string>>;
+}) {
+  const {
+    recording,
+    recordingPaused,
+    startRecording,
+    stopRecording,
+    pauseRecording,
+    resumeRecording,
+    hasMicrophoneAccess,
+    mimeType,
+  } = useAudioRecorder({ mid });
+
+  const [recordingTime, setRecordingTime] = useState(0);
+
+  useEffect(() => {
+    setIsRecording(recording);
+  }, [recording, setIsRecording]);
+
+  useEffect(() => {
+    setIsPaused(recordingPaused);
+  }, [recordingPaused, setIsPaused]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (recording && !recordingPaused) {
+      interval = setInterval(() => {
+        setRecordingTime((prev) => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [recording, recordingPaused]);
+
   return (
-    <>
-      {!isVoiceChat && (
+    <div className="flex flex-col items-center justify-center space-y-4 p-6">
+      {(recording || recordingPaused) && (
         <ReactMic
-          record={recording}
-          className="frequencyBars"
-          onStart={onStart}
-          onData={onData}
-          onStop={onStop}
-          channelCount={2}
-          autoGainControl={true}
-          audioBitsPerSecond={128000}
+          record={recording && !recordingPaused}
+          className="w-full max-w-md"
+          onStop={(blob: Blob) => {
+            setRecordingBlob(blob);
+            setRecordingTime(0);
+          }}
+          onData={() => {}}
           sampleRate={32000}
           timeSlice={60000}
           mimeType={mimeType}
@@ -62,79 +76,91 @@ export default function RecorderControls({
         />
       )}
       <div
-        className="flex flex-col items-center gap-2.5 mb-0.5"
+        className="flex items-center justify-between w-full max-w-md"
+        style={{
+          height: '80px',
+          padding: '0 20px',
+        }}
       >
-        {!isVoiceChat && (
-          <>
-            <div
-              style={{
-                display:
-                  !isAddendum && (recording || recordingPaused || !hasMicrophoneAccess)
-                    ? 'none'
-                    : 'flex',
-              }}
-              className="items-center gap-2"
-            >
-              <div
-                style={{
-                  cursor: recording || recordingPaused || !hasMicrophoneAccess ? 'pointer' : 'not-allowed',
-                }}
-                className="flex items-center gap-2"
-              >
-                <label className="text-sm font-medium">Addendum</label>
-                <Switch
-                  checked={isAddendum}
-                  disabled={recording || recordingPaused || !hasMicrophoneAccess}
-                  onCheckedChange={setIsAddendum}
-                />
-              </div>
+        <div className="flex items-center space-x-4">
+          {(recording || recordingPaused) && (
+            <div className="text-sm text-gray-600">
+              {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
             </div>
-            <div
-              style={{
-                cursor: recording || recordingPaused ? 'not-allowed' : 'pointer',
-              }}
-              className="flex items-center gap-2"
+          )}
+        </div>
+        <div className="flex items-center space-x-4">
+          {recording && recordingPaused && (
+            <Button
+              onClick={resumeRecording}
+              disabled={!hasApiKey}
+              variant="outline"
+              size="sm"
             >
-              <label className="text-sm font-medium">Voice Chat</label>
-              <Switch
-                checked={isVoiceChat}
-                disabled={recording || recordingPaused}
-                onCheckedChange={setIsVoiceChat}
-              />
-            </div>
-            <div className="flex justify-center">
+              Resume
+            </Button>
+          )}
+          {recording && !recordingPaused && (
+            <Button
+              onClick={pauseRecording}
+              disabled={!hasApiKey}
+              variant="outline"
+              size="sm"
+            >
+              Pause
+            </Button>
+          )}
+          <div className="flex items-center space-x-2">
+            <div className="relative">
               <button
-                onClick={hasMicrophoneAccess ? (recording && !recordingPaused ? pauseRecording : startRecording) : undefined}
-                className="w-[60px] h-[60px]"
-                disabled={isRecordButtonDisabled}
+                onClick={recording || recordingPaused ? stopRecording : startRecording}
+                disabled={!hasApiKey}
+                style={{
+                  width: '60px',
+                  height: '60px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: 'transparent',
+                  cursor: hasApiKey ? 'pointer' : 'not-allowed',
+                  opacity: hasApiKey ? 1 : 0.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
                 {recording && !recordingPaused ? (
                   <svg height="60px" width="100%" viewBox="0 0 64 64" enableBackground="new 0 0 64 64">
-                    <path d="M30,2C15.432,2,2,15.432,2,32c0,16.569,13.432,30,30,30s30-13.431,30-30C62,15.432,48.568,2,32,2z M47,47H17V17h30V47z" fill="red" />
+                    <path d="M30,2C15.432,2,2,15.432,2,32c0,16.569,13.432,30,30,30s30-13.431,30-30C62,15.432,48.568,2,32,2z M47,47H17V17h30V47z" fill="hsl(var(--destructive))" />
                     <g transform="translate(12.5 16) scale(0.6 0.6)">
-                      <path d="M23,45c0,1,0.9,2,2,2h4c1.1,0,2-1.1,2-2V9c0-1-0.9-2-2-2h-4c-1.1,0-2,1.1-2,2V43z" fill="red" />
-                      <path d="M35,45c0,1,0.9,2,2,2h4c1.1,0,2-1.1,2-2V9c0-1-0.9-2-2-2h-4c-1.1,0-2,1.1-2,2V43z" fill="red" />
+                      <path d="M23,45c0,1,0.9,2,2,2h4c1.1,0,2-1.1,2-2V9c0-1-0.9-2-2-2h-4c-1.1,0-2,1.1-2,2V43z" fill="hsl(var(--destructive))" />
+                      <path d="M35,45c0,1,0.9,2,2,2h4c1.1,0,2-1.1,2-2V9c0-1-0.9-2-2-2h-4c-1.1,0-2,1.1-2,2V43z" fill="hsl(var(--destructive))" />
                     </g>
                   </svg>
                 ) : (
                   <svg height="60px" width="100%">
-                    <circle cx="30" cy="30" r="25" stroke="black" strokeWidth="3" fill={hasMicrophoneAccess ? 'hsl(var(--success))' : 'hsl(var(--muted-foreground))'} />
+                    <circle cx="30" cy="30" r="25" stroke="hsl(var(--foreground))" strokeWidth="3" fill={hasMicrophoneAccess ? 'hsl(var(--success))' : 'hsl(var(--muted-foreground))'} />
                   </svg>
                 )}
               </button>
-              <button onClick={stopRecording} className="w-[60px] h-[60px]" hidden={!recording && !recordingPaused}>
+              <button onClick={stopRecording} style={{ width: '60px', height: '60px' }} hidden={!recording && !recordingPaused}>
                 <svg height="60px" width="100%" viewBox="0 0 64 64" enableBackground="new 0 0 64 64">
-                  <path d="M30,2C15.432,2,2,15.432,2,32c0,16.569,13.432,30,30,30s30-13.431,30-30C62,15.432,48.568,2,32,2z M47,47H17V17h30V47z" fill="red" />
+                  <path d="M30,2C15.432,2,2,15.432,2,32c0,16.569,13.432,30,30,30s30-13.431,30-30C62,15.432,48.568,2,32,2z M47,47H17V17h30V47z" fill="hsl(var(--destructive))" />
                 </svg>
               </button>
             </div>
-          </>
-        )}
-        {isVoiceChat && (
-          <MyLiveKitRoom mid={patientData.mid} onDisconnected={() => setIsVoiceChat(false)} selectPatient={selectPatient} />
-        )}
+          </div>
+        </div>
       </div>
-    </>
+      {microphoneError && (
+        <div className="text-red-500 text-sm text-center max-w-md">
+          {microphoneError}
+        </div>
+      )}
+      {!hasApiKey && (
+        <div className="text-orange-500 text-sm text-center max-w-md">
+          Please add your OpenAI API key in settings to start recording.
+        </div>
+      )}
+    </div>
   );
 }
-

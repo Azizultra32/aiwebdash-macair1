@@ -1,64 +1,43 @@
-/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-import { ReactNode, useState } from 'react'
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger
-} from '@/components/ui/tabs'
-import { Card, CardContent } from '@/components/ui/card'
+import React from 'react';
+import styled from 'styled-components';
 
-interface TabItem {
-  label: string;
-  content: ReactNode;
+type TabOption = 'editor' | 'visualizer' | 'flow' | 'tester';
+
+interface Props {
+  activeTab: TabOption;
+  onTabChange: (tab: TabOption) => void;
 }
 
-interface PromptTabsProps {
-  tabs: TabItem[];
-  defaultActive?: number;
-}
-
-/**
- * Generic tabbed UI component used by prompt-related views.
- * Renders a set of labeled tabs and displays the active tab's content.
- */
-const PromptTabs = ({ tabs, defaultActive = 0 }: PromptTabsProps) => {
-  const [activeIndex, setActiveIndex] = useState(defaultActive);
-
-  if (!tabs.length) {
-    // Nothing to render if no tabs were provided
-    return null;
+const TabButton = styled.button<{ active: boolean }>`
+  padding: 8px 16px;
+  margin-right: 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: ${(props) => (props.active ? 'hsl(var(--ring))' : 'hsl(var(--muted))')};
+  color: ${(props) => (props.active ? 'hsl(var(--primary-foreground))' : 'hsl(var(--foreground))')};
+  &:hover {
+    background-color: ${(props) => (props.active ? 'hsl(var(--ring) / 0.8)' : 'hsl(var(--muted-foreground))')};
   }
+`;
 
-  // Clamp the active index to a valid range
-  const safeIndex = Math.min(Math.max(activeIndex, 0), tabs.length - 1);
-
-  const activeLabel = tabs[safeIndex]?.label
-
+const PromptTabs = ({ activeTab, onTabChange }: Props) => {
   return (
-    <Tabs
-      value={activeLabel}
-      onValueChange={(val) =>
-        setActiveIndex(tabs.findIndex((t) => t.label === val))
-      }
-      className="w-full"
-    >
-      <TabsList className="mb-5 flex flex-wrap gap-2 bg-transparent">
-        {tabs.map((tab) => (
-          <TabsTrigger key={tab.label} value={tab.label}>
-            {tab.label}
-          </TabsTrigger>
-        ))}
-      </TabsList>
-      {tabs.map((tab) => (
-        <TabsContent key={tab.label} value={tab.label} className="mt-0">
-          <Card>
-            <CardContent className="p-4">{tab.content}</CardContent>
-          </Card>
-        </TabsContent>
-      ))}
-    </Tabs>
-  )
+    <div style={{ marginBottom: '20px' }}>
+      <TabButton active={activeTab === 'editor'} onClick={() => onTabChange('editor')}>
+        Editor
+      </TabButton>
+      <TabButton active={activeTab === 'visualizer'} onClick={() => onTabChange('visualizer')}>
+        Visualizer
+      </TabButton>
+      <TabButton active={activeTab === 'flow'} onClick={() => onTabChange('flow')}>
+        Flow
+      </TabButton>
+      <TabButton active={activeTab === 'tester'} onClick={() => onTabChange('tester')}>
+        Tester
+      </TabButton>
+    </div>
+  );
 };
 
 export default PromptTabs;

@@ -1,155 +1,160 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import ReactFlow, { 
-  Background, 
-  Controls, 
-  Edge,
+import ReactFlow, {
   Node,
-  applyEdgeChanges,
-  applyNodeChanges,
-  MarkerType
+  Edge,
+  addEdge,
+  Connection,
+  useNodesState,
+  useEdgesState,
+  MarkerType,
 } from 'reactflow';
-import { logger } from '@/utils/logger';
 import 'reactflow/dist/style.css';
+import styled from 'styled-components';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import supabase from '@/supabase';
-import { Card } from '@/components/ui/card'
 
-const FlowContainerClasses =
-  'h-[80vh] w-full border border-gray-300 rounded-lg overflow-hidden'
+const FlowContainer = styled.div`
+  height: 80vh;
+  width: 100%;
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+`;
 
-const NodeContent: React.FC<{ component: PromptComponent }> = ({ component }) => (
-  <div className="p-2 rounded border border-gray-300 bg-white max-w-[300px]">
-    <div className="font-bold mb-1">{component.title}</div>
-    <div className="text-xs text-gray-600 mt-1">Key: {component.prompt_key}</div>
-    <div className="text-xs text-gray-600">Order: {component.sort_order}</div>
-    {!component.is_active && (
-      <div className="text-red-600 text-xs mt-1">Inactive</div>
-    )}
-  </div>
-)
+const NodeContent = styled.div`
+  padding: 10px;
+  border-radius: 5px;
+  background: white;
+  border: 1px solid hsl(var(--border));
+  max-width: 300px;
 
-interface PromptComponent {
-  id: number;
-  created_at: string;
+  .title {
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+
+  .key {
+    font-size: 0.8em;
+    color: hsl(var(--muted-foreground));
+    margin-top: 4px;
+  }
+
+  .order {
+    font-size: 0.8em;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .inactive {
+    color: hsl(var(--destructive));
+    font-size: 0.8em;
+    margin-top: 4px;
+  }
+`;
+
+interface PromptData {
+  mid: string;
+  agent_code: string;
   prompt_key: string;
-  title: string;
-  prompt_text: string;
-  sort_order: number;
-  is_active: boolean;
+  title?: string;
+  order?: number;
+  is_active?: boolean;
 }
 
 const PromptFlow = () => {
-  const [nodes, setNodes] = useState<Node[]>([]);
-  const [edges, setEdges] = useState<Edge[]>([]);
-  const [_, setPrompts] = useState<PromptComponent[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [promptData, setPromptData] = useState<PromptData[]>([]);
+
+  const onConnect = useCallback(
+    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
+    [setEdges],
+  );
 
   useEffect(() => {
-    fetchPrompts();
-  }, []);
-
-  const fetchPrompts = async () => {
-    try {
-      logger.debug('Fetching prompts...');
+    // Fetch prompts from Supabase
+    const fetchPrompts = async () => {
       const { data, error } = await supabase
-        .from('system_prompt_components')
-        .select('*')
-        .order('sort_order');
+        .from('prompts')
+        .select('mid, agent_code, prompt_key, title, order, is_active')
+        .order('order', { ascending: true });
 
       if (error) {
         console.error('Error fetching prompts:', error);
-        setError(error.message);
         return;
       }
 
-      logger.debug('Fetched prompts', data);
-      setPrompts(data || []);
-      createNodesAndEdges(data || []);
-    } catch (err) {
-      console.error('Error in fetchPrompts:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
-    }
-  };
+      if (data) {
+        setPromptData(data);
+      }
+    };
 
-  const createNodesAndEdges = (promptData: PromptComponent[]) => {
-    logger.debug('Creating nodes and edges for', promptData);
-    const newNodes: Node[] = [];
+    fetchPrompts();
+  }, []);
+
+  useEffect(() => {
+    if (promptData.length === 0) return;
+
+    // Create nodes from prompt data
+    const newNodes: Node[] = promptData.map((prompt, index) => ({
+      id: prompt.prompt_key,
+      position: { x: index * 250, y: 100 },
+      data: {
+        label: (
+          <NodeContent>
+            <div className="title">{prompt.title || prompt.prompt_key}</div>
+            <div className="key">Key: {prompt.prompt_key}</div>
+            <div className="order">Order: {prompt.order}</div>
+            {!prompt.is_active && <div className="inactive">Inactive</div>}
+            <Badge variant={prompt.is_active ? 'default' : 'secondary'}>
+              {prompt.agent_code}
+            </Badge>
+          </NodeContent>
+        ),
+      },
+      type: 'default',
+    }));
+
+    setNodes(newNodes);
+
+    // Create edges between consecutive prompts
     const newEdges: Edge[] = [];
-    
-    // Calculate positions based on sort_order
-    const spacing = { x: 300, y: 100 };
-    const startPos = { x: 100, y: 100 };
-    
-    // Create nodes for each component
-    promptData.forEach((component, index) => {
-      const row = Math.floor(index / 3);
-      const col = index % 3;
-      
-      newNodes.push({
-        id: component.prompt_key,
-        position: { 
-          x: startPos.x + (col * spacing.x), 
-          y: startPos.y + (row * spacing.y)
-        },
-        data: {
-          label: <NodeContent component={component} />
-        },
-        type: 'default',
-        style: {
-          opacity: component.is_active ? 1 : 0.5
-        }
-      });
-
-      // Create edge to next component if it exists and is active
-      if (index < promptData.length - 1 && component.is_active && promptData[index + 1].is_active) {
+    for (let index = 0; index < promptData.length - 1; index++) {
+      if (promptData[index].is_active && promptData[index + 1].is_active) {
         newEdges.push({
-          id: `e${component.prompt_key}-${promptData[index + 1].prompt_key}`,
-          source: component.prompt_key,
+          id: `edge-${index}`,
+          source: promptData[index].prompt_key,
           target: promptData[index + 1].prompt_key,
           type: 'smoothstep',
           animated: true,
-          style: { stroke: '#2563eb' },
+          style: { stroke: 'hsl(var(--ring))' },
           markerEnd: {
             type: MarkerType.ArrowClosed,
-            color: '#2563eb',
+            color: 'hsl(var(--ring))',
           },
         });
       }
-    });
+    }
 
-    logger.debug('Setting nodes', newNodes);
-    logger.debug('Setting edges', newEdges);
-    setNodes(newNodes);
     setEdges(newEdges);
-  };
-
-  const onNodesChange = useCallback((changes: any) => {
-    setNodes((nds) => applyNodeChanges(changes, nds));
-  }, []);
-
-  const onEdgesChange = useCallback((changes: any) => {
-    setEdges((eds) => applyEdgeChanges(changes, eds));
-  }, []);
-
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
+  }, [promptData, setNodes, setEdges]);
 
   return (
-    <Card className={FlowContainerClasses}>
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        fitView
-        minZoom={0.5}
-        maxZoom={1.5}
-        defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
-      >
-        <Background />
-        <Controls />
-      </ReactFlow>
-    </Card>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Prompt Flow</h2>
+        <Button variant="outline">Refresh</Button>
+      </div>
+      <FlowContainer>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          fitView
+        />
+      </FlowContainer>
+    </div>
   );
 };
 
