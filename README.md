@@ -65,6 +65,8 @@ The application relies on several environment variables for Supabase and Stripe 
 - `VITE_STRIPE_CHECKOUT_URL` - URL of the Stripe checkout serverless function.
 - `STRIPE_SECRET_KEY` - secret Stripe key required by the serverless function.
 - `VITE_PROMPT_MANAGER_IDS` - comma-separated list of user IDs allowed to manage prompts.
+- `VITE_V0_API_URL` - base URL for the v0 UI generation API.
+- `VITE_V0_API_KEY` - authentication token for the v0 API.
 
 ### Running ESLint
 
