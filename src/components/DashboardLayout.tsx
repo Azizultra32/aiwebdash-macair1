@@ -1,4 +1,5 @@
 import { ArrowLeft, User, LogOut, Settings } from 'lucide-react';
+import FontSizeSelector from './FontSizeSelector';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,6 +14,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import supabase from '@/supabase';
@@ -227,6 +230,11 @@ const DashboardHeader = ({
                   Home
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel>Appearance</DropdownMenuLabel>
+              <div className="px-4 py-2">
+                <FontSizeSelector />
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
           <Button variant="secondary" size="sm" onClick={handleLogout}>
