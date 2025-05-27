@@ -9,11 +9,11 @@ export default function SpeechCommandDialog({ speechCommandActivated }: Props) {
     speechCommandActivated === 0
       ? {}
       : speechCommandActivated === 1 || speechCommandActivated === 4
-        ? { backgroundColor: '#4CBB17', width: '100%', height: '100%', opacity: 0.5 }
+        ? { backgroundColor: 'hsl(var(--success))', width: '100%', height: '100%', opacity: 0.5 }
         : speechCommandActivated === 2
-          ? { backgroundColor: '#FFBF00', width: '100%', height: '100%', opacity: 0.5 }
+          ? { backgroundColor: 'hsl(var(--accent))', width: '100%', height: '100%', opacity: 0.5 }
           : speechCommandActivated === 3
-            ? { backgroundColor: '#D22B2B', width: '100%', height: '100%', opacity: 0.5 }
+            ? { backgroundColor: 'hsl(var(--destructive))', width: '100%', height: '100%', opacity: 0.5 }
             : {};
 
   return (

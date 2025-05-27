@@ -16,7 +16,7 @@ import supabase from '@/supabase';
 const FlowContainer = styled.div`
   height: 80vh;
   width: 100%;
-  border: 1px solid #ccc;
+  border: 1px solid hsl(var(--border));
   border-radius: 8px;
 `;
 
@@ -24,7 +24,7 @@ const NodeContent = styled.div`
   padding: 10px;
   border-radius: 5px;
   background: white;
-  border: 1px solid #ccc;
+  border: 1px solid hsl(var(--border));
   max-width: 300px;
 
   .title {
@@ -34,17 +34,17 @@ const NodeContent = styled.div`
 
   .key {
     font-size: 0.8em;
-    color: #666;
+    color: hsl(var(--muted-foreground));
     margin-top: 4px;
   }
 
   .order {
     font-size: 0.8em;
-    color: #666;
+    color: hsl(var(--muted-foreground));
   }
 
   .inactive {
-    color: #dc2626;
+    color: hsl(var(--destructive));
     font-size: 0.8em;
     margin-top: 4px;
   }
@@ -139,10 +139,10 @@ const PromptFlow = () => {
           target: promptData[index + 1].prompt_key,
           type: 'smoothstep',
           animated: true,
-          style: { stroke: '#2563eb' },
+          style: { stroke: 'hsl(var(--ring))' },
           markerEnd: {
             type: MarkerType.ArrowClosed,
-            color: '#2563eb',
+            color: 'hsl(var(--ring))',
           },
         });
       }

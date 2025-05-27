@@ -173,8 +173,8 @@ ReactMic.propTypes = {
 }
 
 ReactMic.defaultProps = {
-  backgroundColor: 'rgba(255, 255, 255, 0.5)',
-  strokeColor: '#000000',
+  backgroundColor: 'hsla(var(--background) / 0.5)',
+  strokeColor: 'hsl(var(--foreground))',
   className: 'visualizer',
   audioBitsPerSecond: 128000,
   mimeType: 'audio/webm;codecs=opus',

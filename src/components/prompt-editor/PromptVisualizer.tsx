@@ -18,7 +18,7 @@ import supabase from '@/supabase';
 const VisualizerContainer = styled.div`
   height: 80vh;
   width: 100%;
-  border: 1px solid #ccc;
+  border: 1px solid hsl(var(--border));
   border-radius: 8px;
 `;
 
@@ -26,7 +26,7 @@ const NodeContent = styled.div`
   padding: 15px;
   border-radius: 8px;
   background: white;
-  border: 1px solid #ccc;
+  border: 1px solid hsl(var(--border));
   min-width: 250px;
   max-width: 300px;
 
@@ -39,17 +39,17 @@ const NodeContent = styled.div`
 
   .title {
     font-weight: bold;
-    color: #333;
+    color: hsl(var(--foreground));
   }
 
   .function {
     font-size: 0.8em;
-    color: #666;
+    color: hsl(var(--muted-foreground));
   }
 
   .model {
     font-size: 0.8em;
-    color: #0070f3;
+    color: hsl(var(--ring));
   }
 
   .details {
@@ -70,10 +70,10 @@ const Button = styled.button`
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.8em;
-  background-color: #0070f3;
+  background-color: hsl(var(--ring));
   color: white;
   &:hover {
-    background-color: #0051a2;
+    background-color: hsla(var(--ring) / 0.8);
   }
 `;
 
@@ -97,7 +97,7 @@ const DetailPanel = styled.div<{ show: boolean }>`
   }
 
   pre {
-    background: #f5f5f5;
+    background: hsl(var(--muted));
     padding: 10px;
     border-radius: 4px;
     overflow-x: auto;
@@ -190,10 +190,10 @@ const PromptVisualizer = ({ mid, onEditPrompt }: Props) => {
       target: targetId,
       type: 'smoothstep',
       animated: true,
-      style: { stroke: '#0070f3' },
+      style: { stroke: 'hsl(var(--ring))' },
       markerEnd: {
         type: MarkerType.ArrowClosed,
-        color: '#0070f3',
+        color: 'hsl(var(--ring))',
       },
     };
   }, []);

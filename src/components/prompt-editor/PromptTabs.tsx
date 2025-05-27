@@ -12,10 +12,10 @@ const TabButton = styled.button<{ active: boolean }>`
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  background-color: ${(props) => (props.active ? '#0070f3' : '#f4f4f4')};
-  color: ${(props) => (props.active ? 'white' : 'black')};
+  background-color: ${(props) => (props.active ? 'hsl(var(--ring))' : 'hsl(var(--muted))')};
+  color: ${(props) => (props.active ? 'hsl(var(--primary-foreground))' : 'hsl(var(--foreground))')};
   &:hover {
-    background-color: ${(props) => (props.active ? '#0051a2' : '#e4e4e4')};
+    background-color: ${(props) => (props.active ? 'hsl(var(--ring) / 0.8)' : 'hsl(var(--muted-foreground))')};
   }
 `;
 
