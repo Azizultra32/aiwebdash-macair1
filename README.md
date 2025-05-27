@@ -64,6 +64,7 @@ The application relies on several environment variables for Supabase and Stripe 
 - `VITE_STRIPE_PUBLISHABLE_KEY` - public Stripe API key used by the client.
 - `VITE_STRIPE_CHECKOUT_URL` - URL of the Stripe checkout serverless function.
 - `STRIPE_SECRET_KEY` - secret Stripe key required by the serverless function.
+- `VITE_PROMPT_MANAGER_IDS` - comma-separated list of user IDs allowed to manage prompts.
 
 ### Running ESLint
 
@@ -161,3 +162,5 @@ After activation the worker repeats this broadcast every five minutes to detect 
 The dashboard includes a route at `/prompt-playground` for experimenting with prompt flows. Use it to test and refine prompts before integrating them into other workflows.
 
 Open the settings dropdown in the top navigation bar and select **Prompt Playground** to access the page.
+
+Only users listed in `VITE_PROMPT_MANAGER_IDS` can edit prompt components.

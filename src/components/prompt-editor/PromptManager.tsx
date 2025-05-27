@@ -53,6 +53,10 @@ const Legend = ({ children }: PropsWithChildren) => (
 );
 
 const SUPERUSER_ID = '91201600-b62c-4a5e-b2a8-d6784e582b90';
+// Comma-separated list of user IDs allowed to manage prompts.
+const AUTHORIZED_IDS = import.meta.env.VITE_PROMPT_MANAGER_IDS
+  ? (import.meta.env.VITE_PROMPT_MANAGER_IDS as string).split(',')
+  : [SUPERUSER_ID];
 
 const AVAILABLE_VARIABLES = [
   {
@@ -85,11 +89,11 @@ const PromptManager = () => {
         logger.debug('Current user', user);
         setUser(user);
         
-        if (user?.id === SUPERUSER_ID) {
-          logger.debug('User is superuser, fetching data...');
+        if (user && AUTHORIZED_IDS.includes(user.id)) {
+          logger.debug('User is authorized, fetching data...');
           await Promise.all([fetchPrompts(), fetchRecentMeetings()]);
         } else {
-          logger.debug('User is not superuser, skipping data fetch');
+          logger.debug('User is not authorized, skipping data fetch');
         }
       } catch (error) {
         console.error('Error initializing component:', error);
@@ -174,7 +178,7 @@ const PromptManager = () => {
       is_active: true,
       prompt_role: 'system',
       variables: {},
-      user_id: SUPERUSER_ID
+      user_id: user?.id
     });
   };
 
@@ -204,7 +208,7 @@ const PromptManager = () => {
             is_active: editingPrompt.is_active,
             prompt_role: editingPrompt.prompt_role,
             variables: editingPrompt.variables,
-            user_id: SUPERUSER_ID
+            user_id: user?.id ?? editingPrompt.user_id
           }]);
 
     if (error) {
@@ -228,12 +232,12 @@ const PromptManager = () => {
     return <div>Loading...</div>;
   }
 
-  // Only show component if user is superuser
-  if (user?.id !== SUPERUSER_ID) {
-    logger.debug('User is not superuser', { currentId: user?.id, expected: SUPERUSER_ID });
-    return <div>Access denied. You must be a superuser to view this page.</div>;
+  // Only show component if user is authorized
+  if (!user || !AUTHORIZED_IDS.includes(user.id)) {
+    logger.debug('User is not authorized', { currentId: user?.id, allowed: AUTHORIZED_IDS });
+    return <div>Access denied. You must be authorized to view this page.</div>;
   }
-  logger.debug('User is superuser, rendering component');
+  logger.debug('User is authorized, rendering component');
 
   return (
     <Container>
