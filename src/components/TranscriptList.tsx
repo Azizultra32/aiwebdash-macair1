@@ -196,12 +196,20 @@ const TranscriptList = ({
     if (transcripts.length > VIRTUAL_THRESHOLD) {
       const idx = transcripts.findIndex((t) => t.mid === selectedTranscript?.mid);
       if (idx !== -1 && listRef.current) {
-        listRef.current.scrollTo({ top: idx * ROW_HEIGHT, behavior: 'smooth' });
+        listRef.current.scrollTop = idx * ROW_HEIGHT;
       }
     } else if (selectedRef.current) {
-      selectedRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      selectedRef.current.scrollIntoView({ block: 'nearest' });
     }
   }, [selectedTranscript?.mid, transcripts.length]);
+
+  // Recalculate container height when the selected transcript changes to avoid
+  // janky scrolling when the details panel opens or closes.
+  useEffect(() => {
+    if (listRef.current) {
+      setContainerHeight(listRef.current.clientHeight);
+    }
+  }, [selectedTranscript]);
 
   // Update container height on mount and when the window resizes so
   // virtualization calculations remain accurate.

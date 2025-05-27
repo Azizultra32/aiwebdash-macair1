@@ -31,6 +31,7 @@ import { useServiceWorkerReload } from '@/hooks/useServiceWorkerReload';
 import { useTranscriptSelection } from '@/hooks/useTranscriptSelection';
 import SpeechCommandDialog from '@/components/SpeechCommandDialog';
 import StatusBanner from '@/components/StatusBanner';
+import FloatingWidget from '@/components/FloatingWidget';
 
 let clientSideMid: string | undefined = undefined;
 
@@ -438,6 +439,11 @@ const Dashboard = () => {
           recordingPatientMidUUID={recordingPatientMidUUID}
           uploadingPatientMidUUID={uploadingPatientMidUUID} />}
       </DashboardLayout>
+      <FloatingWidget
+        show
+        isActivated={recordingPatientMidUUID !== ''}
+        actions={[{ label: 'Hide', onClick: () => {} }]}
+      />
     </>
   );
 };
