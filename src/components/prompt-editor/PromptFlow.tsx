@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import ReactFlow, { 
   Background, 
   Controls, 
@@ -10,45 +10,22 @@ import ReactFlow, {
 } from 'reactflow';
 import { logger } from '@/utils/logger';
 import 'reactflow/dist/style.css';
-import styled from '@emotion/styled';
 import supabase from '@/supabase';
+import { Card } from '@/components/ui/card'
 
-const FlowContainer = styled.div`
-  height: 80vh;
-  width: 100%;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-`;
+const FlowContainerClasses =
+  'h-[80vh] w-full border border-gray-300 rounded-lg overflow-hidden'
 
-const NodeContent = styled.div`
-  padding: 10px;
-  border-radius: 5px;
-  background: white;
-  border: 1px solid #ccc;
-  max-width: 300px;
-
-  .title {
-    font-weight: bold;
-    margin-bottom: 4px;
-  }
-
-  .key {
-    font-size: 0.8em;
-    color: #666;
-    margin-top: 4px;
-  }
-
-  .order {
-    font-size: 0.8em;
-    color: #666;
-  }
-
-  .inactive {
-    color: #dc2626;
-    font-size: 0.8em;
-    margin-top: 4px;
-  }
-`;
+const NodeContent: React.FC<{ component: PromptComponent }> = ({ component }) => (
+  <div className="p-2 rounded border border-gray-300 bg-white max-w-[300px]">
+    <div className="font-bold mb-1">{component.title}</div>
+    <div className="text-xs text-gray-600 mt-1">Key: {component.prompt_key}</div>
+    <div className="text-xs text-gray-600">Order: {component.sort_order}</div>
+    {!component.is_active && (
+      <div className="text-red-600 text-xs mt-1">Inactive</div>
+    )}
+  </div>
+)
 
 interface PromptComponent {
   id: number;
@@ -113,17 +90,8 @@ const PromptFlow = () => {
           x: startPos.x + (col * spacing.x), 
           y: startPos.y + (row * spacing.y)
         },
-        data: { 
-          label: (
-            <NodeContent>
-              <div className="title">{component.title}</div>
-              <div className="key">Key: {component.prompt_key}</div>
-              <div className="order">Order: {component.sort_order}</div>
-              {!component.is_active && (
-                <div className="inactive">Inactive</div>
-              )}
-            </NodeContent>
-          )
+        data: {
+          label: <NodeContent component={component} />
         },
         type: 'default',
         style: {
@@ -167,7 +135,7 @@ const PromptFlow = () => {
   }
 
   return (
-    <FlowContainer>
+    <Card className={FlowContainerClasses}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -181,7 +149,7 @@ const PromptFlow = () => {
         <Background />
         <Controls />
       </ReactFlow>
-    </FlowContainer>
+    </Card>
   );
 };
 

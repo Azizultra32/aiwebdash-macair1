@@ -1,23 +1,12 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
-import { ReactNode, useState } from 'react';
-import styled from '@emotion/styled';
-
-const TabContainer = styled.div`
-  margin-bottom: 20px;
-`;
-
-const TabButton = styled.button<{ active: boolean }>`
-  padding: 10px 20px;
-  margin-right: 10px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  background-color: ${(props) => (props.active ? '#0070f3' : '#f4f4f4')};
-  color: ${(props) => (props.active ? 'white' : 'black')};
-  &:hover {
-    background-color: ${(props) => (props.active ? '#0051a2' : '#e4e4e4')};
-  }
-`;
+import { ReactNode, useState } from 'react'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
+} from '@/components/ui/tabs'
+import { Card, CardContent } from '@/components/ui/card'
 
 interface TabItem {
   label: string;
@@ -44,22 +33,32 @@ const PromptTabs = ({ tabs, defaultActive = 0 }: PromptTabsProps) => {
   // Clamp the active index to a valid range
   const safeIndex = Math.min(Math.max(activeIndex, 0), tabs.length - 1);
 
+  const activeLabel = tabs[safeIndex]?.label
+
   return (
-    <>
-      <TabContainer>
-        {tabs.map((tab, index) => (
-          <TabButton
-            key={tab.label}
-            active={index === safeIndex}
-            onClick={() => setActiveIndex(index)}
-          >
+    <Tabs
+      value={activeLabel}
+      onValueChange={(val) =>
+        setActiveIndex(tabs.findIndex((t) => t.label === val))
+      }
+      className="w-full"
+    >
+      <TabsList className="mb-5 flex flex-wrap gap-2 bg-transparent">
+        {tabs.map((tab) => (
+          <TabsTrigger key={tab.label} value={tab.label}>
             {tab.label}
-          </TabButton>
+          </TabsTrigger>
         ))}
-      </TabContainer>
-      {tabs[safeIndex].content}
-    </>
-  );
+      </TabsList>
+      {tabs.map((tab) => (
+        <TabsContent key={tab.label} value={tab.label} className="mt-0">
+          <Card>
+            <CardContent className="p-4">{tab.content}</CardContent>
+          </Card>
+        </TabsContent>
+      ))}
+    </Tabs>
+  )
 };
 
 export default PromptTabs;
