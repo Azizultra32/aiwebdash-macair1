@@ -147,7 +147,7 @@ const FormLogin = () => {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-[#20226D] text-white text-center m-4 p-2 -ml-[2px] rounded-md h-12 mt-4 font-bold text-base tracking-[0.04em] leading-[1.2]"
+          className="w-full bg-primary text-primary-foreground text-center m-4 p-2 -ml-[2px] rounded-md h-12 mt-4 font-bold text-base tracking-[0.04em] leading-[1.2]"
         >
           Submit
         </button>

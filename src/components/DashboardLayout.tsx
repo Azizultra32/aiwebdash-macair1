@@ -125,29 +125,21 @@ const DashboardHeader = ({
       <div className="flex justify-between items-center h-full px-4">
         <Link to="/" className="flex items-center">
           <div
-            style={{
-              width: isDesktop ? '160px' : '100px',
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-            className="cursor-pointer relative overflow-hidden"
+            className={cn(
+              'cursor-pointer relative overflow-hidden flex items-center justify-center h-full transition-all duration-200 ease-in-out',
+              isDesktop ? 'w-[160px]' : 'w-[100px]'
+            )}
           >
             <img
               src="/1@2x.png"
               alt="Logo"
-              className="h-8 w-auto object-contain"
-              style={{
-                filter: 'brightness(0) invert(1)', // Makes logo white
-                maxWidth: '100%',
-                transition: 'transform 0.2s ease-in-out',
-              }}
+              className="h-8 w-auto object-contain filter brightness-0 invert max-w-full transition-transform duration-200 ease-in-out"
             />
+            <span className="sr-only">Home</span>
           </div>
         </Link>
 
-        <div className="absolute left-1/2 transform -translate-x-1/2" style={{ width: '300px', height: '40px' }}>
+        <div className="absolute left-1/2 transform -translate-x-1/2 w-[300px] h-10">
           <MicReactiveScanner isActivated={recording} />
         </div>
 
@@ -259,7 +251,7 @@ const DashboardLayout = ({
   clientTranscripts 
 }: Props) => {
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground overflow-hidden" style={{ height: '100vh' }}>
+    <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
       <DashboardHeader 
         isDesktop={isDesktop} 
         onClick={toggleSidebar} 

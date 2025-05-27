@@ -5,7 +5,7 @@ import Routes from './Routes';
 function App() {
   return (
     <GlobalStateProvider>
-      <div className="App" style={{ overflow: 'hidden', height: '100vh' }}>
+      <div className="App h-screen overflow-hidden">
         <Toaster />
         <Routes />
       </div>

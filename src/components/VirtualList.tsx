@@ -67,9 +67,11 @@ const VirtualList = forwardRef<VirtualListRef, VirtualListProps>(
       <div
         ref={containerRef}
         onScroll={onScroll}
-        style={{ overflowY: 'auto', position: 'relative', flex: 1 }}
+        className="overflow-y-auto relative flex-1"
       >
-        <div style={{ height: itemCount * itemSize, position: 'relative' }}>{items}</div>
+        <div style={{ height: itemCount * itemSize }} className="relative">
+          {items}
+        </div>
       </div>
     );
   },
