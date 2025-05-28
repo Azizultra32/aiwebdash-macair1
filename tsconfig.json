@@ -29,6 +29,10 @@
     "@typescript-eslint/no-explicit-any": "off"
   },
 
-  "include": ["src"],
+  "include": [
+    "src",
+    "deno.d.ts",
+    "public/db-worker.js"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
