@@ -21,7 +21,8 @@ class TestExtendableEvent extends Event implements ExtendableEvent {
   }
 }
 
-let activateHandler: (event: ExtendableEvent) => void;
+// Capture the activate event handler typed with our TestExtendableEvent helper
+let activateHandler: (event: TestExtendableEvent) => void;
 let mockPostMessage: ReturnType<typeof vi.fn>;
 
 beforeEach(async () => {
