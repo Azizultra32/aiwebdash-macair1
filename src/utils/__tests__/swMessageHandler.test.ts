@@ -14,6 +14,7 @@ let originalSelfWbManifest: any;
 type VersionMessage = { type: string; version: string };
 let messageHandler: (event: MessageEvent<VersionMessage>) => Promise<void>;
 let mockPostMessage: ReturnType<typeof vi.fn>;
+let addToCacheListSpy: ReturnType<typeof vi.spyOn>;
 
 // Setup a faux service worker environment before importing the script
 beforeEach(async () => {
@@ -28,6 +29,8 @@ beforeEach(async () => {
   // script for each test run. This avoids state leakage across tests.
   vi.resetModules();
   mockPostMessage = vi.fn();
+  const { PrecacheController } = await import('workbox-precaching');
+  addToCacheListSpy = vi.spyOn(PrecacheController.prototype, 'addToCacheList');
 
   (global as any).self = {
     addEventListener: (type: string, handler: any) => {
@@ -41,8 +44,11 @@ beforeEach(async () => {
   } as any;
 
   // Workbox expects this manifest to be defined during tests
-  (global as any).self.__WB_MANIFEST = [];
-  (global as any).__WB_MANIFEST = [];
+  // Provide a dummy entry to ensure PrecacheController.addToCacheList
+  // receives an array of objects
+  const manifest = [{ url: '/index.html', revision: '1' }];
+  (global as any).self.__WB_MANIFEST = manifest;
+  (global as any).__WB_MANIFEST = manifest;
   (global as any).caches = {
     delete: vi.fn().mockResolvedValue(true),
   } as any;
@@ -57,6 +63,7 @@ beforeEach(async () => {
 afterEach(() => {
   // Restore the original fetch implementation to prevent test pollution
   global.fetch = originalFetch;
+  addToCacheListSpy.mockRestore();
   
   if (originalSelf === undefined) {
     delete (global as any).self;
@@ -101,6 +108,7 @@ describe('service worker message handler', () => {
       type: 'UPDATE_AVAILABLE',
       version: '2',
     });
+    expect(addToCacheListSpy).toHaveBeenCalledWith(expect.any(Array));
   });
 
   it('does nothing when versions match', async () => {
@@ -117,5 +125,6 @@ describe('service worker message handler', () => {
     expect(global.fetch).toHaveBeenCalled();
     expect((global as any).caches.delete).not.toHaveBeenCalled();
     expect(mockPostMessage).not.toHaveBeenCalled();
+    expect(addToCacheListSpy).toHaveBeenCalledWith(expect.any(Array));
   });
 });
