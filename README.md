@@ -111,6 +111,16 @@ linter and tests together:
 npm run lint && npm run test
 ```
 
+Before opening a pull request, run the prepare script to rebase your branch and
+execute the lint and test checks:
+
+```bash
+npm run prepare-pr
+```
+
+If `node_modules` is missing, run `bash .codex/setup.sh` before executing this
+command.
+
 ### Storybook
 
 To develop components in isolation, run Storybook:
