@@ -111,6 +111,16 @@ linter and tests together:
 npm run lint && npm run test
 ```
 
+Before opening a pull request, rebase your branch and verify the project passes
+all checks by running:
+
+```bash
+npm run prepare-pr [target-branch]
+```
+
+The script fetches from `origin`, rebases your branch onto the given target
+branch, and runs the preflight, lint, and test steps.
+
 ### Storybook
 
 To develop components in isolation, run Storybook:
