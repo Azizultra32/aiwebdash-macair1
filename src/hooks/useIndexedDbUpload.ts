@@ -16,8 +16,12 @@ interface UseIndexedDbUploadResult {
   finalizeUploads: (patientMid: string) => Promise<void>;
 }
 
-const blobMap = new Map<Promise<any>, [string, Blob]>();
-const uploadMap = new Map<string, Promise<any>[]>();
+interface UploadResult {
+  error?: unknown;
+}
+
+const blobMap = new Map<Promise<UploadResult>, [string, Blob]>();
+const uploadMap = new Map<string, Promise<UploadResult>[]>();
 
 export function useIndexedDbUpload(
   isOnline: boolean,
@@ -37,7 +41,7 @@ export function useIndexedDbUpload(
     };
   }, []);
 
-  const doUpload = useCallback((path: string, blb: Blob) => {
+  const doUpload = useCallback((path: string, blb: Blob): Promise<UploadResult> => {
     return supabase.storage
       .from('armada-voice2')
       .upload(path, blb, {
@@ -48,8 +52,13 @@ export function useIndexedDbUpload(
 
   const handleChunk = useCallback(
     async (patientMid: string, chunk: number, blob: Blob) => {
-      const userUUID: any = await supabase.auth.getSession();
-      const path = `${userUUID.data.session.user.id}/${patientMid}-${chunk}.wav`;
+      const { data } = await supabase.auth.getSession();
+      const session = data.session;
+      if (!session) {
+        console.error('No active session found');
+        return;
+      }
+      const path = `${session.user.id}/${patientMid}-${chunk}.wav`;
       if (isOnline) {
         if (!uploadMap.get(patientMid)) {
           uploadMap.set(patientMid, []);
@@ -74,7 +83,7 @@ export function useIndexedDbUpload(
     async (patientMid: string) => {
       if (!isOnline) return;
       let maxRetries = 3;
-      let retries: Promise<any>[] = [];
+      let retries: Promise<UploadResult>[] = [];
       do {
         try {
           const uploadPromises = uploadMap.get(patientMid) ?? [];
@@ -109,13 +118,18 @@ export function useIndexedDbUpload(
 
   const uploadOfflineChunks = useCallback(async () => {
     try {
-      const userUUID: any = await supabase.auth.getSession();
+      const { data } = await supabase.auth.getSession();
+      const session = data.session;
+      if (!session) {
+        console.error('No active session found');
+        return;
+      }
       const patientMids = await getAllPatientMids();
       for (const patientMid of patientMids) {
         try {
           const chunks = await getAudioChunks(patientMid);
           for (let i = 0; i < chunks.length; i++) {
-            const path = `${userUUID.data.session.user.id}/${patientMid}-${i + 1}.wav`;
+            const path = `${session.user.id}/${patientMid}-${i + 1}.wav`;
             try {
               await doUpload(path, chunks[i]);
             } catch (error) {
