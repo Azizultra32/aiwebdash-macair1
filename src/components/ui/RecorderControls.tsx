@@ -1,7 +1,8 @@
-import { useAudioRecorder } from '@/hooks/useAudioRecorder';
+import useAudioRecorder from '@/hooks/useAudioRecorder';
 import { ReactMic } from '@/lib/react-mic';
 import { useEffect, useState } from 'react';
 import { Button } from './button';
+import { cn } from '@/lib/utils';
 
 export default function RecorderControls({
   isRecording,
@@ -76,7 +77,7 @@ export default function RecorderControls({
         />
       )}
       <div
-        className="flex items-center justify-between w-full max-w-md h-[80px] px-5"
+        className="flex items-center justify-between w-full max-w-md h-20 px-5"
       >
         <div className="flex items-center space-x-4">
           {(recording || recordingPaused) && (
@@ -111,7 +112,10 @@ export default function RecorderControls({
               <button
                 onClick={recording || recordingPaused ? stopRecording : startRecording}
                 disabled={!hasApiKey}
-                className={`w-[60px] h-[60px] rounded-full border-0 bg-transparent flex items-center justify-center ${hasApiKey ? 'cursor-pointer opacity-100' : 'cursor-not-allowed opacity-50'}`}
+                className={cn(
+                  'flex items-center justify-center rounded-full border-none bg-transparent w-[60px] h-[60px]',
+                  hasApiKey ? 'cursor-pointer opacity-100' : 'cursor-not-allowed opacity-50',
+                )}
               >
                 {recording && !recordingPaused ? (
                   <svg height="60px" width="100%" viewBox="0 0 64 64" enableBackground="new 0 0 64 64">
@@ -129,8 +133,8 @@ export default function RecorderControls({
               </button>
               <button
                 onClick={stopRecording}
-                className="w-[60px] h-[60px]"
                 hidden={!recording && !recordingPaused}
+                className="w-[60px] h-[60px]"
               >
                 <svg height="60px" width="100%" viewBox="0 0 64 64" enableBackground="new 0 0 64 64">
                   <path d="M30,2C15.432,2,2,15.432,2,32c0,16.569,13.432,30,30,30s30-13.431,30-30C62,15.432,48.568,2,32,2z M47,47H17V17h30V47z" fill="hsl(var(--destructive))" />
