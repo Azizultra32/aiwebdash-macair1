@@ -6,12 +6,11 @@ import TranscriptList from '@/components/TranscriptList';
 import { logger } from '@/utils/logger';
 import useTranscripts from '@/hooks/useTranscripts';
 import useCreateTranscript from '@/hooks/useCreateTranscript';
-import { realtimeTranscripts, deleteTranscriptAsync, updateTranscriptAsync } from '@/hooks/useCreateTranscript';
+import { useRealtimeTranscripts, deleteTranscriptAsync, updateTranscriptAsync } from '@/hooks/useCreateTranscript';
 import Transcript from '@/components/Transcript';
 import { Loading } from '@/components/Loading';
 import type { Transcript as TranscriptT, TranscriptData } from '@/types/types';
 import AudioRecorder from '@/components/ui/recorder';
-import { useQueryClient } from '@tanstack/react-query';
 import { checkMicrophonePermissions, uuidv4 } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 import 'regenerator-runtime/runtime'
@@ -157,7 +156,6 @@ const Dashboard = () => {
     }
   }, []);
 
-  const queryClient = useQueryClient();
 
   const onDeleteTranscript = async ({ mid, patient_code }: TranscriptData) => {
     if (mid !== undefined && confirm(`Delete patient '${patient_code}'?`)) {
@@ -187,11 +185,7 @@ const Dashboard = () => {
     }
   };
 
-  useEffect(() => {
-    if (isOnline) {
-      realtimeTranscripts(queryClient);
-    }
-  }, [isOnline]);
+  useRealtimeTranscripts(isOnline);
 
   useEffect(() => {
     // Initialize with local storage data immediately
