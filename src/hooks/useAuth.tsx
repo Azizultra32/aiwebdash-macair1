@@ -1,5 +1,6 @@
 import supabase from '@/supabase';
 import { logger } from '@/utils/logger';
+import { isError } from '@/utils/error';
 import { LoginData, UserData, PasswordData } from '@/types/types';
 import { User, Session } from '@supabase/supabase-js';
 import { UseQueryResult, UseMutationResult, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -160,9 +161,13 @@ const AuthProvider = ({ children }: Props) => {
       }
 
       return signUpData;
-    } catch (error: any) {
-      console.error('Final error:', error);
-      throw error;
+    } catch (error: unknown) {
+      if (isError(error)) {
+        console.error('Final error:', error);
+      } else {
+        console.error('Unknown final error', error);
+      }
+      throw error as Error;
     }
   };
 
@@ -203,9 +208,13 @@ const AuthProvider = ({ children }: Props) => {
       queryClient.setQueryData(['user'], data.session.user);
 
       return data;
-    } catch (error: any) {
-      console.error('Final verification error:', error);
-      throw error;
+    } catch (error: unknown) {
+      if (isError(error)) {
+        console.error('Final verification error:', error);
+      } else {
+        console.error('Unknown final verification error', error);
+      }
+      throw error as Error;
     }
   };
 
@@ -233,9 +242,13 @@ const AuthProvider = ({ children }: Props) => {
         console.error('Resend OTP error:', error);
         throw error;
       }
-    } catch (error: any) {
-      console.error('Final resend error:', error);
-      throw error;
+    } catch (error: unknown) {
+      if (isError(error)) {
+        console.error('Final resend error:', error);
+      } else {
+        console.error('Unknown final resend error', error);
+      }
+      throw error as Error;
     }
   };
 
