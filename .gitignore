@@ -51,3 +51,4 @@ debug.log*
 # Temporary PR files
 unique-pr-*.txt
 unique-*.txt
+.merge-metadata-*
