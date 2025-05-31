@@ -1,4 +1,5 @@
-import { QueryClient, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import supabase from '@/supabase';
 import { TranscriptData, TranscriptTokenCount } from '@/types/types';
 import { uuidv4 } from '@/lib/utils';
@@ -6,81 +7,79 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 import { debounce } from '@/utils/debounce';
 import { logger } from '@/utils/logger';
 
-let _didSubscribe: Boolean = false;
-let _onRealtimeUpdate: Function | undefined = undefined;
-let _queryClient: QueryClient | undefined = undefined;
-let _restart: Boolean = false;
-let _mySubscription: RealtimeChannel | undefined = undefined;
+export function useRealtimeTranscripts(enabled: boolean, onRealtimeUpdate?: () => void) {
+  const queryClient = useQueryClient();
+  const subscriptionRef = useRef<RealtimeChannel | null>(null);
+  const restartRef = useRef(false);
 
-export function realtimeTranscripts(queryClient: QueryClient, onRealtimeUpdate: Function | undefined = undefined) {
-  _onRealtimeUpdate = onRealtimeUpdate;
-  _queryClient = queryClient;
-  if (_didSubscribe) {
-    return;
-  }
-  _didSubscribe = true;
-  _restart = false;
-  _mySubscription = undefined;
+  useEffect(() => {
+    if (!enabled) return;
 
-  const connectionErrorHandler = async (status: string) => {
-    _restart = true;
-    if (status !== 'CLOSED') {
-      _mySubscription?.unsubscribe();
-      _mySubscription = undefined;
+    function start_up() {
+      logger.debug('start_up');
+      eventHandler();
+      if (document.visibilityState === 'visible' && restartRef.current) {
+        logger.debug('start stream');
+        startStream();
+        restartRef.current = false;
+      }
     }
-    logger.debug('disconnect', { status });
-    if (document.visibilityState === 'visible') {
-        start_up(); // got an error, but tab still running so restart
-    }
-  };
 
-  const eventHandler = debounce(() => {
-    _queryClient?.invalidateQueries(['transcripts2']);
-    _onRealtimeUpdate && _onRealtimeUpdate();
-  }, 1000);
-
-  const startStream = debounce(async () => {
-    logger.debug('subscribing to realtime...');
-    _mySubscription = supabase
-      .channel('room1')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'transcripts2',
-        },
-        eventHandler
-      )
-      .subscribe((status) => {
-        logger.debug('subscribed', { status });
-        if (status === 'SUBSCRIBED') {
-          // Connection established
-        }
-        else {
-          connectionErrorHandler(status);
-        }
-      });
-  }, 2000);
-
-  startStream();
-
-  const start_up = async () => {
-    logger.debug('start_up');
-    eventHandler();
-    if (document.visibilityState === 'visible' && _restart) {
-      logger.debug('start stream');
-      startStream();
-      _restart = false;
-    }
-  };
-
-  document.onvisibilitychange = () => {
-    logger.debug('visibility change', { state: document.visibilityState })
-    if (document.visibilityState === 'visible') {
+    const connectionErrorHandler = (status: string) => {
+      restartRef.current = true;
+      if (status !== 'CLOSED') {
+        subscriptionRef.current?.unsubscribe();
+        subscriptionRef.current = null;
+      }
+      logger.debug('disconnect', { status });
+      if (document.visibilityState === 'visible') {
         start_up();
-    }
-  };
+      }
+    };
+
+    const eventHandler = debounce(() => {
+      queryClient.invalidateQueries(['transcripts2']);
+      onRealtimeUpdate && onRealtimeUpdate();
+    }, 1000);
+
+    const startStream = debounce(() => {
+      logger.debug('subscribing to realtime...');
+      subscriptionRef.current = supabase
+        .channel('room1')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'transcripts2',
+          },
+          eventHandler
+        )
+        .subscribe(status => {
+          logger.debug('subscribed', { status });
+          if (status !== 'SUBSCRIBED') {
+            connectionErrorHandler(status);
+          }
+        });
+    }, 2000);
+
+    const visibilityHandler = () => {
+      logger.debug('visibility change', { state: document.visibilityState });
+      if (document.visibilityState === 'visible') {
+        start_up();
+      }
+    };
+
+    startStream();
+    document.addEventListener('visibilitychange', visibilityHandler);
+
+    return () => {
+      document.removeEventListener('visibilitychange', visibilityHandler);
+      subscriptionRef.current?.unsubscribe();
+      subscriptionRef.current = null;
+      restartRef.current = false;
+    };
+  }, [enabled, onRealtimeUpdate, queryClient]);
 }
 
 export async function deleteTranscriptAsync(mid: string) {
