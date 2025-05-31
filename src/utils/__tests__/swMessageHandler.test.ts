@@ -3,10 +3,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // Store originals for globals we mock. They are assigned in beforeEach so that
 // tests always start from a clean slate even if previous tests modified them.
 let originalFetch: typeof global.fetch;
-let originalSelf: any;
-let originalCaches: any;
-let originalGlobalWbManifest: any;
-let originalSelfWbManifest: any;
+let originalSelf: unknown;
+let originalCaches: unknown;
+let originalGlobalWbManifest: unknown;
+let originalSelfWbManifest: unknown;
 
 // Explicitly type the expected shape of the message event handled by the
 // service worker. This mirrors the structure used in `public/sw.js` when
@@ -20,10 +20,10 @@ let addToCacheListSpy: ReturnType<typeof vi.spyOn>;
 beforeEach(async () => {
   // Capture current global implementations so we can restore them later
   originalFetch = global.fetch;
-  originalSelf = (global as any).self;
-  originalCaches = (global as any).caches;
-  originalGlobalWbManifest = (global as any).__WB_MANIFEST;
-  originalSelfWbManifest = (global as any).self?.__WB_MANIFEST;
+  originalSelf = (globalThis as { self?: unknown }).self;
+  originalCaches = (globalThis as { caches?: unknown }).caches;
+  originalGlobalWbManifest = (globalThis as { __WB_MANIFEST?: unknown }).__WB_MANIFEST;
+  originalSelfWbManifest = (globalThis as { self?: { __WB_MANIFEST?: unknown } }).self?.__WB_MANIFEST;
 
   // Reset the module registry to ensure a fresh import of the service worker
   // script for each test run. This avoids state leakage across tests.
@@ -32,8 +32,9 @@ beforeEach(async () => {
   const { PrecacheController } = await import('workbox-precaching');
   addToCacheListSpy = vi.spyOn(PrecacheController.prototype, 'addToCacheList');
 
-  (global as any).self = {
-    addEventListener: (type: string, handler: any) => {
+  // Test mocking: assign a fake service worker global
+(globalThis as { self?: unknown }).self = {
+    addEventListener: (type: string, handler: EventListenerOrEventListenerObject) => {
       if (type === 'message') {
         messageHandler = handler;
       }
@@ -47,15 +48,15 @@ beforeEach(async () => {
   // Provide a dummy entry to ensure PrecacheController.addToCacheList
   // receives an array of objects
   const manifest = [{ url: '/index.html', revision: '1' }];
-  (global as any).self.__WB_MANIFEST = manifest;
-  (global as any).__WB_MANIFEST = manifest;
-  (global as any).caches = {
+  (globalThis as { self?: { __WB_MANIFEST?: unknown } }).self!.__WB_MANIFEST = manifest;
+  (globalThis as { __WB_MANIFEST?: unknown }).__WB_MANIFEST = manifest;
+  (globalThis as { caches?: unknown }).caches = {
     delete: vi.fn().mockResolvedValue(true),
   } as any;
 
   global.fetch = vi
     .fn()
-    .mockResolvedValue({ json: () => Promise.resolve({ version: '2' }) }) as any;
+    .mockResolvedValue({ json: () => Promise.resolve({ version: '2' }) }) as unknown as typeof fetch;
 
   await import('../../../public/sw.js');
 });

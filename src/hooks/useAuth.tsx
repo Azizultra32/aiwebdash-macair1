@@ -160,7 +160,7 @@ const AuthProvider = ({ children }: Props) => {
       }
 
       return signUpData;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Final error:', error);
       throw error;
     }
@@ -203,7 +203,7 @@ const AuthProvider = ({ children }: Props) => {
       queryClient.setQueryData(['user'], data.session.user);
 
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Final verification error:', error);
       throw error;
     }
@@ -233,7 +233,7 @@ const AuthProvider = ({ children }: Props) => {
         console.error('Resend OTP error:', error);
         throw error;
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Final resend error:', error);
       throw error;
     }

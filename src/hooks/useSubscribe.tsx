@@ -55,11 +55,12 @@ export default function useSubscribe() {
         if (stripeError) {
           throw stripeError;
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Stripe checkout error:', error);
+        const errorMsg = (typeof error === 'object' && error && 'message' in error) ? (error as { message: string }).message : String(error);
         toast({
           title: 'Error',
-          description: error.message || 'Failed to initiate checkout',
+          description: errorMsg,
           variant: 'destructive',
         });
       }

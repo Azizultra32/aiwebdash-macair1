@@ -12,7 +12,7 @@ import FloatingAfterscribe from './FloatingAfterscribe';
 
 interface TranscriptTabsProps {
   transcript: Transcript;
-  summaryMap: Record<string, any>;
+  summaryMap: Record<string, { links: string[]; title: string; number: number; summary: string }>;
   activeTab: string;
   setActiveTab: (tab: string) => void;
   summaryRefs: {

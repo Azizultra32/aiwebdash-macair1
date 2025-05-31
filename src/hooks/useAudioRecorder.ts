@@ -13,7 +13,8 @@ export default function useAudioRecorder(onTranscription: RecordCallback) {
   const [isRecording, setIsRecording] = useState(false);
   const chunkNumberRef = useRef<ChunkNumberWrapper>({ chunkNumber: 0 });
   const recorderRef = useRef(new MicRecorder({ bitRate: 128 }));
-  const intervalRef = useRef<any>(null);
+  // In Node, setInterval returns a Timeout object, in browsers a number. Use 'NodeJS.Timeout | number | null' for compatibility.
+  const intervalRef = useRef<NodeJS.Timeout | number | null>(null);
   const segmentsRef = useRef<string[]>([]);
   const flashUUIDRef = useRef<string | null>(null);
 
@@ -48,7 +49,7 @@ export default function useAudioRecorder(onTranscription: RecordCallback) {
 
     if (!isRecording) {
       flashUUIDRef.current = uuidv4();
-      recorder.start().catch((e: any) => console.error(e));
+      recorder.start().catch((e: unknown) => console.error(e));
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
@@ -56,12 +57,15 @@ export default function useAudioRecorder(onTranscription: RecordCallback) {
       intervalRef.current = setInterval(() => {
         recorder
           .getMp3()
-          .then(([_, blob]: [any, Blob]) => {
+          .then((result) => {
+           // MicRecorder.getMp3() returns [buffer, Blob], but buffer is not used. We type it as unknown for safety.
+           const [, blob] = result as [unknown, Blob];
+
             const soundDetected = AudioContext.getSoundDetected();
             AudioContext.setSoundDetected(false);
             transcribe(blob, soundDetected, data.session?.user?.id);
           })
-          .catch((e: any) => logger.error('Recorder error', e));
+          .catch((e: unknown) => logger.error('Recorder error', e));
       }, 3000);
     } else {
       if (intervalRef.current) {
@@ -71,12 +75,15 @@ export default function useAudioRecorder(onTranscription: RecordCallback) {
       recorder
         .stop()
         .getMp3()
-        .then(([_, blob]: [any, Blob]) => {
+        .then((result) => {
+           // MicRecorder.getMp3() returns [buffer, Blob], but buffer is not used. We type it as unknown for safety.
+           const [, blob] = result as [unknown, Blob];
+
           const soundDetected = AudioContext.getSoundDetected();
           AudioContext.setSoundDetected(false);
           transcribe(blob, soundDetected, data.session?.user?.id);
         })
-        .catch((e: any) => logger.error('Recorder stop error', e));
+        .catch((e: unknown) => logger.error('Recorder stop error', e));
     }
     setIsRecording(!isRecording);
   }, [isRecording, transcribe]);

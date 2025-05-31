@@ -49,7 +49,7 @@ export function getAudioMimeType(): string {
   return 'audio/mp3';
   const priorities: string[] = ['webm', 'm4a', 'mp4', 'mp3', 'mpeg', 'mpga', 'wav'];
   const allAudioMimeTypes = getAllSupportedAudioMimeTypes();
-  const map = priorities.reduce((accum : any, p : string) => {
+  const map = priorities.reduce<Record<string, string>>((accum, p: string) => {
     const mimeType = allAudioMimeTypes.filter(x => x && x.length).find(x => x.indexOf(p) > -1);
     if (mimeType && mimeType.length && accum[p] === undefined) {
       accum[p] = mimeType;

@@ -48,8 +48,10 @@ export function useIndexedDbUpload(
 
   const handleChunk = useCallback(
     async (patientMid: string, chunk: number, blob: Blob) => {
-      const userUUID: any = await supabase.auth.getSession();
-      const path = `${userUUID.data.session.user.id}/${patientMid}-${chunk}.wav`;
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (!userId) throw new Error('No user ID found in session');
+      const path = `${userId}/${patientMid}-${chunk}.wav`;
       if (isOnline) {
         if (!uploadMap.get(patientMid)) {
           uploadMap.set(patientMid, []);
@@ -109,13 +111,15 @@ export function useIndexedDbUpload(
 
   const uploadOfflineChunks = useCallback(async () => {
     try {
-      const userUUID: any = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (!userId) throw new Error('No user ID found in session');
       const patientMids = await getAllPatientMids();
       for (const patientMid of patientMids) {
         try {
           const chunks = await getAudioChunks(patientMid);
           for (let i = 0; i < chunks.length; i++) {
-            const path = `${userUUID.data.session.user.id}/${patientMid}-${i + 1}.wav`;
+            const path = `${userId}/${patientMid}-${i + 1}.wav`;
             try {
               await doUpload(path, chunks[i]);
             } catch (error) {

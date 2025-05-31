@@ -4,9 +4,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // in one test do not leak into another.
 let originalFetch: typeof global.fetch;
 let originalSetInterval: typeof global.setInterval;
-let originalSelf: any;
-let originalCaches: any;
-let originalSelfWbManifest: any;
+let originalSelf: unknown;
+let originalCaches: unknown;
+let originalSelfWbManifest: unknown;
 let intervalId: ReturnType<typeof setInterval> | undefined;
 
 // Define ExtendableEvent interface for TypeScript
@@ -29,17 +29,18 @@ beforeEach(async () => {
   // Capture the current implementations so they can be restored in afterEach.
   originalFetch = global.fetch;
   originalSetInterval = global.setInterval;
-  originalSelf = (global as any).self;
-  originalCaches = (global as any).caches;
-  originalSelfWbManifest = (global as any).self?.__WB_MANIFEST;
+  originalSelf = (globalThis as { self?: unknown }).self;
+  originalCaches = (globalThis as { caches?: unknown }).caches;
+  originalSelfWbManifest = (globalThis as { self?: { __WB_MANIFEST?: unknown } }).self?.__WB_MANIFEST;
 
   // Ensure a fresh module state before each test run
   vi.resetModules();
 
   mockPostMessage = vi.fn();
 
-  (global as any).self = {
-    addEventListener: (type: string, handler: any) => {
+  // Test mocking: assign a fake service worker global
+(globalThis as { self?: unknown }).self = {
+    addEventListener: (type: string, handler: EventListenerOrEventListenerObject) => {
       if (type === 'activate') {
         activateHandler = handler;
       }
@@ -49,10 +50,10 @@ beforeEach(async () => {
     },
   } as any;
 
-  (global as any).self.__WB_MANIFEST = [];
-  (global as any).__WB_MANIFEST = [];
+  (globalThis as { self?: { __WB_MANIFEST?: unknown } }).self!.__WB_MANIFEST = [];
+  (globalThis as { __WB_MANIFEST?: unknown }).__WB_MANIFEST = [];
 
-  (global as any).caches = {
+  (globalThis as { caches?: unknown }).caches = {
     keys: vi.fn().mockResolvedValue([]),
     delete: vi.fn().mockResolvedValue(true),
   } as any;

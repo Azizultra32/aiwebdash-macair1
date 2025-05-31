@@ -1,0 +1,8 @@
+# Ignore config and build files that are not part of the main TypeScript project
+supabase/functions/stripe-checkout/index.ts
+tailwind.config.js
+update-appcache.cjs
+vite.config.ts
+
+# Ignore test artifacts
+unique-pr-*.txt

@@ -7,11 +7,12 @@ import {
 } from '../indexedDB';
 
 class FakeWorker {
-  onmessage: ((e: { data: any }) => void) | null = null;
+  onmessage: ((e: MessageEvent<{ data: unknown }>) => void) | null = null;
   postMessage = vi.fn();
   terminate = vi.fn();
   emit(data: any) {
-    this.onmessage?.({ data } as any);
+    // We use type assertion here because test emits are not real MessageEvents
+this.onmessage?.({ data } as unknown as MessageEvent<{ data: unknown }>);
   }
 }
 
@@ -33,22 +34,24 @@ describe('indexedDB helpers', () => {
   beforeEach(() => {
     worker = new FakeWorker();
     originalWorker = globalThis.Worker;
-    (globalThis as any).Worker = vi.fn(() => worker);
+    // Test mocking: Worker is replaced for controlled test environment
+(globalThis as unknown as { Worker: typeof Worker }).Worker = vi.fn(() => worker);
     originalFileReader = globalThis.FileReader;
-    (globalThis as any).FileReader = FakeFileReader as any;
+    // Test mocking: FileReader is replaced for controlled test environment
+(globalThis as unknown as { FileReader: typeof FileReader }).FileReader = FakeFileReader as typeof FileReader;
   });
 
   afterEach(() => {
     closeIndexedDB();
     if (originalWorker) {
-      (globalThis as any).Worker = originalWorker;
+      (globalThis as unknown as { Worker: typeof Worker }).Worker = originalWorker;
     } else {
-      delete (globalThis as any).Worker;
+      delete (globalThis as unknown as { Worker?: typeof Worker }).Worker;
     }
     if (originalFileReader) {
-      (globalThis as any).FileReader = originalFileReader;
+      (globalThis as unknown as { FileReader: typeof FileReader }).FileReader = originalFileReader;
     } else {
-      delete (globalThis as any).FileReader;
+      delete (globalThis as unknown as { FileReader?: typeof FileReader }).FileReader;
     }
     vi.restoreAllMocks();
   });

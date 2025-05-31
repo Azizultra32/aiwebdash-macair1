@@ -73,10 +73,30 @@ const AVAILABLE_VARIABLES = [
 type ViewMode = 'edit' | 'visualize';
 
 const PromptManager = () => {
-  const [prompts, setPrompts] = useState<any[]>([]);
-  const [editingPrompt, setEditingPrompt] = useState<any>(null);
-  const [assembledPrompt, setAssembledPrompt] = useState<any[]>([]);
-  const [user, setUser] = useState<any>(null);
+  interface Prompt {
+  id: string;
+  title: string;
+  content: string;
+  prompt_key?: string;
+  prompt_text?: string;
+  sort_order?: number;
+  is_active?: boolean;
+  prompt_role?: string;
+  variables?: Record<string, unknown>;
+  user_id?: string;
+  role?: string;
+  // Add more fields as needed
+}
+
+const [prompts, setPrompts] = useState<Prompt[]>([]);
+  const [editingPrompt, setEditingPrompt] = useState<Prompt | null>(null);
+  const [assembledPrompt, setAssembledPrompt] = useState<Prompt[]>([]);
+  interface User {
+  id: string;
+  email?: string;
+  // Add more fields as needed
+}
+const [user, setUser] = useState<User | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('edit');
   const [selectedMid, setSelectedMid] = useState<string>('');
   const [recentMeetings, setRecentMeetings] = useState<Array<{mid: string, created_at: string}>>([]);
@@ -163,23 +183,24 @@ const PromptManager = () => {
     }
   };
 
-  const handleEdit = (prompt: any) => {
+  const handleEdit = (prompt: Prompt) => {
     setEditingPrompt({ 
       ...prompt,
-      variables: prompt.variables || {}
     });
   };
 
   const handleAdd = () => {
     setEditingPrompt({
-      prompt_key: '',
+      id: '', // New prompt, id to be generated on save
       title: '',
+      content: '',
+      prompt_key: '',
       prompt_text: '',
       sort_order: prompts.length,
       is_active: true,
       prompt_role: 'system',
       variables: {},
-      user_id: user?.id
+      user_id: user?.id,
     });
   };
 
@@ -304,6 +325,8 @@ const PromptManager = () => {
                     setEditingPrompt({
                       ...editingPrompt,
                       prompt_key: e.target.value,
+                      id: editingPrompt.id || '',
+                      content: editingPrompt.content || '',
                     })
                   }
                   required
@@ -320,6 +343,8 @@ const PromptManager = () => {
                     setEditingPrompt({
                       ...editingPrompt,
                       title: e.target.value,
+                      id: editingPrompt.id || '',
+                      content: editingPrompt.content || '',
                     })
                   }
                   required
@@ -335,6 +360,8 @@ const PromptManager = () => {
                     setEditingPrompt({
                       ...editingPrompt,
                       prompt_role: e.target.value,
+                      id: editingPrompt.id || '',
+                      content: editingPrompt.content || '',
                     })
                   }
                   required
