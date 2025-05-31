@@ -76,7 +76,11 @@ const Button = styled.button`
   background-color: hsl(var(--ring));
   color: white;
   &:hover {
+<<<<<<< HEAD
     background-color: hsla(var(--ring) / 0.8);
+=======
+    background-color: hsl(var(--ring));
+>>>>>>> 1ec5456 (refactor: replace hard-coded colors with tokens)
   }
 `;
 
