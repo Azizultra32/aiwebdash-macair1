@@ -186,6 +186,28 @@ fi
 
 Codex will execute this script automatically during environment initialization.
 
+### Working with PR branches
+
+After running the setup script, you can use the included PR dashboard script to view and manage pull request branches:
+
+```bash
+./pr-dashboard.sh
+```
+
+The dashboard shows a list of all open PRs with:
+- PR number and title (when using GitHub CLI)
+- Commands to check out each PR branch
+- Instructions for rebasing and merging
+
+To work with a specific PR:
+
+1. Check out the PR branch using the command from the dashboard
+2. Rebase it on the latest main branch using `./prepare-pr.sh main`
+3. Review the changes and run tests if needed
+4. Merge to main with a descriptive commit message
+
+This workflow allows for efficient PR management even when working offline.
+
 ## Service Worker Version Checks
 
 When the service worker activates it broadcasts `GET_CURRENT_VERSION` to every connected client. Each client replies with its current version so the worker can compare it to the latest value from `version.json`.
