@@ -55,8 +55,13 @@ self.addEventListener('activate', (event) => {
 
   // When this service worker is superseded, clear the version check interval
   self.addEventListener('controllerchange', cleanup);
-  if (self.registration && self.registration.installing) {
-    self.registration.installing.addEventListener('statechange', cleanup);
+  if (self.registration) {
+    self.registration.addEventListener('updatefound', () => {
+      const newWorker = self.registration?.installing;
+      if (newWorker) {
+        newWorker.addEventListener('statechange', cleanup);
+      }
+    });
   }
 });
 
