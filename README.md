@@ -154,7 +154,7 @@ supabase stop
 
 ### Codex environment setup
 
-Codex disables network access after the setup phase. Create a `.codex/setup.sh` script so dependencies are installed while the network is still available:
+Codex disables network access after the setup phase. The `.codex/setup.sh` script installs dependencies and fetches open pull requests while the network is still available. It first checks for an `origin` remote and falls back to the `REPO_URL` environment variable if one isn't configured.
 
 ```bash
 #!/usr/bin/env bash
@@ -162,7 +162,22 @@ set -euo pipefail
 
 # Install Node.js dependencies
 if command -v npm >/dev/null 2>&1; then
-  npm ci --include=dev
+  npm install --legacy-peer-deps
+  npm run lint || echo "Linting failed during setup"
+  npm run test || echo "Tests failed during setup"
+
+  # Fetch open pull requests
+  if git remote get-url origin >/dev/null 2>&1; then
+    git fetch origin 'refs/pull/*/head:refs/pull/*' || true
+  elif [ -n "${REPO_URL:-}" ]; then
+    git remote add origin "$REPO_URL"
+    git fetch origin 'refs/pull/*/head:refs/pull/*' || true
+  else
+    echo "Warning: no 'origin' remote found and REPO_URL is unset; skipping fetch"
+  fi
+  if command -v gh >/dev/null 2>&1; then
+    gh pr list --state open --json number,title,headRefName > pr_list.json
+  fi
 else
   echo "Error: npm not found." >&2
   exit 1
