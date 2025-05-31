@@ -10,6 +10,14 @@ if command -v npm >/dev/null 2>&1; then
   # allow the script to continue so dependency installation succeeds.
   npm run lint || echo "Linting failed during setup"
   npm run test || echo "Tests failed during setup"
+
+  # Fetch all PR refs from GitHub
+  git fetch origin 'refs/pull/*/head:refs/pull/*'
+  
+  # Optionally save a list of open PRs if GitHub CLI is available
+  if command -v gh >/dev/null 2>&1; then
+    gh pr list --state open --json number,title,headRefName > pr_list.json
+  fi
 else
   echo "Error: npm not found." >&2
   exit 1
