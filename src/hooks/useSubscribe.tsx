@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import supabase from '@/supabase';
 import { toast } from '@/components/ui/use-toast';
 import { getStripe } from '@/lib/stripe';
+import { isError } from '@/utils/error';
 
 export default function useSubscribe() {
   const navigate = useNavigate();
@@ -55,13 +56,22 @@ export default function useSubscribe() {
         if (stripeError) {
           throw stripeError;
         }
-      } catch (error: any) {
-        console.error('Stripe checkout error:', error);
-        toast({
-          title: 'Error',
-          description: error.message || 'Failed to initiate checkout',
-          variant: 'destructive',
-        });
+      } catch (error: unknown) {
+        if (isError(error)) {
+          console.error('Stripe checkout error:', error);
+          toast({
+            title: 'Error',
+            description: error.message || 'Failed to initiate checkout',
+            variant: 'destructive',
+          });
+        } else {
+          console.error('Unknown Stripe checkout error', error);
+          toast({
+            title: 'Error',
+            description: 'Failed to initiate checkout',
+            variant: 'destructive',
+          });
+        }
       }
     },
     [navigate],
