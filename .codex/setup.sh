@@ -11,6 +11,12 @@ if command -v npm >/dev/null 2>&1; then
   npm run lint || echo "Linting failed during setup"
   npm run test || echo "Tests failed during setup"
 
+  # Configure git remote if it doesn't exist
+  if ! git remote | grep -q 'origin'; then
+    echo "Setting up git remote origin"
+    git remote add origin https://github.com/Azizultra32/aiwebdash-macair1.git
+  fi
+
   # Fetch all PR refs from GitHub
   git fetch origin 'refs/pull/*/head:refs/pull/*'
   
