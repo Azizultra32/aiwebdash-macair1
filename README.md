@@ -111,15 +111,15 @@ linter and tests together:
 npm run lint && npm run test
 ```
 
-Before opening a pull request, run the prepare script to rebase your branch and
-execute the lint and test checks:
+Before opening a pull request, rebase your branch and verify the project passes
+all checks by running:
 
 ```bash
-npm run prepare-pr
+npm run prepare-pr [target-branch]
 ```
 
-If `node_modules` is missing, run `bash .codex/setup.sh` before executing this
-command.
+The script fetches from `origin`, rebases your branch onto the given target
+branch, and runs the preflight, lint, and test steps.
 
 ### Testing notes
 
