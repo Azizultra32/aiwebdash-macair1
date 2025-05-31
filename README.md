@@ -184,3 +184,7 @@ The dashboard includes a route at `/prompt-playground` for experimenting with pr
 Open the settings dropdown in the top navigation bar and select **Prompt Playground** to access the page.
 
 Only users listed in `VITE_PROMPT_MANAGER_IDS` can edit prompt components.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
