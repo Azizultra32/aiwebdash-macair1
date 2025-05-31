@@ -11,8 +11,13 @@ if command -v npm >/dev/null 2>&1; then
   npm run lint || echo "Linting failed during setup"
   npm run test || echo "Tests failed during setup"
 
-  # Fetch all PR refs from GitHub
-  git fetch origin 'refs/pull/*/head:refs/pull/*'
+  # Fetch open pull requests if an origin remote is available. This step
+  # shouldn't stop the rest of the setup if it fails.
+  if ! git remote | grep -q 'origin'; then
+    echo "Setting up git remote origin"
+    git remote add origin https://github.com/Azizultra32/aiwebdash-macair1.git
+  fi
+  git fetch origin 'refs/pull/*/head:refs/pull/*' || true
   
   # Optionally save a list of open PRs if GitHub CLI is available
   if command -v gh >/dev/null 2>&1; then
