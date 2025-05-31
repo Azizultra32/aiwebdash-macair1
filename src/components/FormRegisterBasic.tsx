@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import supabase from '@/supabase';
 import { logger } from '@/utils/logger';
+import { isError } from '@/utils/error';
 
 const formSchema = z.object({
   name: z.string().min(3),
@@ -94,11 +95,15 @@ const FormRegisterBasic = () => {
         title: 'Code Sent',
         description: 'Check your phone for the verification code',
       });
-    } catch (error: any) {
-      console.error('Registration error:', error);
+    } catch (error: unknown) {
+      if (isError(error)) {
+        console.error('Registration error:', error);
+      } else {
+        console.error('Unknown registration error', error);
+      }
 
       // Special case: rate limit error but OTP was sent
-      if (error.message === 'RATE_LIMIT_BUT_SENT') {
+      if (isError(error) && error.message === 'RATE_LIMIT_BUT_SENT') {
         localStorage.setItem(
           'registrationData',
           JSON.stringify({
@@ -119,7 +124,7 @@ const FormRegisterBasic = () => {
         return; // Exit early since we want to proceed with OTP verification
       }
 
-      if (error.message.includes('already registered')) {
+      if (isError(error) && error.message.includes('already registered')) {
         toast({
           title: 'Account Exists',
           description: 'This phone number is already registered. Please login instead.',
@@ -129,7 +134,7 @@ const FormRegisterBasic = () => {
             </Button>
           ),
         });
-      } else if (error.message.includes('rate limit')) {
+      } else if (isError(error) && error.message.includes('rate limit')) {
         toast({
           title: 'Please Wait',
           description: 'Please wait a few minutes before trying again',
@@ -137,7 +142,7 @@ const FormRegisterBasic = () => {
         });
       } else {
         toast({
-          description: error.message,
+          description: isError(error) ? error.message : 'An unknown error occurred',
           variant: 'destructive',
         });
       }
@@ -181,10 +186,16 @@ const FormRegisterBasic = () => {
 
         navigate('/login');
       }
-    } catch (error: any) {
-      const isExpired = error.message.toLowerCase().includes('expired');
+    } catch (error: unknown) {
+      const isExpired = isError(error)
+        ? error.message.toLowerCase().includes('expired')
+        : false;
 
-      console.error('OTP submission error:', error);
+      if (isError(error)) {
+        console.error('OTP submission error:', error);
+      } else {
+        console.error('Unknown OTP submission error', error);
+      }
 
       toast({
         title: isExpired ? 'Code Expired' : 'Invalid Code',
@@ -218,9 +229,9 @@ const FormRegisterBasic = () => {
         title: 'Code Sent',
         description: 'New verification code sent to your phone',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
-        description: error.message,
+        description: isError(error) ? error.message : 'An unknown error occurred',
         variant: 'destructive',
       });
     }

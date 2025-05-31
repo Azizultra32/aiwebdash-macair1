@@ -3,6 +3,7 @@ import SingleFieldForm from './SingleFieldForm';
 import { useToast } from './ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { isError } from '@/utils/error';
 
 const FormReset = () => {
   const {
@@ -17,9 +18,9 @@ const FormReset = () => {
     try {
       await reset(values);
       navigate('/login');
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
-        description: error.message,
+        description: isError(error) ? error.message : 'An unknown error occurred',
         variant: 'destructive',
       });
     }

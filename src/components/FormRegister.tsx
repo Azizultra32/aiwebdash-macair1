@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from './ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { isError } from '@/utils/error';
 
 const degreeOptions = [
   'MD (Doctor of Medicine)',
@@ -215,9 +216,9 @@ const FormRegister = () => {
     try {
       await register(values);
       navigate('/login');
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
-        description: error.message,
+        description: isError(error) ? error.message : 'An unknown error occurred',
         variant: 'destructive',
       });
     }
