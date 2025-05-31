@@ -70,12 +70,29 @@ const AVAILABLE_VARIABLES = [
   }
 ];
 
+interface PromptComponent {
+  id?: number;
+  prompt_key: string;
+  title: string;
+  prompt_text: string;
+  sort_order: number;
+  is_active: boolean;
+  prompt_role: string;
+  variables: Record<string, string>;
+  user_id?: string;
+}
+
+interface ChatMessage {
+  role: string;
+  content: string;
+}
+
 type ViewMode = 'edit' | 'visualize';
 
 const PromptManager = () => {
-  const [prompts, setPrompts] = useState<any[]>([]);
-  const [editingPrompt, setEditingPrompt] = useState<any>(null);
-  const [assembledPrompt, setAssembledPrompt] = useState<any[]>([]);
+  const [prompts, setPrompts] = useState<PromptComponent[]>([]);
+  const [editingPrompt, setEditingPrompt] = useState<PromptComponent | null>(null);
+  const [assembledPrompt, setAssembledPrompt] = useState<ChatMessage[]>([]);
   const [user, setUser] = useState<any>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('edit');
   const [selectedMid, setSelectedMid] = useState<string>('');
@@ -140,7 +157,7 @@ const PromptManager = () => {
     }
 
     logger.debug('Received prompts', data);
-    setPrompts(data);
+    setPrompts(data as PromptComponent[]);
     fetchAssembledPrompt();
   };
 
@@ -159,11 +176,11 @@ const PromptManager = () => {
 
     logger.debug('Received assembled prompt', data);
     if (data) {
-      setAssembledPrompt(data);
+      setAssembledPrompt(data as ChatMessage[]);
     }
   };
 
-  const handleEdit = (prompt: any) => {
+  const handleEdit = (prompt: PromptComponent) => {
     setEditingPrompt({ 
       ...prompt,
       variables: prompt.variables || {}
@@ -185,6 +202,7 @@ const PromptManager = () => {
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!editingPrompt) return;
     
     const { error } = editingPrompt.id
       ? await supabase

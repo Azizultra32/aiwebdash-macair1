@@ -15,6 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useDetectCountryCode } from '@/hooks/useDetectCountryCode';
 import { formatPhoneNumber, unformatPhoneNumber } from '@/utils/phone';
+import { isError } from '@/utils/error';
 
 const countryCodeRegex = /^\+\d{1,4}$/;
 
@@ -71,9 +72,9 @@ const FormLogin = () => {
       const fullPhone = `${values.countryCode}${values.phone}`;
       await login({ phone: fullPhone, password: values.password });
       navigate('/');
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
-        description: error.message,
+        description: isError(error) ? error.message : 'An unknown error occurred',
         variant: 'destructive',
       });
     }

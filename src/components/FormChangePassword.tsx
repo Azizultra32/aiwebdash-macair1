@@ -3,6 +3,7 @@ import SingleFieldForm from './SingleFieldForm';
 import { useToast } from './ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { isError } from '@/utils/error';
 
 const FormChangePassword = () => {
   const {
@@ -16,9 +17,9 @@ const FormChangePassword = () => {
     try {
       await changePassword(values);
       navigate('/');
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
-        description: error.message,
+        description: isError(error) ? error.message : 'An unknown error occurred',
         variant: 'destructive',
       });
     }
