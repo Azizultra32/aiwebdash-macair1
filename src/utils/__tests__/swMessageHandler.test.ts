@@ -43,9 +43,12 @@ beforeEach(async () => {
     },
   } as any;
 
-  // Workbox expects this manifest to be defined during tests
-  // Provide a dummy entry to ensure PrecacheController.addToCacheList
-  // receives an array of objects
+  // Workbox expects this manifest to be defined during tests.
+  // PrecacheController reads `self.__WB_MANIFEST` as soon as the service
+  // worker script is imported. If it's undefined or not an array of
+  // precache entries, `addToCacheList` will receive an unexpected value
+  // and throw. We therefore supply a dummy entry here to keep the import
+  // logic happy.
   const manifest = [{ url: '/index.html', revision: '1' }];
   (global as any).self.__WB_MANIFEST = manifest;
   (global as any).__WB_MANIFEST = manifest;
