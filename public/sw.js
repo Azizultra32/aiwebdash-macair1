@@ -55,7 +55,9 @@ self.addEventListener('activate', (event) => {
 
   // When this service worker is superseded, clear the version check interval
   self.addEventListener('controllerchange', cleanup);
-  self.addEventListener('statechange', cleanup);
+  if (self.registration && self.registration.installing) {
+    self.registration.installing.addEventListener('statechange', cleanup);
+  }
 });
 
 // Message event - handle version checks
