@@ -18,7 +18,7 @@ export default function SpeechCommandDialog({ speechCommandActivated }: Props) {
 
   return (
     <Dialog open={speechCommandActivated !== 0}>
-      <DialogContent style={style} />
+      <DialogContent className="p-0" style={style} />
     </Dialog>
   );
 }
