@@ -48,7 +48,8 @@ beforeEach(async () => {
   // worker script is imported. If it's undefined or not an array of
   // precache entries, `addToCacheList` will receive an unexpected value
   // and throw. We therefore supply a dummy entry here to keep the import
-  // logic happy.
+  // logic happy. In production builds this variable is replaced by the
+  // bundler, but unit tests run the raw file so we must mock it manually.
   const manifest = [{ url: '/index.html', revision: '1' }];
   (global as any).self.__WB_MANIFEST = manifest;
   (global as any).__WB_MANIFEST = manifest;

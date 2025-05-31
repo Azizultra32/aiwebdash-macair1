@@ -121,6 +121,14 @@ npm run prepare-pr
 If `node_modules` is missing, run `bash .codex/setup.sh` before executing this
 command.
 
+### Testing notes
+
+Service worker tests import `public/sw.js` directly. Workbox's precache
+controller expects `self.__WB_MANIFEST` to contain a manifest array when the
+script is executed. The build process normally injects this variable, so the
+tests manually define `self.__WB_MANIFEST` with a dummy entry to prevent import
+errors.
+
 ### Storybook
 
 To develop components in isolation, run Storybook:
