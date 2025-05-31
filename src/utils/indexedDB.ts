@@ -1,5 +1,17 @@
 let dbWorker: Worker | null = null;
 
+/**
+ * Ensure that the database worker has been initialized.
+ *
+ * @throws {Error} if the worker is not initialized
+ */
+const ensureWorker = (): Worker => {
+  if (!dbWorker) {
+    throw new Error('Database worker not initialized');
+  }
+  return dbWorker;
+};
+
 export const initIndexedDB = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     try {
@@ -24,16 +36,13 @@ export const initIndexedDB = (): Promise<void> => {
 
 export const saveAudioChunk = (patientMidUUID: string, chunk: number, blob: Blob): Promise<void> => {
   return new Promise((resolve, reject) => {
-    if (!dbWorker) {
-      reject(new Error("Database worker not initialized"));
-      return;
-    }
+    const worker = ensureWorker();
 
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64data = reader.result as string;
-      
-      dbWorker!.onmessage = (e) => {
+
+      worker.onmessage = (e) => {
         if (e.data.type === 'save') {
           if (e.data.status === 'success') {
             resolve();
@@ -43,7 +52,7 @@ export const saveAudioChunk = (patientMidUUID: string, chunk: number, blob: Blob
         }
       };
 
-      dbWorker!.postMessage({
+      worker.postMessage({
         type: 'save',
         data: { patientMidUUID, chunk, audioData: base64data }
       });
@@ -56,12 +65,9 @@ export const saveAudioChunk = (patientMidUUID: string, chunk: number, blob: Blob
 
 export const getAudioChunks = (patientMidUUID: string): Promise<Blob[]> => {
   return new Promise((resolve, reject) => {
-    if (!dbWorker) {
-      reject(new Error("Database worker not initialized"));
-      return;
-    }
+    const worker = ensureWorker();
 
-    dbWorker.onmessage = (e) => {
+    worker.onmessage = (e) => {
       if (e.data.type === 'get') {
         if (e.data.status === 'success') {
           const blobs = e.data.result.map((base64Data: string) => {
@@ -78,7 +84,7 @@ export const getAudioChunks = (patientMidUUID: string): Promise<Blob[]> => {
       }
     };
 
-    dbWorker.postMessage({
+    worker.postMessage({
       type: 'get',
       data: { patientMidUUID }
     });
@@ -87,12 +93,9 @@ export const getAudioChunks = (patientMidUUID: string): Promise<Blob[]> => {
 
 export const getAllPatientMids = (): Promise<string[]> => {
   return new Promise((resolve, reject) => {
-    if (!dbWorker) {
-      reject(new Error("Database worker not initialized"));
-      return;
-    }
+    const worker = ensureWorker();
 
-    dbWorker.onmessage = (e) => {
+    worker.onmessage = (e) => {
       if (e.data.type === 'getAllPatientMids') {
         if (e.data.status === 'success') {
           resolve(e.data.result);
@@ -102,7 +105,7 @@ export const getAllPatientMids = (): Promise<string[]> => {
       }
     };
 
-    dbWorker.postMessage({
+    worker.postMessage({
       type: 'getAllPatientMids'
     });
   });
@@ -110,12 +113,9 @@ export const getAllPatientMids = (): Promise<string[]> => {
 
 export const clearAudioChunks = (patientMidUUID: string): Promise<void> => {
   return new Promise((resolve, reject) => {
-    if (!dbWorker) {
-      reject(new Error("Database worker not initialized"));
-      return;
-    }
+    const worker = ensureWorker();
 
-    dbWorker.onmessage = (e) => {
+    worker.onmessage = (e) => {
       if (e.data.type === 'clear') {
         if (e.data.status === 'success') {
           resolve();
@@ -125,7 +125,7 @@ export const clearAudioChunks = (patientMidUUID: string): Promise<void> => {
       }
     };
 
-    dbWorker.postMessage({
+    worker.postMessage({
       type: 'clear',
       data: { patientMidUUID }
     });
