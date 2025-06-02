@@ -20,6 +20,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      supertest: path.resolve(__dirname, './test-helpers/supertest.ts'),
     },
   },
   test: {
