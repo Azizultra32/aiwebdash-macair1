@@ -114,12 +114,23 @@ export async function createTranscriptAsync(transcript: TranscriptData) {
   const token_count = transcript.token_count || 0;
   const patient_uuid = uuidv4();
 
-  const { error } = await supabase
-    .from('transcripts2')
-    .insert([{ ...transcript, token_count, created_at, user_id, patient_uuid }]);
+  const response = await fetch('/api/createTranscript', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${data?.session?.access_token}`,
+    },
+    body: JSON.stringify({
+      ...transcript,
+      token_count,
+      created_at,
+      user_id,
+      patient_uuid,
+    }),
+  });
 
-  if (error) {
-    throw new Error(error?.message ?? 'Unknown error');
+  if (!response.ok) {
+    throw new Error(await response.text());
   }
 
   return transcript.mid;
