@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
-import supabase from '@/supabase';
 import { uuidv4 } from '@/lib/utils';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import useRecorderState from '@/hooks/useRecorderState';
@@ -109,10 +108,11 @@ export default function AudioRecorder(props: AudioRecorderProps) {
           patientName = truncate(patientName, 12, true);
           if (recording || recordingPaused) { // Changed here
             if (patient.mid != null) {
-              supabase
-                .from('transcripts2')
-                .update({ patient_code: patientName })
-                .eq('mid', patient.mid);
+              fetch('/api/updateTranscript', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mid: patient.mid, patient_code: patientName }),
+              });
             }
           }
           patient.patient_code = patientName;

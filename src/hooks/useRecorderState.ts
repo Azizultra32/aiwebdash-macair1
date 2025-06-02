@@ -1,5 +1,4 @@
 import { useCallback, useState } from 'react';
-import supabase from '@/supabase';
 import NoSleep from 'nosleep.js';
 import { getAudioMimeType } from '@/lib/utils';
 import { ChunkNumberWrapper, TranscriptData } from '@/types/types';
@@ -102,7 +101,12 @@ export function useRecorderState({
     }
     setRecording(true);
     setRecordingButtonDisabled(true);
-    isOnline && supabase.from('transcripts2').update({ is_paused: false }).eq('mid', patient.mid);
+    isOnline &&
+      fetch('/api/updateTranscript', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mid: patient.mid, is_paused: false }),
+      });
   }, [recordingPaused, patient.mid, isOnline]);
 
   const cStopRecording = useCallback(async () => {
@@ -118,14 +122,24 @@ export function useRecorderState({
     }
     setRecordingPaused(false);
     setRecordingButtonDisabled(true);
-    isOnline && (await supabase.from('transcripts2').update({ is_paused: false }).eq('mid', patient.mid));
+    isOnline &&
+      (await fetch('/api/updateTranscript', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mid: patient.mid, is_paused: false }),
+      }));
   }, [recordingPaused, patient.mid, onStopCallback, isOnline]);
 
   const cPauseRecording = useCallback(() => {
     setRecordingPaused(true);
     setRecording(false);
     setRecordingButtonDisabled(true);
-    isOnline && supabase.from('transcripts2').update({ is_paused: true }).eq('mid', patient.mid);
+    isOnline &&
+      fetch('/api/updateTranscript', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mid: patient.mid, is_paused: true }),
+      });
   }, [patient.mid, isOnline]);
 
   const onStart = useCallback(async () => {

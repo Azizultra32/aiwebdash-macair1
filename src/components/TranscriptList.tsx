@@ -6,7 +6,6 @@ import { useState, useEffect, useRef } from 'react';
 // Virtualized scrolling is implemented manually to avoid adding heavy
 // dependencies. We track scroll position and container height to render
 // only the visible rows plus some overscan buffer.
-import supabase from '@/supabase';
 import { Button } from './ui/button';
 import OnlineStatusIndicator from '@/components/OnlineStatusIndicator';
 
@@ -45,11 +44,15 @@ const TranscriptList = ({
   const VIRTUAL_THRESHOLD = 30;
 
   const handleRename = async (editedText: string, mid: string) => {
-    const { data, error } = await supabase.from('transcripts2').update({ patient_code: editedText }).eq('mid', mid);
-    if (error) {
-      throw new Error(error.message);
+    const response = await fetch('/api/updateTranscript', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mid, patient_code: editedText }),
+    });
+    if (!response.ok) {
+      throw new Error(await response.text());
     }
-    return data;
+    return response.json();
   };
 
   // Track scroll position for virtualization

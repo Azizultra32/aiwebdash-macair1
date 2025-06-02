@@ -7,6 +7,7 @@ import {
 } from 'react';
 import supabase from '@/supabase';
 import { logger } from '@/utils/logger';
+import type { Transcript } from '@/types/types';
 import PromptVisualizer from './PromptVisualizer';
 import PromptSuggestions from './PromptSuggestions';
 
@@ -124,24 +125,17 @@ const PromptManager = () => {
   }, []);
 
   const fetchRecentMeetings = async () => {
-    const { data, error } = await supabase
-      .from('transcripts2')
-      .select('mid, created_at')
-      .order('created_at', { ascending: false })
-      .limit(10);
-
-    if (!error && data) {
-      // Get unique meetings
-      const uniqueMeetings = Array.from(new Set(data.map(d => d.mid)))
-        .map(mid => {
-          const meeting = data.find(d => d.mid === mid);
-          return {
-            mid,
-            created_at: meeting!.created_at
-          };
-        });
-      setRecentMeetings(uniqueMeetings);
-    }
+    const response = await fetch('/api/transcripts');
+    if (!response.ok) return;
+    const data = (await response.json()) as Transcript[];
+    const sorted = data
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 10);
+    const uniqueMeetings = Array.from(new Set(sorted.map((d) => d.mid))).map((mid) => {
+      const meeting = sorted.find((d) => d.mid === mid)!;
+      return { mid, created_at: meeting.created_at };
+    });
+    setRecentMeetings(uniqueMeetings);
   };
 
   const fetchPrompts = async () => {
