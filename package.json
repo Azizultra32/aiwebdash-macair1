@@ -13,7 +13,8 @@
     "generate-types": "npx supabase gen types typescript --project-id 'VITE_SUPABASE_URL' --schema public > src/types/supabase.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "prepare-pr": "bash prepare-pr.sh"
+    "prepare-pr": "bash prepare-pr.sh",
+    "start:bff": "node server/index.cjs"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -67,7 +68,9 @@
     "tailwind-merge": "^1.14.0",
     "tslib": "^2.6.2",
     "usehooks-ts": "^2.9.1",
-    "zod": "^3.21.4"
+    "zod": "^3.21.4",
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^2.1.4",
