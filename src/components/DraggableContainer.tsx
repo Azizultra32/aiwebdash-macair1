@@ -12,4 +12,4 @@ const DraggableContainer: React.FC<Props> = ({ children, className }) => (
   </motion.div>
 )
 
-export default DraggableContainer
+export default DraggableContainer;
