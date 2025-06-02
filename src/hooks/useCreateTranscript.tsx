@@ -88,13 +88,13 @@ export async function deleteTranscriptAsync(mid: string) {
     throw new Error(sessionError?.message ?? 'Unknown error');
   }
 
-  const response = await fetch('/api/deleteTranscript', {
-    method: 'POST',
+  // DELETE request to the transcripts API using the provided MID
+  const response = await fetch(`/api/transcripts/${mid}`, {
+    method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${data?.session?.access_token}`,
     },
-    body: JSON.stringify({ mid }),
   });
 
   if (!response.ok) {
