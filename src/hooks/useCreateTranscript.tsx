@@ -83,14 +83,25 @@ export function useRealtimeTranscripts(enabled: boolean, onRealtimeUpdate?: () =
 }
 
 export async function deleteTranscriptAsync(mid: string) {
-  const { error } = await supabase
-    .from('transcripts2')
-    .delete()
-    .eq('mid', mid);
-  if (error) {
-    throw new Error(error.message);
+  const { data, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError) {
+    throw new Error(sessionError?.message ?? 'Unknown error');
   }
-  return mid; 
+
+  const response = await fetch('/api/deleteTranscript', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${data?.session?.access_token}`,
+    },
+    body: JSON.stringify({ mid }),
+  });
+
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+
+  return mid;
 }
 
 export async function createTranscriptAsync(transcript: TranscriptData) {
@@ -137,13 +148,22 @@ export async function createTranscriptAsync(transcript: TranscriptData) {
 }
 
 export async function updateTranscriptAsync(transcript: TranscriptTokenCount) {
-  const { error } = await supabase
-    .from('transcripts2')
-    .update({ ...transcript })
-    .eq('mid', transcript.mid);
+  const { data, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError) {
+    throw new Error(sessionError?.message ?? 'Unknown error');
+  }
 
-  if (error) {
-    throw new Error(error?.message ?? 'Unknown error');
+  const response = await fetch('/api/updateTranscript', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${data?.session?.access_token}`,
+    },
+    body: JSON.stringify(transcript),
+  });
+
+  if (!response.ok) {
+    throw new Error(await response.text());
   }
 
   supabase.rpc('process_queue');

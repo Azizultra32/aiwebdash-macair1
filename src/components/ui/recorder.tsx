@@ -109,10 +109,17 @@ export default function AudioRecorder(props: AudioRecorderProps) {
           patientName = truncate(patientName, 12, true);
           if (recording || recordingPaused) { // Changed here
             if (patient.mid != null) {
-              supabase
-                .from('transcripts2')
-                .update({ patient_code: patientName })
-                .eq('mid', patient.mid);
+              const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+              if (!sessionError) {
+                await fetch('/api/updateTranscript', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${sessionData?.session?.access_token}`,
+                  },
+                  body: JSON.stringify({ mid: patient.mid, patient_code: patientName }),
+                });
+              }
             }
           }
           patient.patient_code = patientName;

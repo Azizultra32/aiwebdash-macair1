@@ -45,11 +45,25 @@ const TranscriptList = ({
   const VIRTUAL_THRESHOLD = 30;
 
   const handleRename = async (editedText: string, mid: string) => {
-    const { data, error } = await supabase.from('transcripts2').update({ patient_code: editedText }).eq('mid', mid);
-    if (error) {
-      throw new Error(error.message);
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) {
+      throw new Error(sessionError?.message ?? 'Unknown error');
     }
-    return data;
+
+    const response = await fetch('/api/updateTranscript', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${sessionData?.session?.access_token}`,
+      },
+      body: JSON.stringify({ mid, patient_code: editedText }),
+    });
+
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+
+    return await response.json();
   };
 
   // Track scroll position for virtualization
