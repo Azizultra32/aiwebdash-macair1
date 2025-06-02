@@ -92,8 +92,8 @@ export async function deleteTranscriptAsync(mid: string) {
   const response = await fetch(`/api/transcripts/${mid}`, {
     method: 'DELETE',
     headers: {
-      'Content-Type': 'application/json',
       Authorization: `Bearer ${data?.session?.access_token}`,
+      'Content-Type': 'application/json',
     },
   });
 
