@@ -53,6 +53,18 @@ If you are developing a production application, we recommend updating the config
    npm run dev
    ```
 
+### Starting the backend
+
+1. Copy `.env.example` to `.env` and set `BFF_PORT`, `BFF_SUPABASE_URL`, and `BFF_SUPABASE_SERVICE_ROLE_KEY`.
+2. Start the backend service:
+
+   ```bash
+   npm run start:bff
+   ```
+
+   The frontend expects the backend to run on `http://localhost:${BFF_PORT}` and all API routes are prefixed with `/api`.
+   During development you may run the frontend and backend in separate terminals.
+
 ## Environment variables
 
 The application relies on several environment variables for Supabase and Stripe integration. Copy `.env.example` to `.env` and fill in the values.
