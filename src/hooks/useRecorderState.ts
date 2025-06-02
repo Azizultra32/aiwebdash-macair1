@@ -92,7 +92,7 @@ export function useRecorderState({
   const noSleep = new NoSleep();
   let didEnableNoSleep = false;
 
-  const cStartRecording = useCallback(() => {
+  const cStartRecording = useCallback(async () => {
     if (!didEnableNoSleep) {
       didEnableNoSleep = true;
       noSleep.enable();
@@ -102,7 +102,19 @@ export function useRecorderState({
     }
     setRecording(true);
     setRecordingButtonDisabled(true);
-    isOnline && supabase.from('transcripts2').update({ is_paused: false }).eq('mid', patient.mid);
+    if (isOnline) {
+      const { data, error: sessionError } = await supabase.auth.getSession();
+      if (!sessionError) {
+        await fetch('/api/updateTranscript', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${data?.session?.access_token}`,
+          },
+          body: JSON.stringify({ mid: patient.mid, is_paused: false }),
+        });
+      }
+    }
   }, [recordingPaused, patient.mid, isOnline]);
 
   const cStopRecording = useCallback(async () => {
@@ -118,14 +130,39 @@ export function useRecorderState({
     }
     setRecordingPaused(false);
     setRecordingButtonDisabled(true);
-    isOnline && (await supabase.from('transcripts2').update({ is_paused: false }).eq('mid', patient.mid));
+    if (isOnline) {
+      const { data, error: sessionError } = await supabase.auth.getSession();
+      if (!sessionError) {
+        await fetch('/api/updateTranscript', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${data?.session?.access_token}`,
+          },
+          body: JSON.stringify({ mid: patient.mid, is_paused: false }),
+        });
+      }
+    }
   }, [recordingPaused, patient.mid, onStopCallback, isOnline]);
 
   const cPauseRecording = useCallback(() => {
     setRecordingPaused(true);
     setRecording(false);
     setRecordingButtonDisabled(true);
-    isOnline && supabase.from('transcripts2').update({ is_paused: true }).eq('mid', patient.mid);
+    if (isOnline) {
+      supabase.auth.getSession().then(({ data, error }) => {
+        if (!error) {
+          fetch('/api/updateTranscript', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${data?.session?.access_token}`,
+            },
+            body: JSON.stringify({ mid: patient.mid, is_paused: true }),
+          });
+        }
+      });
+    }
   }, [patient.mid, isOnline]);
 
   const onStart = useCallback(async () => {

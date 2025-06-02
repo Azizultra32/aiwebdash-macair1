@@ -124,13 +124,9 @@ const PromptManager = () => {
   }, []);
 
   const fetchRecentMeetings = async () => {
-    const { data, error } = await supabase
-      .from('transcripts2')
-      .select('mid, created_at')
-      .order('created_at', { ascending: false })
-      .limit(10);
-
-    if (!error && data) {
+    const response = await fetch('/api/transcripts');
+    if (response.ok) {
+      const data = (await response.json()) as { mid: string; created_at: string }[];
       // Get unique meetings
       const uniqueMeetings = Array.from(new Set(data.map(d => d.mid)))
         .map(mid => {
