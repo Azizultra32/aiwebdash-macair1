@@ -42,6 +42,10 @@ app.post('/api/createTranscript', async (req, res) => {
 });
 
 const port = process.env.BFF_PORT || 3001;
-app.listen(port, () => {
-  console.log(`BFF server listening on port ${port}`);
-});
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`BFF server listening on port ${port}`);
+  });
+}
+
+module.exports = { app };
