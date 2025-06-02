@@ -48,7 +48,14 @@ export default function AudioRecorder(props: AudioRecorderProps) {
     } as TranscriptData;
   }, [patientData, newPatientData, patientTag, isAddendum]);
 
-  const recorder = useRecorderState({
+  const {
+    recording,
+    setRecording,
+    recordingPaused,
+    setRecordingPaused,
+    // Destructure other properties from useRecorderState as needed, or access via recorder.propertyName
+    ...recorder // Keep other recorder properties accessible via recorder.property
+  } = useRecorderState({
     patient,
     patientTag,
     isAddendum,
@@ -68,31 +75,31 @@ export default function AudioRecorder(props: AudioRecorderProps) {
     {
       command: ['start recording'],
       callback: useCallback(() => {
-        if (!recorder.recording || recorder.recordingPaused) {
+        if (!recording || recordingPaused) { // Changed here
           recorder.cStartRecording();
           props.onSpeechCommand?.(1);
         }
-      }, [recorder, props]),
+      }, [recording, recordingPaused, recorder.cStartRecording, props]), // Changed here
       matchInterim: true,
     },
     {
       command: ['pause recording'],
       callback: useCallback(() => {
-        if (recorder.recording && !recorder.recordingPaused) {
+        if (recording && !recordingPaused) { // Changed here
           recorder.cPauseRecording();
           props.onSpeechCommand?.(2);
         }
-      }, [recorder, props]),
+      }, [recording, recordingPaused, recorder.cPauseRecording, props]), // Changed here
       matchInterim: true,
     },
     {
       command: ['stop recording', 'end recording'],
       callback: useCallback(() => {
-        if (recorder.recording || recorder.recordingPaused) {
+        if (recording || recordingPaused) { // Changed here
           recorder.cStopRecording();
           props.onSpeechCommand?.(3);
         }
-      }, [recorder, props]),
+      }, [recording, recordingPaused, recorder.cStopRecording, props]), // Changed here
       matchInterim: true,
     },
     {
@@ -100,7 +107,7 @@ export default function AudioRecorder(props: AudioRecorderProps) {
       callback: useCallback(
         (patientName: string) => {
           patientName = truncate(patientName, 12, true);
-          if (recorder.recording || recorder.recordingPaused) {
+          if (recording || recordingPaused) { // Changed here
             if (patient.mid != null) {
               supabase
                 .from('transcripts2')
@@ -111,7 +118,7 @@ export default function AudioRecorder(props: AudioRecorderProps) {
           patient.patient_code = patientName;
           props.onSpeechCommand?.(4, patientName);
         },
-        [recorder, patient, props],
+        [recording, recordingPaused, patient, props, recorder.cStartRecording, recorder.cPauseRecording, recorder.cStopRecording], // Added recorder methods to dependency array for completeness, though not directly used in this specific callback logic, they are part of the 'recorder' context often changed together.
       ),
     },
   ];
@@ -124,25 +131,25 @@ export default function AudioRecorder(props: AudioRecorderProps) {
     }
   }, [hasMicrophoneAccess]);
 
+  const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
+  const [microphoneError, setMicrophoneError] = useState<string>('');
+  const hasApiKey = true; // Placeholder - should be managed properly
+
   return (
     <RecorderControls
-      recording={recorder.recording}
-      recordingPaused={recorder.recordingPaused}
-      isRecordButtonDisabled={recorder.isRecordButtonDisabled}
-      hasMicrophoneAccess={hasMicrophoneAccess}
-      onStart={recorder.onStart}
-      onData={recorder.onData}
-      onStop={recorder.onStop}
-      startRecording={recorder.cStartRecording}
-      pauseRecording={recorder.cPauseRecording}
-      stopRecording={recorder.cStopRecording}
-      isAddendum={isAddendum}
-      setIsAddendum={setIsAddendum}
-      isVoiceChat={isVoiceChat}
-      setIsVoiceChat={setIsVoiceChat}
-      mimeType={recorder.mimeType}
-      patientData={patientData}
-      selectPatient={selectPatient}
+      isRecording={recording} // Use the destructured state
+      setIsRecording={setRecording} // Pass the destructured setter
+      isPaused={recordingPaused} // Use the destructured state
+      setIsPaused={setRecordingPaused} // Pass the destructured setter
+      recordingBlob={recordingBlob}
+      setRecordingBlob={setRecordingBlob}
+      hasApiKey={hasApiKey} // Pass the placeholder or actual value
+      mid={patient.mid} // Pass the mid from patient object
+      microphoneError={microphoneError}
+      setMicrophoneError={setMicrophoneError}
+      // Note: hasMicrophoneAccess is used internally by RecorderControls via useAudioRecorder, 
+      // but it's not an explicit prop of RecorderControls itself. 
+      // The original RecorderControls component definition shows it expects these props.
     />
   );
 }

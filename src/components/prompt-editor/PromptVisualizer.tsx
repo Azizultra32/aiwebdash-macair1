@@ -66,23 +66,6 @@ const NodeContent = styled.div`
   }
 `;
 
-const Button = styled.button`
-  padding: 4px 8px;
-  margin: 2px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.8em;
-  background-color: hsl(var(--ring));
-  color: white;
-  &:hover {
-<<<<<<< HEAD
-    background-color: hsla(var(--ring) / 0.8);
-=======
-    background-color: hsl(var(--ring));
->>>>>>> 1ec5456 (refactor: replace hard-coded colors with tokens)
-  }
-`;
 
 const DetailPanel = styled.div<{ show: boolean }>`
   position: fixed;

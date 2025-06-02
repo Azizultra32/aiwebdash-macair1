@@ -46,7 +46,19 @@ const FormLogin = () => {
     },
   });
 
-  useDetectCountryCode((code) => form.setValue('countryCode', code));
+  // const detectedCodeFromHook = useDetectCountryCode((code) => form.setValue('countryCode', code)); // Old way
+  const detectedCodeFromHook = useDetectCountryCode();
+
+  useEffect(() => {
+    if (detectedCodeFromHook) {
+      form.setValue('countryCode', detectedCodeFromHook, { shouldValidate: true });
+    } else {
+      // If hook returns empty (initial or error) and form field is empty, set default
+      if (!form.getValues('countryCode')) {
+        form.setValue('countryCode', '+1', { shouldValidate: true });
+      }
+    }
+  }, [detectedCodeFromHook, form]);
 
   const { isSubmitting } = useFormState({
     control: form.control,

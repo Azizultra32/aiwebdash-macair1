@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm, useFormState, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { getCountryCallingCode } from 'libphonenumber-js';
+
 
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -30,10 +30,12 @@ const otpSchema = z.object({
     .regex(/^\d+$/, { message: 'OTP must contain only numbers' }),
 });
 
+import { useDetectCountryCode } from '@/hooks/useDetectCountryCode'; // Added import
+
 const FormRegisterBasic = () => {
   const [showOtp, setShowOtp] = useState(false);
   const { signUpWithPhone, verifyOtp, resendOtp } = useAuth();
-  const [detectedCountryCode, setDetectedCountryCode] = useState('');
+  // Removed: const [detectedCountryCode, setDetectedCountryCode] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
   const [otpTimer, setOtpTimer] = useState(60);
@@ -271,20 +273,18 @@ const FormRegisterBasic = () => {
     }
   };
 
+  const detectedCodeFromHook = useDetectCountryCode();
+
   useEffect(() => {
-    const detectCountryCode = async () => {
-      try {
-        const response = await fetch('https://ipapi.co/json/');
-        const data = await response.json();
-        const code = `+${getCountryCallingCode(data.country_code)}`;
-        setDetectedCountryCode(code);
-        registrationForm.setValue('countryCode', code);
-      } catch (error) {
-        console.error('Error detecting country code:', error);
+    if (detectedCodeFromHook) {
+      registrationForm.setValue('countryCode', detectedCodeFromHook, { shouldValidate: true });
+    } else {
+      // If hook returns empty (initial or error) and form field is empty, set default
+      if (!registrationForm.getValues('countryCode')) {
+        registrationForm.setValue('countryCode', '+1', { shouldValidate: true });
       }
-    };
-    detectCountryCode();
-  }, [registrationForm]);
+    }
+  }, [detectedCodeFromHook, registrationForm]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;

@@ -162,6 +162,8 @@ export function useRecorderState({
     onStart,
     onStop,
     onData,
+    setRecording, // Add this
+    setRecordingPaused, // Add this
   };
 }
 
