@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import type { AddressInfo } from 'net';
 import { createRequire } from 'module';
+import request from 'supertest';
 
 const selectMock = vi.fn();
 const insertMock = vi.fn();
@@ -30,35 +30,6 @@ const app = require('../../server/index.cjs');
 afterAll(() => {
   require.cache[supabaseKey] = { exports: originalModule };
 });
-
-type Response = { status: number; body: any };
-function request(target: any) {
-  return {
-    get: (path: string) => perform('GET', path),
-    delete: (path: string) => perform('DELETE', path),
-    post: (path: string) => ({ send: (body: any) => perform('POST', path, body) }),
-  };
-
-  async function perform(method: string, path: string, body?: any): Promise<Response> {
-    const server = target.listen(0);
-    await new Promise(res => server.once('listening', res));
-    const port = (server.address() as AddressInfo).port;
-    const res = await fetch(`http://127.0.0.1:${port}${path}`, {
-      method,
-      headers: body ? { 'Content-Type': 'application/json' } : undefined,
-      body: body ? JSON.stringify(body) : undefined,
-    });
-    const text = await res.text();
-    await new Promise(res => server.close(res));
-    let parsed: any;
-    try {
-      parsed = text ? JSON.parse(text) : undefined;
-    } catch {
-      parsed = text;
-    }
-    return { status: res.status, body: parsed };
-  }
-}
 
 describe('BFF API', () => {
   beforeEach(() => {
