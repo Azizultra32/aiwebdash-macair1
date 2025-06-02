@@ -1,6 +1,6 @@
 import { Component } from 'react';
 import PropTypes from 'prop-types';
-import { MicrophoneRecorder } from '../libs/MicrophoneRecorder';
+import MicRecorder from '../libs/mic-recorder';
 
 export class ReactMic extends Component {
   constructor(props) {
@@ -28,7 +28,7 @@ export class ReactMic extends Component {
     } = this.props;
     const { canvasCtx } = this.state;
     const canvas = this.refs.visualizer;
-    const microphoneRecorder = new MicrophoneRecorder(
+    const microphoneRecorder = new MicRecorder(
       onStart,
       onStop,
       onData,
