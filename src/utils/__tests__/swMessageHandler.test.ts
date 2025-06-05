@@ -29,8 +29,11 @@ beforeEach(async () => {
   // script for each test run. This avoids state leakage across tests.
   vi.resetModules();
   mockPostMessage = vi.fn();
-  const { PrecacheController } = await import('workbox-precaching');
-  addToCacheListSpy = vi.spyOn(PrecacheController.prototype, 'addToCacheList');
+
+  // Workbox reads `self.__WB_MANIFEST` during module initialization. Define
+  // a dummy manifest before importing `workbox-precaching` to avoid errors
+  // when the precache controller attempts to parse this variable.
+  const manifest = [{ url: '/index.html', revision: '1' }];
 
   (global as any).self = {
     addEventListener: (type: string, handler: any) => {
@@ -43,19 +46,14 @@ beforeEach(async () => {
     },
   } as any;
 
-  // Workbox expects this manifest to be defined during tests.
-  // PrecacheController reads `self.__WB_MANIFEST` as soon as the service
-  // worker script is imported. If it's undefined or not an array of
-  // precache entries, `addToCacheList` will receive an unexpected value
-  // and throw. We therefore supply a dummy entry here to keep the import
-  // logic happy. In production builds this variable is replaced by the
-  // bundler, but unit tests run the raw file so we must mock it manually.
-  const manifest = [{ url: '/index.html', revision: '1' }];
   (global as any).self.__WB_MANIFEST = manifest;
   (global as any).__WB_MANIFEST = manifest;
   (global as any).caches = {
     delete: vi.fn().mockResolvedValue(true),
   } as any;
+
+  const { PrecacheController } = await import('workbox-precaching');
+  addToCacheListSpy = vi.spyOn(PrecacheController.prototype, 'addToCacheList');
 
   global.fetch = vi
     .fn()
