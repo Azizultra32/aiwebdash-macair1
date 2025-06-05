@@ -134,7 +134,9 @@ npm run prepare-pr [target-branch]
 ```
 
 The script fetches from `origin`, rebases your branch onto the given target
-branch, and runs the preflight, lint, and test steps.
+branch, and runs the preflight, lint, and test steps. If `origin` is missing
+but the `REPO_URL` environment variable is set, the script adds the remote
+before fetching.
 
 ### Testing notes
 
