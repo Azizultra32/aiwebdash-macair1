@@ -1,59 +1,26 @@
 "use client"
 
 import * as React from "react"
-import { DndProvider, useDrag, useDrop } from "react-dnd"
+import { DndProvider } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { Search, ChevronLeft, ChevronRight, Plus, X } from 'lucide-react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Search, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import DraggableContainer from '@/components/DraggableContainer'
-
-// Types
-type Person = {
-  id: string
-  name: string
-  role: string
-  type: "DOCTOR" | "MOA"
-  specialization?: string
-  availability?: "Available" | "Busy"
-  image: string
-}
-
-type Patient = {
-  id: string
-  name: string
-}
-
-type Task = {
-  id: string
-  name: string
-  doctorId: string
-  patientId: string
-  date: string
-  tag: string
-  assignee: Person | null
-  status: "pending" | "completed"
-  notes?: string
-}
-
-type DoctorMOAAssignment = {
-  doctorId: string
-  moaId: string
-}
-
-type Group = {
-  id: string
-  name: string
-  doctorIds: string[]
-}
+import {
+  PersonCard,
+  GroupManagement,
+  DoctorAssignmentCard,
+  TaskList,
+  type Person,
+  type Patient,
+  type Task,
+  type DoctorMOAAssignment,
+  type Group,
+} from '@/components/moa-dashboard'
 
 // Initial Data
 const initialDoctors: Person[] = [
@@ -81,256 +48,6 @@ const initialTasks: Task[] = [
   { id: "t4", name: "Prescription Renewal", doctorId: "d1", patientId: "p2", date: "2023-06-18", tag: "Prescription", assignee: null, status: "pending" },
 ]
 
-// Draggable Person Card Component
-const PersonCard = ({ person }: { person: Person }) => {
-  const [{ isDragging }, drag] = useDrag(() => ({
-    type: "PERSON",
-    item: person,
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
-  }))
-
-  return (
-    <div
-      ref={drag}
-      className={`cursor-move ${isDragging ? "opacity-50" : ""}`}
-    >
-      <Card className="mb-2 hover:shadow-md transition-shadow">
-        <CardContent className="p-4 flex items-center gap-4">
-          <Avatar>
-            <AvatarImage src={person.image} alt={person.name} />
-            <AvatarFallback>{person.name[0]}</AvatarFallback>
-          </Avatar>
-          <div>
-            <p className="font-medium">{person.name}</p>
-            <p className="text-sm text-muted-foreground">{person.role}</p>
-            {person.type === "DOCTOR" && (
-              <p className="text-xs text-muted-foreground">{person.specialization}</p>
-            )}
-            {person.type === "MOA" && (
-              <p className="text-xs text-muted-foreground">{person.availability}</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
-
-// Task Card Component
-const TaskCard = ({ task, doctor, patient, onComplete, onAssign }: { task: Task; doctor: Person; patient: Patient; onComplete: () => void; onAssign: (person: Person) => void }) => {
-  const [{ isOver }, drop] = useDrop(() => ({
-    accept: "PERSON",
-    drop: (item: Person) => onAssign(item),
-    collect: (monitor) => ({
-      isOver: monitor.isOver(),
-    }),
-  }))
-
-  const [showNotes, setShowNotes] = React.useState(false)
-
-  return (
-    <div
-      ref={drop}
-      className={`mb-4 ${isOver ? "ring-2 ring-primary" : ""} ${
-        task.status === "completed" ? "opacity-50" : ""
-      }`}
-    >
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex justify-between">
-            <div className="flex-1 space-y-1">
-              <h3 className="text-lg font-medium">{task.name}</h3>
-              <p className="text-sm mt-1">
-                <span className="font-bold">{patient.name}</span> - {task.date}
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">{doctor.name}</p>
-            </div>
-            <div className="flex flex-col items-end ml-4 space-y-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onComplete}
-                disabled={task.status === "completed" || !task.assignee}
-              >
-                {task.status === "completed" ? "Completed" : "Mark Complete"}
-              </Button>
-              <p className="text-sm text-muted-foreground">
-                {task.assignee ? task.assignee.name : "Unassigned"}
-              </p>
-            </div>
-          </div>
-          <div className="mt-4 flex justify-between items-center">
-            <Badge variant="secondary">{task.tag}</Badge>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowNotes(!showNotes)}
-              className="p-0 h-auto font-normal text-muted-foreground hover:text-foreground"
-            >
-              {showNotes ? "Hide Notes" : "Show Notes"}
-            </Button>
-          </div>
-          {showNotes && (
-            <div className="mt-2 relative">
-              <textarea
-                className="w-full h-40 p-2 text-sm border rounded-md resize-none"
-                placeholder="Enter notes here..."
-                defaultValue={task.notes || ""}
-              />
-              <Button
-                variant="secondary"
-                size="sm"
-                className="absolute bottom-2 right-2"
-              >
-                Save Notes
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
-
-// MOA Assignment Card Component
-const MOAAssignmentCard = ({ doctor, assignedMOAs, onAssign, onUnassign }: { doctor: Person; assignedMOAs: Person[]; onAssign: (moaId: string) => void; onUnassign: (moaId: string) => void }) => {
-  const [{ isOver }, drop] = useDrop(() => ({
-    accept: "PERSON",
-    drop: (item: Person) => {
-      if (item.type === "MOA") {
-        onAssign(item.id)
-      }
-    },
-    collect: (monitor) => ({
-      isOver: monitor.isOver(),
-    }),
-  }))
-
-  return (
-    <div
-      ref={drop}
-      className={`mb-4 ${isOver ? "ring-2 ring-primary" : ""}`}
-    >
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium">{doctor.name}</h3>
-            <Badge variant="secondary">{doctor.specialization}</Badge>
-          </div>
-          <div className="space-y-2">
-            {assignedMOAs.map((moa) => (
-              <div key={moa.id} className="flex items-center justify-between bg-muted p-2 rounded-md">
-                <span>{moa.name}</span>
-                <Button variant="ghost" size="sm" onClick={() => onUnassign(moa.id)}>
-                  <X className="h-4 w-4" />
-                  <span className="sr-only">Remove {moa.name}</span>
-                </Button>
-              </div>
-            ))}
-            {assignedMOAs.length < 3 && (
-              <div className="h-10 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center text-sm text-gray-500">
-                Drop MOA here
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
-
-// Group Card Component
-const GroupCard = ({ group, doctors, onRemoveDoctor, onDeleteGroup }: { group: Group; doctors: Person[]; onRemoveDoctor: (doctorId: string) => void; onDeleteGroup: () => void }) => {
-  return (
-    <Card className="mb-4">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>{group.name}</CardTitle>
-        <Button variant="destructive" size="sm" onClick={onDeleteGroup}>
-          Delete Group
-        </Button>
-      </CardHeader>
-      <CardContent>
-        {group.doctorIds.map((doctorId) => {
-          const doctor = doctors.find((d) => d.id === doctorId)
-          if (!doctor) return null
-          return (
-            <div key={doctorId} className="flex items-center justify-between mb-2">
-              <span>{doctor.name}</span>
-              <Button variant="ghost" size="sm" onClick={() => onRemoveDoctor(doctorId)}>
-                <X className="h-4 w-4" />
-                <span className="sr-only">Remove {doctor.name} from group</span>
-              </Button>
-            </div>
-          )
-        })}
-      </CardContent>
-    </Card>
-  )
-}
-
-// Create Group Dialog Component
-const CreateGroupDialog = ({ doctors, onCreateGroup }: { doctors: Person[]; onCreateGroup: (name: string, doctorIds: string[]) => void }) => {
-  const [groupName, setGroupName] = React.useState("")
-  const [selectedDoctors, setSelectedDoctors] = React.useState<string[]>([])
-
-  const handleCreateGroup = () => {
-    if (groupName && selectedDoctors.length > 0) {
-      onCreateGroup(groupName, selectedDoctors)
-      setGroupName("")
-      setSelectedDoctors([])
-    }
-  }
-
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Group
-        </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Create New Group</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="group-name">Group Name</Label>
-            <Input
-              id="group-name"
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
-              placeholder="Enter group name"
-            />
-          </div>
-          <div>
-            <Label>Select Doctors</Label>
-            {doctors.map((doctor) => (
-              <div key={doctor.id} className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id={`doctor-${doctor.id}`}
-                  checked={selectedDoctors.includes(doctor.id)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedDoctors([...selectedDoctors, doctor.id])
-                    } else {
-                      setSelectedDoctors(selectedDoctors.filter((id) => id !== doctor.id))
-                    }
-                  }}
-                />
-                <Label htmlFor={`doctor-${doctor.id}`}>{doctor.name}</Label>
-              </div>
-            ))}
-          </div>
-          <Button onClick={handleCreateGroup}>Create Group</Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
-}
 
 // Main Dashboard Component
 export default function Dashboard() {
@@ -486,96 +203,37 @@ export default function Dashboard() {
           </div>
           <div className="grid grid-cols-2 gap-4 p-4 h-[calc(100vh-4rem)] overflow-hidden">
             {isDoctorsVisible ? (
-              // MOA Assignment Column
               <DraggableContainer className="col-span-1">
-              <Card className="overflow-hidden">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                  <CardTitle>Assign MOAs to Doctors</CardTitle>
-                  <CreateGroupDialog doctors={doctors} onCreateGroup={handleCreateGroup} />
-                </CardHeader>
-                <CardContent className="p-0">
-                  <ScrollArea className="h-[calc(100vh-16rem)] px-4 py-2">
-                    {groups.map((group) => (
-                      <GroupCard
-                        key={group.id}
-                        group={group}
-                        doctors={doctors}
-                        onRemoveDoctor={(doctorId) => handleRemoveDoctorFromGroup(group.id, doctorId)}
-                        onDeleteGroup={() => handleDeleteGroup(group.id)}
-                      />
-                    ))}
-                    {doctors.map((doctor) => (
-                      <MOAAssignmentCard
-                        key={doctor.id}
-                        doctor={doctor}
-                        assignedMOAs={getAssignedMOAsForDoctor(doctor.id)}
-                        onAssign={(moaId) => handleAssignMOAToDoctor(doctor.id, moaId)}
-                        onUnassign={(moaId) => handleUnassignMOAFromDoctor(doctor.id, moaId)}
-                      />
-                    ))}
-                  </ScrollArea>
-                </CardContent>
-              </Card>
+                <GroupManagement
+                  groups={groups}
+                  doctors={doctors}
+                  onCreateGroup={handleCreateGroup}
+                  onRemoveDoctor={handleRemoveDoctorFromGroup}
+                  onDeleteGroup={handleDeleteGroup}
+                />
+                <ScrollArea className="h-[calc(100vh-16rem)] px-4 py-2">
+                  {doctors.map((doctor) => (
+                    <DoctorAssignmentCard
+                      key={doctor.id}
+                      doctor={doctor}
+                      assignedMOAs={getAssignedMOAsForDoctor(doctor.id)}
+                      onAssign={(moaId) => handleAssignMOAToDoctor(doctor.id, moaId)}
+                      onUnassign={(moaId) => handleUnassignMOAFromDoctor(doctor.id, moaId)}
+                    />
+                  ))}
+                </ScrollArea>
               </DraggableContainer>
             ) : (
-              // Tasks Panel (visible when doctors column is collapsed)
               <DraggableContainer className="col-span-1">
-              <Card className="overflow-hidden">
-                <CardHeader>
-                  <CardTitle>Tasks</CardTitle>
-                  <div className="relative">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search tasks..."
-                      value={taskSearch}
-                      onChange={(e) => setTaskSearch(e.target.value)}
-                      className="pl-8"
-                    />
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <Tabs defaultValue="all" className="h-full flex flex-col">
-                    <TabsList className="justify-start px-4 py-2 border-b">
-                      <TabsTrigger value="all">All Tasks</TabsTrigger>
-                      {doctors.map((doctor) => (
-                        <TabsTrigger key={doctor.id} value={doctor.id}>
-                          {doctor.name}
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                    <ScrollArea className="flex-1 px-4 py-2">
-                      <TabsContent value="all" className="mt-0">
-                        {filteredTasks.map((task) => (
-                          <TaskCard
-                            key={task.id}
-                            task={task}
-                            doctor={doctors.find((d) => d.id === task.doctorId)!}
-                            patient={patients.find((p) => p.id === task.patientId)!}
-                            onComplete={() => handleTaskCompletion(task.id)}
-                            onAssign={(person) => handleTaskAssignment(task.id, person)}
-                          />
-                        ))}
-                      </TabsContent>
-                      {doctors.map((doctor) => (
-                        <TabsContent key={doctor.id} value={doctor.id} className="mt-0">
-                          {filteredTasks
-                            .filter((task) => task.doctorId === doctor.id)
-                            .map((task) => (
-                              <TaskCard
-                                key={task.id}
-                                task={task}
-                                doctor={doctor}
-                                patient={patients.find((p) => p.id === task.patientId)!}
-                                onComplete={() => handleTaskCompletion(task.id)}
-                                onAssign={(person) => handleTaskAssignment(task.id, person)}
-                              />
-                            ))}
-                        </TabsContent>
-                      ))}
-                    </ScrollArea>
-                  </Tabs>
-                </CardContent>
-              </Card>
+                <TaskList
+                  tasks={filteredTasks}
+                  doctors={doctors}
+                  patients={patients}
+                  taskSearch={taskSearch}
+                  onSearch={setTaskSearch}
+                  onComplete={handleTaskCompletion}
+                  onAssign={handleTaskAssignment}
+                />
               </DraggableContainer>
             )}
             {/* MOAs Panel */}
