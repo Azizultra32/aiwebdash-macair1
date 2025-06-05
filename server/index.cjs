@@ -41,7 +41,43 @@ app.post('/api/createTranscript', async (req, res) => {
   }
 });
 
-const port = process.env.BFF_PORT || 3001;
-app.listen(port, () => {
-  console.log(`BFF server listening on port ${port}`);
+app.post('/api/updateTranscript', async (req, res) => {
+  try {
+    const transcript = req.body;
+    const { error } = await supabase
+      .from('transcripts2')
+      .update({ ...transcript })
+      .eq('mid', transcript.mid);
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+    res.status(200).json({ mid: transcript.mid });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
+
+app.delete('/api/transcripts/:mid', async (req, res) => {
+  try {
+    const { mid } = req.params;
+    const { error } = await supabase
+      .from('transcripts2')
+      .delete()
+      .eq('mid', mid);
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+const port = process.env.BFF_PORT || 3001;
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`BFF server listening on port ${port}`);
+  });
+}
+
+module.exports = { app };
