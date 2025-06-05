@@ -4,6 +4,7 @@ import NoSleep from 'nosleep.js';
 import { getAudioMimeType } from '@/lib/utils';
 import { ChunkNumberWrapper, TranscriptData } from '@/types/types';
 import { logger } from '@/utils/logger';
+import { useToast } from '@/components/ui/use-toast';
 import { useIndexedDbUpload } from './useIndexedDbUpload';
 
 interface UseRecorderStateProps {
@@ -34,6 +35,7 @@ export function useRecorderState({
   const mimeType = getAudioMimeType();
 
   const { handleChunk, finalizeUploads } = useIndexedDbUpload(isOnline);
+  const { toast } = useToast();
 
   const onData = useCallback(
     async (blob: Blob, soundDetected: boolean) => {
@@ -103,15 +105,34 @@ export function useRecorderState({
     setRecording(true);
     setRecordingButtonDisabled(true);
     if (isOnline) {
-      const { data, error: sessionError } = await supabase.auth.getSession();
-      if (!sessionError) {
-        await fetch('/api/updateTranscript', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${data?.session?.access_token}`,
-          },
-          body: JSON.stringify({ mid: patient.mid, is_paused: false }),
+      try {
+        const { data, error: sessionError } = await supabase.auth.getSession();
+        if (!sessionError) {
+          const response = await fetch('/api/updateTranscript', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${data?.session?.access_token}`,
+            },
+            body: JSON.stringify({ mid: patient.mid, is_paused: false }),
+          });
+          if (!response.ok) {
+            logger.error('Failed to update transcript on start', {
+              status: response.status,
+            });
+            toast({
+              title: 'Error',
+              description: 'Failed to update transcript status',
+              variant: 'destructive',
+            });
+          }
+        }
+      } catch (error) {
+        logger.error('Failed to update transcript on start', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to update transcript status',
+          variant: 'destructive',
         });
       }
     }
@@ -131,15 +152,34 @@ export function useRecorderState({
     setRecordingPaused(false);
     setRecordingButtonDisabled(true);
     if (isOnline) {
-      const { data, error: sessionError } = await supabase.auth.getSession();
-      if (!sessionError) {
-        await fetch('/api/updateTranscript', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${data?.session?.access_token}`,
-          },
-          body: JSON.stringify({ mid: patient.mid, is_paused: false }),
+      try {
+        const { data, error: sessionError } = await supabase.auth.getSession();
+        if (!sessionError) {
+          const response = await fetch('/api/updateTranscript', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${data?.session?.access_token}`,
+            },
+            body: JSON.stringify({ mid: patient.mid, is_paused: false }),
+          });
+          if (!response.ok) {
+            logger.error('Failed to update transcript on stop', {
+              status: response.status,
+            });
+            toast({
+              title: 'Error',
+              description: 'Failed to update transcript status',
+              variant: 'destructive',
+            });
+          }
+        }
+      } catch (error) {
+        logger.error('Failed to update transcript on stop', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to update transcript status',
+          variant: 'destructive',
         });
       }
     }
@@ -150,18 +190,40 @@ export function useRecorderState({
     setRecording(false);
     setRecordingButtonDisabled(true);
     if (isOnline) {
-      supabase.auth.getSession().then(({ data, error }) => {
-        if (!error) {
-          fetch('/api/updateTranscript', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${data?.session?.access_token}`,
-            },
-            body: JSON.stringify({ mid: patient.mid, is_paused: true }),
-          });
-        }
-      });
+      supabase
+        .auth
+        .getSession()
+        .then(async ({ data, error }) => {
+          if (!error) {
+            try {
+              const response = await fetch('/api/updateTranscript', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${data?.session?.access_token}`,
+                },
+                body: JSON.stringify({ mid: patient.mid, is_paused: true }),
+              });
+              if (!response.ok) {
+                logger.error('Failed to update transcript on pause', {
+                  status: response.status,
+                });
+                toast({
+                  title: 'Error',
+                  description: 'Failed to update transcript status',
+                  variant: 'destructive',
+                });
+              }
+            } catch (err) {
+              logger.error('Failed to update transcript on pause', err);
+              toast({
+                title: 'Error',
+                description: 'Failed to update transcript status',
+                variant: 'destructive',
+              });
+            }
+          }
+        });
     }
   }, [patient.mid, isOnline]);
 
