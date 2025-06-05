@@ -166,8 +166,6 @@ export async function updateTranscriptAsync(transcript: TranscriptTokenCount) {
     throw new Error(await response.text());
   }
 
-  supabase.rpc('process_queue');
-
   return transcript.mid;
 }
 
