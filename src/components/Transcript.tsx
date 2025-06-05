@@ -72,7 +72,7 @@ const Transcript = ({ transcript }: Props) => {
   };
 
   return (
-    <div className="flex flex-1 flex-col md:flex-row overflow-hidden" style={{ height: 'calc(100vh - 65px)' }}>
+    <div className="flex flex-1 flex-col md:flex-row overflow-hidden h-full">
       <TranscriptSoap 
         transcript={transcript}
         summaryMap={summaryMap}
@@ -83,7 +83,7 @@ const Transcript = ({ transcript }: Props) => {
         handleMaximize={handleMaximize}
       />
       
-      <div className="flex-1 flex flex-col" style={{ maxHeight: '50vh', overflowY: 'auto' }}>
+      <div className="flex-1 flex flex-col overflow-y-auto min-h-0">
         <div className="flex justify-end p-4 space-x-4 bg-gray-100">
           <ToggleButton
             label="looper"

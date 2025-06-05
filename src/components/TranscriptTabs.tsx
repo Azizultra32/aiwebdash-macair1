@@ -55,7 +55,7 @@ const TranscriptTabs = ({
   }, [activeTab, features, setActiveTab]);
 
   return (
-    <div className="flex-1 flex flex-col bg-gray-100">
+    <div className="flex-1 flex flex-col bg-gray-100 overflow-hidden">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-grow min-h-0 flex flex-col">
         <div className="px-6 flex justify-between items-center bg-gray-100">
           <TabsList className="h-auto flex flex-wrap gap-2 bg-transparent">
@@ -74,7 +74,7 @@ const TranscriptTabs = ({
           {activeTab === 'consult' && <FloatingAfterscribe />}
         </div>
 
-        <div className="p-6 h-[calc(50vh-var(--tabs-offset))]">
+        <div className="p-6 flex-1 overflow-y-auto min-h-0">
           <TabsContent value="consult" className="h-full m-0">
             <TranscriptConsultWizard
               transcript={transcript}
