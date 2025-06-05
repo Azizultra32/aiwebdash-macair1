@@ -17,10 +17,17 @@ if ! command -v npm >/dev/null 2>&1; then
   exit 1
 fi
 
-# Ensure origin remote exists
+# Ensure origin remote exists, otherwise add it if REPO_URL is provided
 if ! git remote | grep -q '^origin$'; then
-  echo "Error: 'origin' remote not found." >&2
-  exit 1
+  if [ -n "${REPO_URL:-}" ]; then
+    if ! git remote add origin "$REPO_URL"; then
+      echo "Error: failed to add 'origin' remote from REPO_URL." >&2
+      exit 1
+    fi
+  else
+    echo "Error: 'origin' remote not found and REPO_URL is unset." >&2
+    exit 1
+  fi
 fi
 
 # Ensure working tree is clean
