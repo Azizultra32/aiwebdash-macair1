@@ -233,11 +233,13 @@ After activation the worker repeats this broadcast every five minutes to detect 
 
 ## Prompt Playground
 
-The dashboard includes a route at `/prompt-playground` for experimenting with prompt flows. Use it to test and refine prompts before integrating them into other workflows.
+The dashboard menu provides access to several prompt-related routes:
 
-Open the settings dropdown in the top navigation bar and select **Prompt Playground** to access the page.
+- `/prompt-playground` – experiment with prompt flows before integrating them into other workflows.
+- `/moa-workflow` – open the MOA Workflow builder to orchestrate multi-step tasks.
+- `/prompt-visualizer` – visualize prompt execution paths for easier debugging.
 
-Only users listed in `VITE_PROMPT_MANAGER_IDS` can edit prompt components.
+Open the settings dropdown in the top navigation bar and choose the desired page. Only users listed in `VITE_PROMPT_MANAGER_IDS` can edit prompt components.
 
 ## License
 
