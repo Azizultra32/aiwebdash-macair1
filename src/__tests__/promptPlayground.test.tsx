@@ -15,21 +15,25 @@ vi.mock('@/components/prompt-editor/PromptManager', () => ({
 import PromptPlayground from '@/views/PromptPlayground';
 
 describe('PromptPlayground', () => {
-  it.skip('switches tabs between Workflow Diagram and Manage Prompts', () => {
+  it('switches tabs between Flow and Editor', async () => {
     render(<PromptPlayground />);
 
-    // Workflow Diagram should be visible initially
-    expect(screen.getByTestId('prompt-flow')).toBeTruthy();
-    expect(screen.queryByTestId('prompt-manager')).toBeNull();
-
-    // Switch to Manage Prompts
-    fireEvent.click(screen.getByRole('button', { name: 'Manage Prompts' }));
+    // Editor tab content should be visible initially
     expect(screen.getByTestId('prompt-manager')).toBeTruthy();
     expect(screen.queryByTestId('prompt-flow')).toBeNull();
 
-    // Switch back to Workflow Diagram
-    fireEvent.click(screen.getByRole('button', { name: 'Workflow Diagram' }));
-    expect(screen.getByTestId('prompt-flow')).toBeTruthy();
+    // Switch to Flow tab
+    const flowTab = screen.getByRole('tab', { name: 'Flow' });
+    fireEvent.mouseDown(flowTab);
+    fireEvent.click(flowTab);
+    expect(await screen.findByTestId('prompt-flow')).toBeTruthy();
     expect(screen.queryByTestId('prompt-manager')).toBeNull();
+
+    // Switch back to Editor tab
+    const editorTab = screen.getByRole('tab', { name: 'Editor' });
+    fireEvent.mouseDown(editorTab);
+    fireEvent.click(editorTab);
+    expect(await screen.findByTestId('prompt-manager')).toBeTruthy();
+    expect(screen.queryByTestId('prompt-flow')).toBeNull();
   });
 });
