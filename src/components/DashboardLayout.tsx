@@ -224,6 +224,22 @@ const DashboardHeader = ({
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
+                  to="/prompt-visualizer"
+                  className="cursor-pointer"
+                >
+                  Prompt Visualizer
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link
+                  to="/moa-workflow"
+                  className="cursor-pointer"
+                >
+                  MOA Workflow
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link
                   to="/"
                   className="cursor-pointer"
                 >
