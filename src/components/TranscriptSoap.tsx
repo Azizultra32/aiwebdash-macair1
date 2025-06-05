@@ -26,7 +26,7 @@ const TranscriptSoap: React.FC<TranscriptSoapProps> = ({
   handleMaximize
 }) => {
   return (
-    <div className="w-full md:w-[45%] p-4 border-r border-border overflow-hidden h-[calc(100vh-100px)] bg-gray-100">
+    <div className="w-full md:w-[45%] p-4 border-r border-border bg-gray-100 flex flex-col overflow-y-auto">
       <Card className="h-full flex flex-col">
         <CardHeader className="p-4 pb-2">
           <div className="flex justify-between items-center border-b pb-2">
