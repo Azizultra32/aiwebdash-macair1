@@ -6,6 +6,8 @@ import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import useRecorderState from '@/hooks/useRecorderState';
 import RecorderControls from './RecorderControls';
 import { TranscriptData } from '@/types/types';
+import { toast } from '@/components/ui/use-toast';
+import { logger } from '@/utils/logger';
 import 'regenerator-runtime/runtime';
 
 interface AudioRecorderProps {
@@ -105,20 +107,37 @@ export default function AudioRecorder(props: AudioRecorderProps) {
     {
       command: ['patient label (is) *', 'label patient *'],
       callback: useCallback(
-        (patientName: string) => {
+        async (patientName: string) => {
           patientName = truncate(patientName, 12, true);
           if (recording || recordingPaused) { // Changed here
             if (patient.mid != null) {
               const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
               if (!sessionError) {
-                await fetch('/api/updateTranscript', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${sessionData?.session?.access_token}`,
-                  },
-                  body: JSON.stringify({ mid: patient.mid, patient_code: patientName }),
-                });
+                try {
+                  const response = await fetch('/api/updateTranscript', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      Authorization: `Bearer ${sessionData?.session?.access_token}`,
+                    },
+                    body: JSON.stringify({ mid: patient.mid, patient_code: patientName }),
+                  });
+                  if (!response.ok) {
+                    logger.error('Failed to update patient label', { status: response.status });
+                    toast({
+                      title: 'Error',
+                      description: 'Failed to update transcript status',
+                      variant: 'destructive',
+                    });
+                  }
+                } catch (error) {
+                  logger.error('Failed to update patient label', error);
+                  toast({
+                    title: 'Error',
+                    description: 'Failed to update transcript status',
+                    variant: 'destructive',
+                  });
+                }
               }
             }
           }
