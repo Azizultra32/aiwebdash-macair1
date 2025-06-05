@@ -7,6 +7,11 @@ vi.mock('@/components/prompt-editor/PromptFlow', () => ({
   default: () => <div data-testid="prompt-flow">Workflow Diagram Mock</div>
 }));
 
+vi.mock('@/components/prompt-editor/PromptVisualizer', () => ({
+  __esModule: true,
+  default: () => <div data-testid="prompt-visualizer">Visualizer Mock</div>
+}));
+
 vi.mock('@/components/prompt-editor/PromptManager', () => ({
   __esModule: true,
   default: () => <div data-testid="prompt-manager">Prompt Manager Mock</div>
