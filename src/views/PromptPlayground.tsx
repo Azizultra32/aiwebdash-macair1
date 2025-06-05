@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import styled from '@emotion/styled';
+import { useState } from 'react';
 import PromptFlow from '@/components/prompt-editor/PromptFlow';
 import PromptManager from '@/components/prompt-editor/PromptManager';
+import PromptVisualizer from '@/components/prompt-editor/PromptVisualizer';
 import PromptTabs from '@/components/prompt-editor/PromptTabs';
 
 const Container = styled.div`
@@ -9,15 +11,16 @@ const Container = styled.div`
 `;
 
 function PromptPlayground() {
+  const [activeTab, setActiveTab] = useState<'editor' | 'visualizer' | 'flow' | 'tester'>('editor');
+
   return (
     <Container>
       <h1>Prompt Playground</h1>
-      <PromptTabs
-        tabs={[
-          { label: 'Workflow Diagram', content: <PromptFlow /> },
-          { label: 'Manage Prompts', content: <PromptManager /> }
-        ]}
-      />
+      <PromptTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      {activeTab === 'editor' && <PromptManager />}
+      {activeTab === 'visualizer' && <PromptVisualizer />}
+      {activeTab === 'flow' && <PromptFlow />}
+      {activeTab === 'tester' && <div>Tester coming soon</div>}
     </Container>
   );
 }
