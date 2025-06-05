@@ -20,17 +20,17 @@ type Props = {
   offlineQueueCount: number;
 };
 
-const TranscriptList = ({ 
-  transcripts, 
-  selectedTranscript, 
-  onSelectTranscript, 
-  onDeleteTranscript, 
-  recordingPatientMidUUID, 
+const TranscriptList = ({
+  transcripts,
+  selectedTranscript,
+  onSelectTranscript,
+  onDeleteTranscript,
+  recordingPatientMidUUID,
   uploadingPatientMidUUID,
   offlineQueueCount,
 }: Props) => {
   const [unlock, setUnlock] = useState<Record<number, boolean>>({});
-  const [patientName, setPatientName] = useState<string>("");
+  const [patientName, setPatientName] = useState<string>('');
   const selectedRef = useRef<HTMLButtonElement>(null);
 
   // Ref to the scroll container when virtualization is active
@@ -71,7 +71,6 @@ const TranscriptList = ({
     setScrollTop(e.currentTarget.scrollTop);
   };
 
-
   const TranscriptRow = ({
     patient,
     index,
@@ -95,7 +94,9 @@ const TranscriptList = ({
             <span
               className="font-medium"
               contentEditable={unlock[index]}
-              style={unlock[index] ? { outline: 'none', boxShadow: '0-2px 0 hsl(var(--primary-foreground)) inset' } : {}}
+              style={
+                unlock[index] ? { outline: 'none', boxShadow: '0-2px 0 hsl(var(--primary-foreground)) inset' } : {}
+              }
               spellCheck={false}
               onClick={(e: React.MouseEvent) => {
                 if (unlock[index]) {
@@ -119,9 +120,7 @@ const TranscriptList = ({
             </span>
             <span className="font-medium">{patient.patient_tag}</span>
           </div>
-          <span className="text-xs text-muted-foreground">
-            {moment(patient.created_at).format('DD-MMM-YY | h:mm')}
-          </span>
+          <span className="text-xs text-muted-foreground">{moment(patient.created_at).format('DD-MMM-YY | h:mm')}</span>
         </div>
         <div className="flex items-center gap-3">
           {unlock[index] ? (
@@ -136,7 +135,7 @@ const TranscriptList = ({
                   onDeleteTranscript(patient);
                 }}
               >
-                <Trash className="h-4 w-4 text-gray-500 hover:text-red-500" />
+                <Trash className="h-4 w-4 text-muted-foreground hover:text-destructive" />
                 <span className="sr-only">Delete transcript</span>
               </Button>
               <Button
@@ -149,7 +148,7 @@ const TranscriptList = ({
                   handleRename(patientName || patient.patient_code, patient.mid);
                 }}
               >
-                <Unlock className="h-4 w-4 text-gray-500 hover:text-blue-500" />
+                <Unlock className="h-4 w-4 text-muted-foreground hover:text-primary" />
                 <span className="sr-only">Save name</span>
               </Button>
             </>
@@ -170,22 +169,22 @@ const TranscriptList = ({
           )}
           {patient.mid === recordingPatientMidUUID ? (
             <>
-              <Mic className="h-4 w-4 text-blue-500" />
+              <Mic className="h-4 w-4 text-primary" />
               <span className="sr-only">Recording</span>
             </>
           ) : patient.mid === uploadingPatientMidUUID ? (
             <>
-              <Upload className="h-4 w-4 text-blue-500" />
+              <Upload className="h-4 w-4 text-primary" />
               <span className="sr-only">Uploading</span>
             </>
           ) : isFinal(patient) ? (
             <>
-              <div className="h-4 w-4 rounded-full bg-green-500" />
+              <div className="h-4 w-4 rounded-full bg-success" />
               <span className="sr-only">Finalized</span>
             </>
           ) : patient.error ? (
             <>
-              <ShieldAlert className="h-4 w-4 text-orange-500" />
+              <ShieldAlert className="h-4 w-4 text-destructive" />
               <span className="sr-only">Error</span>
             </>
           ) : (
@@ -200,10 +199,12 @@ const TranscriptList = ({
   );
 
   const isFinal = (transcript: Transcript) => {
-    return transcript.completed_at != null && 
-           (transcript.completed_at ?? new Date()) >= (transcript.queued_completed_at ?? new Date()) && 
-           transcript.token_count > 0 && 
-           (transcript.is_paused ?? false) === false;
+    return (
+      transcript.completed_at != null &&
+      (transcript.completed_at ?? new Date()) >= (transcript.queued_completed_at ?? new Date()) &&
+      transcript.token_count > 0 &&
+      (transcript.is_paused ?? false) === false
+    );
   };
 
   useEffect(() => {
@@ -238,10 +239,9 @@ const TranscriptList = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-
   return (
-    <div className="w-full md:w-64 bg-white h-full flex flex-col border-r border-gray-200">
-      <div className="flex justify-between items-center px-4 py-2 bg-gray-100">
+    <div className="w-full md:w-64 bg-background h-full flex flex-col border-r border-border">
+      <div className="flex justify-between items-center px-4 py-2 bg-muted">
         <h2 className="font-semibold">Patient List</h2>
         <div className="flex items-center gap-2">
           <OnlineStatusIndicator />
@@ -290,22 +290,20 @@ const TranscriptList = ({
         </div>
       )}
       {selectedTranscript && (
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-border">
           <div className="flex flex-col items-center space-y-4">
-            <div className="w-full p-4 rounded-md bg-blue-100 relative">
+            <div className="w-full p-4 rounded-md bg-muted relative">
               <div className="flex justify-between items-start">
-                <span className="text-lg font-medium text-blue-800">
-                  {selectedTranscript.patient_code}
-                </span>
-                <span className="text-xs text-blue-600">
+                <span className="text-lg font-medium text-primary">{selectedTranscript.patient_code}</span>
+                <span className="text-xs text-primary">
                   {moment(selectedTranscript.created_at).format('DD-MMM-YY | h:mm')}
                 </span>
               </div>
               <div className="flex items-center space-x-1 mt-2">
                 {isFinal(selectedTranscript) ? (
-                  <Check className="h-4 w-4 text-blue-700" />
+                  <Check className="h-4 w-4 text-primary" />
                 ) : (
-                  <ArrowRight className="h-4 w-4 text-gray-400" />
+                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
                 )}
               </div>
             </div>
