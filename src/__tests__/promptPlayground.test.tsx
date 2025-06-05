@@ -36,4 +36,13 @@ describe('PromptPlayground', () => {
     expect(await screen.findByTestId('prompt-manager')).toBeTruthy();
     expect(screen.queryByTestId('prompt-flow')).toBeNull();
   });
+
+  it('renders the tester tab', async () => {
+    render(<PromptPlayground />);
+
+    const testerTab = screen.getByRole('tab', { name: 'Tester' });
+    fireEvent.mouseDown(testerTab);
+    fireEvent.click(testerTab);
+    expect(await screen.findByTestId('prompt-tester')).toBeTruthy();
+  });
 });
