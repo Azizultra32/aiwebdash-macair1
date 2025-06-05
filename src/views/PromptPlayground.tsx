@@ -4,6 +4,7 @@ import { useState } from 'react';
 import PromptFlow from '@/components/prompt-editor/PromptFlow';
 import PromptManager from '@/components/prompt-editor/PromptManager';
 import PromptVisualizer from '@/components/prompt-editor/PromptVisualizer';
+import PromptTester from '@/components/prompt-editor/PromptTester';
 import PromptTabs from '@/components/prompt-editor/PromptTabs';
 
 const Container = styled.div`
@@ -20,7 +21,7 @@ function PromptPlayground() {
       {activeTab === 'editor' && <PromptManager />}
       {activeTab === 'visualizer' && <PromptVisualizer />}
       {activeTab === 'flow' && <PromptFlow />}
-      {activeTab === 'tester' && <div>Tester coming soon</div>}
+      {activeTab === 'tester' && <PromptTester />}
     </Container>
   );
 }
