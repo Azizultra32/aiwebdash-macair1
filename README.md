@@ -83,6 +83,8 @@ The application relies on several environment variables for Supabase and Stripe 
 - `BFF_SUPABASE_URL` - Supabase project URL for the backend.
 - `BFF_SUPABASE_SERVICE_ROLE_KEY` - service role key used by the backend.
 
+## Quality Assurance & Testing
+
 ### Running ESLint
 
 Before running the linter, ensure development dependencies are installed. Run
@@ -126,6 +128,8 @@ linter and tests together:
 npm run lint && npm run test
 ```
 
+### Pull Request Workflow
+
 Before opening a pull request, rebase your branch and verify the project passes
 all checks by running:
 
@@ -138,6 +142,13 @@ branch, and runs the preflight, lint, and test steps. If `origin` is missing
 but the `REPO_URL` environment variable is set, the script adds the remote
 before fetching.
 
+**Important:** Always run `npm run prepare-pr main` before creating a pull request to ensure:
+- ✅ Your branch is up-to-date with the latest changes  
+- ✅ All dependencies are installed correctly
+- ✅ Linting passes without errors
+- ✅ All tests pass successfully
+- ✅ No merge conflicts with the target branch
+
 ### Testing notes
 
 Service worker tests import `public/sw.js` directly. Workbox's precache
@@ -145,16 +156,6 @@ controller expects `self.__WB_MANIFEST` to contain a manifest array when the
 script is executed. The build process normally injects this variable, so the
 tests manually define `self.__WB_MANIFEST` with a dummy entry to prevent import
 errors.
-
-### Storybook
-
-To develop components in isolation, run Storybook:
-
-```bash
-npm run storybook
-```
-
-The Storybook UI will be available at `http://localhost:6006`.
 
 ### Running Supabase locally
 
