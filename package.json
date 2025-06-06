@@ -11,8 +11,6 @@
     "preview": "vite preview",
     "test": "vitest run",
     "generate-types": "npx supabase gen types typescript --project-id 'VITE_SUPABASE_URL' --schema public > src/types/supabase.ts",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build",
     "prepare-pr": "bash prepare-pr.sh",
     "start:bff": "node server/index.cjs"
   },
@@ -75,10 +73,6 @@
   "devDependencies": {
     "@eslint/eslintrc": "^2.1.4",
     "@eslint/js": "^8.46.0",
-    "@storybook/addon-essentials": "^7.6.0",
-    "@storybook/addon-links": "^7.6.0",
-    "@storybook/react": "^7.6.0",
-    "@storybook/react-vite": "^7.6.0",
     "@testing-library/react": "^14.0.0",
     "@trivago/prettier-plugin-sort-imports": "^4.2.0",
     "@types/node": "^20.4.5",
