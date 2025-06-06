@@ -16,6 +16,8 @@ on:
         - check-all
         - merge-ready
         - close-stale
+        - rebase-all
+        - rebase-behind
 
 jobs:
   pr-quality-check:

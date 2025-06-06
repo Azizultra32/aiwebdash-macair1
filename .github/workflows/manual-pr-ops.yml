@@ -10,6 +10,7 @@ on:
         options:
           - 'check-specific-pr'
           - 'merge-specific-pr'
+          - 'rebase-specific-pr'
           - 'rebase-all-prs'
           - 'generate-report'
           - 'cleanup-merged-branches'
@@ -140,6 +141,93 @@ jobs:
             
           } catch (error) {
             console.error(`❌ Failed to merge PR #${prNumber}: ${error.message}`);
+            throw error;
+          }
+
+  rebase-specific-pr:
+    if: github.event.inputs.operation == 'rebase-specific-pr'
+    runs-on: ubuntu-latest
+    name: Rebase Specific PR
+
+    steps:
+    - name: Validate PR number
+      run: |
+        if [ -z "${{ github.event.inputs.pr_number }}" ]; then
+          echo "❌ PR number is required for rebase operation"
+          exit 1
+        fi
+
+    - name: Rebase PR
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const prNumber = parseInt('${{ github.event.inputs.pr_number }}');
+
+          try {
+            // Get PR details
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+
+            // Check if PR is from a fork
+            if (pr.head.repo.full_name !== pr.base.repo.full_name) {
+              throw new Error('Cannot rebase PRs from forks automatically. Please ask contributor to rebase manually.');
+            }
+
+            // Check if PR is behind
+            const { data: comparison } = await github.rest.repos.compareCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              base: pr.base.sha,
+              head: pr.head.sha
+            });
+
+            if (comparison.behind_by === 0) {
+              console.log(`✅ PR #${prNumber} is already up to date`);
+
+              await github.rest.issues.createComment({
+                issue_number: prNumber,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `🤖 **Rebase Check Complete**\n\n✅ This PR is already up to date with \`main\`.\n\nNo rebase needed!`
+              });
+
+              return;
+            }
+
+            console.log(`🔄 PR #${prNumber} is ${comparison.behind_by} commits behind, rebasing...`);
+
+            // Attempt to rebase
+            await github.rest.pulls.updateBranch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              expected_head_sha: pr.head.sha
+            });
+
+            console.log(`✅ Successfully rebased PR #${prNumber}`);
+
+            // Add success comment
+            await github.rest.issues.createComment({
+              issue_number: prNumber,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🤖 **Auto-Rebase Complete**\n\n✅ This PR has been successfully rebased onto the latest \`main\` branch.\n\n**Changes:**\n- Rebased ${comparison.behind_by} commits from main\n- Branch is now up to date\n- Quality gates will run automatically\n\nReady for review!`
+            });
+
+          } catch (error) {
+            console.error(`❌ Failed to rebase PR #${prNumber}: ${error.message}`);
+
+            // Add failure comment with manual instructions
+            await github.rest.issues.createComment({
+              issue_number: prNumber,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🤖 **Auto-Rebase Failed**\n\n❌ Could not automatically rebase this PR: ${error.message}\n\n**Manual rebase required:**\n\`\`\`bash\ngit checkout ${pr.head.ref}\ngit fetch origin main\ngit rebase origin/main\n# Resolve any conflicts\ngit push --force-with-lease\n\`\`\`\n\n**Or use GitHub web interface:**\n1. Click "Update branch" button above\n2. Select "Update with rebase"\n3. Resolve conflicts if any appear`
+            });
+
             throw error;
           }
 

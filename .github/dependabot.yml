@@ -1,0 +1,41 @@
+version: 2
+updates:
+  # NPM dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    rebase-strategy: "auto"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "Azizultra32"
+    assignees:
+      - "Azizultra32"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "automated"
+    
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    rebase-strategy: "auto"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "Azizultra32"
+    assignees:
+      - "Azizultra32"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "github-actions"
+      - "automated"
