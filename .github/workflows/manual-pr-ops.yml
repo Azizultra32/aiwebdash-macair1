@@ -418,3 +418,108 @@ jobs:
           console.log(`\n📊 Cleanup Summary:`);
           console.log(`- Deleted: ${deleted} branches`);
           console.log(`- Skipped: ${skipped} branches`);
+
+  rebase-all-prs:
+    if: github.event.inputs.operation == 'rebase-all-prs'
+    runs-on: ubuntu-latest
+    name: Rebase All PRs
+
+    steps:
+    - name: Rebase all open PRs
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { data: prs } = await github.rest.pulls.list({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            state: 'open',
+            per_page: 100
+          });
+
+          console.log(`🔄 Found ${prs.length} open PRs to process`);
+
+          let processed = 0;
+          let succeeded = 0;
+          let failed = 0;
+          let skipped = 0;
+
+          for (const pr of prs) {
+            processed++;
+            console.log(`\n📋 Processing PR #${pr.number}: ${pr.title}`);
+
+            try {
+              // Skip draft PRs
+              if (pr.draft) {
+                console.log(`⏭️ Skipping draft PR #${pr.number}`);
+                skipped++;
+                continue;
+              }
+
+              // Skip PRs from forks
+              if (pr.head.repo.full_name !== pr.base.repo.full_name) {
+                console.log(`⏭️ Skipping fork PR #${pr.number} (cannot auto-rebase)`);
+                skipped++;
+
+                await github.rest.issues.createComment({
+                  issue_number: pr.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: `🤖 **Auto-Rebase Skipped**\n\n⏭️ This PR is from a fork and cannot be automatically rebased.\n\n**Manual rebase required:**\n\`\`\`bash\ngit checkout ${pr.head.ref}\ngit fetch upstream main\ngit rebase upstream/main\n# Resolve any conflicts\ngit push --force-with-lease\n\`\`\`\n\nPlease rebase your branch and push the changes.`
+                });
+                continue;
+              }
+
+              // Check if PR is behind
+              const { data: comparison } = await github.rest.repos.compareCommits({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                base: pr.base.sha,
+                head: pr.head.sha
+              });
+
+              if (comparison.behind_by === 0) {
+                console.log(`✅ PR #${pr.number} is already up to date`);
+                skipped++;
+                continue;
+              }
+
+              console.log(`🔄 PR #${pr.number} is ${comparison.behind_by} commits behind, rebasing...`);
+
+              // Attempt to rebase
+              await github.rest.pulls.updateBranch({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                expected_head_sha: pr.head.sha
+              });
+
+              console.log(`✅ Successfully rebased PR #${pr.number}`);
+              succeeded++;
+
+              // Add success comment
+              await github.rest.issues.createComment({
+                issue_number: pr.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `🤖 **Auto-Rebase Complete**\n\n✅ This PR has been successfully rebased onto the latest \`main\` branch.\n\n**Changes:**\n- Rebased ${comparison.behind_by} commits from main\n- Branch is now up to date\n- Quality gates will run automatically\n\nReady for review!`
+              });
+
+            } catch (error) {
+              console.error(`❌ Failed to rebase PR #${pr.number}: ${error.message}`);
+              failed++;
+
+              // Add failure comment with manual instructions
+              await github.rest.issues.createComment({
+                issue_number: pr.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `🤖 **Auto-Rebase Failed**\n\n❌ Could not automatically rebase this PR: ${error.message}\n\n**Manual rebase required:**\n\`\`\`bash\ngit checkout ${pr.head.ref}\ngit fetch origin main\ngit rebase origin/main\n# Resolve any conflicts\ngit push --force-with-lease\n\`\`\`\n\n**Or use GitHub web interface:**\n1. Click "Update branch" button above\n2. Select "Update with rebase"\n3. Resolve conflicts if any appear`
+              });
+            }
+          }
+
+          console.log(`\n📊 Rebase Summary:`);
+          console.log(`- Total PRs: ${processed}`);
+          console.log(`- Successfully rebased: ${succeeded}`);
+          console.log(`- Failed: ${failed}`);
+          console.log(`- Skipped: ${skipped}`);
