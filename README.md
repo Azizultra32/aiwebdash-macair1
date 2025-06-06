@@ -38,12 +38,13 @@ If you are developing a production application, we recommend updating the config
    ```bash
    bash .codex/setup.sh
    ```
-
    Verify that dependencies are present by running the preflight script:
 
    ```bash
    npm run preflight
    ```
+
+   After setup finishes, HTTP access persists for tools like `curl` and `gh`, but Git network operations are no longer allowed.
 
 3. Create a `.env` file by copying `.env.example` and updating the values for your environment.
 
@@ -172,7 +173,7 @@ supabase stop
 
 ### Codex environment setup
 
-Codex disables network access after the setup phase. The `.codex/setup.sh` script installs dependencies and fetches open pull requests while the network is still available. It first checks for an `origin` remote and falls back to the `REPO_URL` environment variable if one isn't configured.
+Codex now keeps general HTTP access available after setup while blocking Git network operations. The `.codex/setup.sh` script runs during initialization to install dependencies and fetch open pull requests before Git access is disabled. It first checks for an `origin` remote and falls back to the `REPO_URL` environment variable if one isn't configured.
 
 ```bash
 #!/usr/bin/env bash
@@ -203,6 +204,8 @@ fi
 ```
 
 Codex will execute this script automatically during environment initialization.
+
+HTTP utilities such as `curl` or the GitHub CLI continue to function after setup. However Git network commands like `git fetch` or `gh pr checkout` are blocked. To use the GitHub CLI for API calls (e.g. `gh pr list` or `gh pr view`), authenticate during setup by setting the `GH_TOKEN` environment variable or running `gh auth login` while network access is still available.
 
 ### Working with PR branches
 
