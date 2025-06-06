@@ -1,0 +1,15 @@
+# Build and config files
+supabase/functions/stripe-checkout/index.ts
+tailwind.config.js
+update-appcache.cjs
+vite.config.ts
+postcss.config.js
+
+# Test artifacts
+unique-pr-*.txt
+pr_list.json
+
+# Generated files
+dist/
+build/
+.storybook/
