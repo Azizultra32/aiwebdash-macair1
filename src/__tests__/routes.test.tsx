@@ -1,45 +1,42 @@
 import React from 'react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { Outlet } from 'react-router-dom';
 
-let initialEntries: string[] = [];
-
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
-  return {
-    ...actual,
-    createBrowserRouter: (routes: any) =>
-      actual.createMemoryRouter(routes, { initialEntries }),
-  };
-});
+vi.mock('@/components/AuthRoute', () => ({
+  __esModule: true,
+  default: () => <Outlet />,
+}));
 
 vi.mock('@/views/Dashboard', () => ({
   __esModule: true,
-  default: () => <div data-testid="dashboard">Dashboard Mock</div>,
+  default: () => <div>Dashboard</div>,
+}));
+
+vi.mock('@/views/MoaDashboard', () => ({
+  __esModule: true,
+  default: () => <div data-testid="moa-dashboard">MOA Dashboard</div>,
 }));
 
 vi.mock('@/components/prompt-editor/PromptVisualizer', () => ({
   __esModule: true,
-  default: () => <div data-testid="prompt-visualizer">Visualizer Mock</div>,
+  default: () => <div data-testid="prompt-visualizer">Prompt Visualizer</div>,
 }));
 
-beforeEach(() => {
-  process.env.VITE_BYPASS_AUTH = '1';
-  vi.resetModules();
-});
+import Routes from '@/components/Routes';
 
 describe('application routes', () => {
-  it('renders MoaDashboard on /moa-workflow', async () => {
-    initialEntries = ['/moa-workflow'];
-    const { default: Routes } = await import('@/components/Routes');
+  it('renders MoaDashboard at /moa-workflow', async () => {
+    window.history.pushState({}, '', '/moa-workflow');
+    window.dispatchEvent(new PopStateEvent('popstate'));
     render(<Routes />);
-    expect(screen.getByText(/Task Management Dashboard/i)).toBeTruthy();
+    expect(await screen.findByTestId('moa-dashboard')).toBeTruthy();
   });
 
-  it('renders PromptVisualizer on /prompt-visualizer', async () => {
-    initialEntries = ['/prompt-visualizer'];
-    const { default: Routes } = await import('@/components/Routes');
+  it('renders PromptVisualizer at /prompt-visualizer', async () => {
+    window.history.pushState({}, '', '/prompt-visualizer');
+    window.dispatchEvent(new PopStateEvent('popstate'));
     render(<Routes />);
-    expect(screen.getByTestId('prompt-visualizer')).toBeTruthy();
+    expect(await screen.findByTestId('prompt-visualizer')).toBeTruthy();
   });
 });
