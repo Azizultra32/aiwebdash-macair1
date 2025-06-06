@@ -18,7 +18,9 @@ if command -v npm >/dev/null 2>&1; then
     git remote add origin "$REPO_URL"
     git fetch origin 'refs/pull/*/head:refs/pull/*' || true
   else
-    echo "Warning: no 'origin' remote found and REPO_URL is unset; skipping fetch"
+    echo "Setting up git remote origin with default URL"
+    git remote add origin https://github.com/Azizultra32/aiwebdash-macair1.git
+    git fetch origin 'refs/pull/*/head:refs/pull/*' || true
   fi
   if command -v gh >/dev/null 2>&1; then
     gh pr list --state open --json number,title,headRefName > pr_list.json

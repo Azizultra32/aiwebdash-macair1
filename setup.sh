@@ -9,7 +9,7 @@ echo "Starting project setup..."
 # Install Node.js dependencies
 if command -v npm >/dev/null 2>&1; then
   echo "Installing dependencies..."
-  
+
   # Use npm install with legacy peer deps to handle dependency conflicts
   # This is more reliable than npm ci in environments where lockfile may be inconsistent
   npm install --legacy-peer-deps
@@ -17,13 +17,13 @@ if command -v npm >/dev/null 2>&1; then
   # Run quality checks - these may fail if the project has issues, but shouldn't block setup
   echo "Running linting checks..."
   npm run lint || echo "⚠️  Linting failed during setup (this is expected if there are existing issues)"
-  
+
   echo "Running tests..."
   npm run test || echo "⚠️  Tests failed during setup (this is expected if there are existing issues)"
 
   # Set up git remote and fetch PR data
   echo "Setting up git remote and fetching PR data..."
-  
+
   if git remote get-url origin >/dev/null 2>&1; then
     echo "Using existing origin remote"
     git fetch origin 'refs/pull/*/head:refs/pull/*' || true
@@ -36,7 +36,7 @@ if command -v npm >/dev/null 2>&1; then
     git remote add origin https://github.com/Azizultra32/aiwebdash-macair1.git
     git fetch origin 'refs/pull/*/head:refs/pull/*' || true
   fi
-  
+
   # Generate PR list if GitHub CLI is available
   if command -v gh >/dev/null 2>&1; then
     echo "Generating PR list with GitHub CLI..."
@@ -44,13 +44,12 @@ if command -v npm >/dev/null 2>&1; then
   else
     echo "GitHub CLI not available - skipping PR list generation"
   fi
-  
+
   echo "✅ Setup completed successfully!"
   echo ""
   echo "Next steps:"
   echo "1. Run 'npm run dev' to start the development server"
   echo "2. Run 'npm run prepare-pr main' before creating pull requests"
-  
 else
   echo "❌ Error: npm not found. Please install Node.js." >&2
   exit 1
