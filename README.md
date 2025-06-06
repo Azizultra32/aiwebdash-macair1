@@ -172,7 +172,7 @@ supabase stop
 
 ### Codex environment setup
 
-Codex disables network access after the setup phase. The `.codex/setup.sh` script installs dependencies and fetches open pull requests while the network is still available. It first checks for an `origin` remote and falls back to the `REPO_URL` environment variable if one isn't configured.
+After setup finishes, HTTP access persists for tools like `curl` and `gh`, but Git network operations are no longer allowed. The `.codex/setup.sh` script installs dependencies and fetches open pull requests while the network is still available. It first checks for an `origin` remote and falls back to the `REPO_URL` environment variable if one isn't configured.
 
 ```bash
 #!/usr/bin/env bash
