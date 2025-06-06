@@ -10,7 +10,7 @@ import supabase from '@/supabase';
 import { Button } from './ui/button';
 import OnlineStatusIndicator from '@/components/OnlineStatusIndicator';
 
-type Props = {
+interface Props {
   transcripts: Transcript[];
   selectedTranscript?: Transcript;
   onSelectTranscript: (transcript: Transcript) => void;
@@ -18,7 +18,7 @@ type Props = {
   recordingPatientMidUUID?: string;
   uploadingPatientMidUUID?: string;
   offlineQueueCount: number;
-};
+}
 
 const TranscriptList = ({
   transcripts,
@@ -108,7 +108,7 @@ const TranscriptList = ({
                   e.preventDefault();
                   setUnlock({ ...unlock, [index]: false });
                   handleRename(e.currentTarget.textContent || '', patient.mid);
-                } else if (e.key !== 'Backspace' && e.currentTarget.textContent!.length >= 12) {
+                } else if (e.key !== 'Backspace' && e.currentTarget.textContent.length >= 12) {
                   e.preventDefault();
                 }
               }}

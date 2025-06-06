@@ -6,11 +6,11 @@ import { User, Session } from '@supabase/supabase-js';
 import { UseQueryResult, UseMutationResult, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, useContext, useEffect } from 'react';
 
-type Props = {
+interface Props {
   children: React.ReactNode;
-};
+}
 
-type AuthContextType = {
+interface AuthContextType {
   /** login mutation returned from useMutation */
   login: UseMutationResult<{ user: User | null; session: Session | null }, Error, { phone: string; password: string }>;
   /** register mutation returned from useMutation */
@@ -38,7 +38,7 @@ type AuthContextType = {
     session: Session | null;
   }>;
   resendOtp: (phone: string) => Promise<void>;
-};
+}
 
 const AuthContext = createContext<AuthContextType>({
   login: {} as UseMutationResult<

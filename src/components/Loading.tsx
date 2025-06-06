@@ -1,10 +1,10 @@
 import { cn } from '@/lib/utils';
 
-type Props = {
+interface Props {
   size?: 'small' | 'medium' | 'large' | 'xsmall';
   position?: 'fullscreen' | 'auto' | 'overlay';
   variant?: 'light' | 'dark';
-};
+}
 
 const Loading = ({ size = 'medium', position = 'auto', variant }: Props) => {
   const classesPostion = cn('flex items-center justify-center', {

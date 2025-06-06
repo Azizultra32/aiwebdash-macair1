@@ -11,12 +11,12 @@ import moment from 'moment';
 
 type Summary = AI_Summary['arguments']['summaries'][0];
 
-type Props = {
+interface Props {
   summary: Summary;
   transcript: Transcript;
-};
+}
 
-const segments : Array<string> = [];
+const segments : string[] = [];
 
 const TranscriptSummary = forwardRef(({ summary, transcript }: Props, ref) => {
   const [isMaximized, setIsMaximized] = useState(false);

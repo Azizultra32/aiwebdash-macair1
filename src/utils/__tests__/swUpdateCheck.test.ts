@@ -74,7 +74,7 @@ afterEach(() => {
     clearInterval(intervalId as any);
     intervalId = undefined;
   }
-  if ((global as any).self && (global as any).self.__versionCheckInterval) {
+  if ((global as any).self?.__versionCheckInterval) {
     delete (global as any).self.__versionCheckInterval;
   }
   if (originalSelf === undefined) {

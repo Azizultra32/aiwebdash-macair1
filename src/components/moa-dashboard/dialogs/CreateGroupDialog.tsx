@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import type { Person } from '../types'
 
-type Props = {
+interface Props {
   doctors: Person[]
   onCreateGroup: (name: string, doctorIds: string[]) => void
 }

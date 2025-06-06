@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import type { Person } from './types'
 
-type Props = {
+interface Props {
   person: Person
 }
 

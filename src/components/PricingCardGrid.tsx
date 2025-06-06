@@ -9,7 +9,7 @@ interface PricingCardGridProps {
   onSubscribe: (planId: number, priceId: string) => void;
 }
 
-const PLANS_CARD_HEIGHT_COLORS: { [key: string]: string } = {
+const PLANS_CARD_HEIGHT_COLORS: Record<string, string> = {
   'SOAP Supreme': 'md:h-[80%] h-full bg-black text-white',
   'SOAP Supreme: Multi-Lingual': 'md:h-[90%]  h-full bg-white text-black',
   'ASSIST ULTRA': 'md:h-full bg-blue-600  h-full text-white',

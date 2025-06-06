@@ -23,7 +23,7 @@ vi.mock('@/hooks/useRecorderState', () => ({
     cPauseRecording: vi.fn(),
   })),
 }));
-var toastMock: any;
+let toastMock: any;
 vi.mock('@/components/ui/use-toast', () => {
   toastMock = vi.fn();
   return {

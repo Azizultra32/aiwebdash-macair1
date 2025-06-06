@@ -51,7 +51,7 @@ export default function useSubscribe() {
         if (error) throw new Error(error);
 
         const stripe = await getStripe();
-        const { error: stripeError } = await stripe!.redirectToCheckout({ sessionId });
+        const { error: stripeError } = await stripe.redirectToCheckout({ sessionId });
 
         if (stripeError) {
           throw stripeError;

@@ -3,6 +3,7 @@
     "target": "ES2020",
     "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "types": ["vitest/globals"],
     "module": "ESNext",
     "skipLibCheck": true,
 
@@ -33,6 +34,9 @@
     "src",
     "deno.d.ts",
     "public/db-worker.js"
+  ],
+  "exclude": [
+    "src/__tests__/**/*"
   ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

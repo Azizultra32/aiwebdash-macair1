@@ -1,4 +1,4 @@
-export type Person = {
+export interface Person {
   id: string
   name: string
   role: string
@@ -8,12 +8,12 @@ export type Person = {
   image: string
 }
 
-export type Patient = {
+export interface Patient {
   id: string
   name: string
 }
 
-export type Task = {
+export interface Task {
   id: string
   name: string
   doctorId: string
@@ -25,12 +25,12 @@ export type Task = {
   notes?: string
 }
 
-export type DoctorMOAAssignment = {
+export interface DoctorMOAAssignment {
   doctorId: string
   moaId: string
 }
 
-export type Group = {
+export interface Group {
   id: string
   name: string
   doctorIds: string[]

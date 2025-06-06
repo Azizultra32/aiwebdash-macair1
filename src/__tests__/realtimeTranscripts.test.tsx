@@ -5,8 +5,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useRealtimeTranscripts } from '@/hooks/useCreateTranscript';
 
 // Mocks
-var channelMock: any;
-const unsubscribes: Array<vi.Mock> = [];
+let channelMock: any;
+const unsubscribes: vi.Mock[] = [];
 vi.mock('@/supabase', () => {
   channelMock = vi.fn(() => ({
     on: vi.fn().mockReturnThis(),

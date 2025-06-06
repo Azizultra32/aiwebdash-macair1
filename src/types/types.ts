@@ -1,35 +1,35 @@
-export type UserData = {
+export interface UserData {
   email: string;
-};
+}
 
-export type PasswordData = {
+export interface PasswordData {
   password: string;
-};
+}
 
-export type LoginData = {
+export interface LoginData {
   email: string;
   password: string;
-};
+}
 
-export type TranscriptData = {
+export interface TranscriptData {
   patient_code: string;
   patient_tag: number;
   mid?: string;
   language?: string;
   token_count: number;
-};
+}
 
-export type TranscriptTokenCount = {
+export interface TranscriptTokenCount {
   mid: string;
   token_count: number;
-};
+}
 
-export type AI_Summary = {
+export interface AI_Summary {
   error?: string;
   arguments: {
     summaries: { links: string[]; title: string; number: number; summary: string }[];
   };
-};
+}
 
 export type Transcript = {
   id: number;
@@ -51,9 +51,9 @@ export type Transcript = {
   queued_completed_at?: string;
 } & TranscriptData;
 
-export type ChunkNumberWrapper = {
+export interface ChunkNumberWrapper {
   chunkNumber: number;
-};
+}
 
 export interface SummaryRef {
   toggleMaximize: () => void;

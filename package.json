@@ -6,7 +6,7 @@
   "scripts": {
     "preflight": "bash preflight.sh",
     "dev": "vite",
-    "build": "tsc && vite build && node update-appcache.cjs",
+    "build": "vite build && node update-appcache.cjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",

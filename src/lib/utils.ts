@@ -57,7 +57,7 @@ export function getAudioMimeType(): string {
     return accum;
   }, {});
   let audioMimeType = null;
-  for(let i in priorities) {
+  for(const i in priorities) {
     if (map[priorities[i]] !== undefined) {
       audioMimeType = map[priorities[i]];
       break;

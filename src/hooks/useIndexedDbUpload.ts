@@ -64,7 +64,7 @@ export function useIndexedDbUpload(
           uploadMap.set(patientMid, []);
         }
         const uploadTask = doUpload(path, blob);
-        uploadMap.get(patientMid)!.push(uploadTask);
+        uploadMap.get(patientMid).push(uploadTask);
         blobMap.set(uploadTask, [path, blob]);
       } else if (isDbReady) {
         try {
@@ -89,7 +89,7 @@ export function useIndexedDbUpload(
           const uploadPromises = uploadMap.get(patientMid) ?? [];
           retries = [];
           for (const promise of uploadPromises) {
-            const [path, blb] = blobMap.get(promise)!;
+            const [path, blb] = blobMap.get(promise);
             try {
               const r = await promise;
               if (r.error) {

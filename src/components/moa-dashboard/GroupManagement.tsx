@@ -5,7 +5,7 @@ import type { Group, Person } from './types'
 import CreateGroupDialog from './dialogs/CreateGroupDialog'
 import GroupCard from './dialogs/GroupCard'
 
-type Props = {
+interface Props {
   groups: Group[]
   doctors: Person[]
   onCreateGroup: (name: string, doctorIds: string[]) => void

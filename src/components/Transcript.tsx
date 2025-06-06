@@ -7,11 +7,11 @@ import TranscriptTabs from './TranscriptTabs';
 import { Switch } from "@/components/ui/switch";
 import { motion } from "framer-motion";
 
-type Props = {
+interface Props {
   transcript: TranscriptType;
   recordingPatientMidUUID: string | undefined;
   uploadingPatientMidUUID: string | undefined;
-};
+}
 
 interface ToggleButtonProps {
   label: string;

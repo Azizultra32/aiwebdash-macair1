@@ -57,7 +57,7 @@ const initializeServices = async () => {
 // Initialize services when the app starts
 initializeServices();
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

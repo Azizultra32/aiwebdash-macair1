@@ -15,9 +15,7 @@ interface TranscriptTabsProps {
   summaryMap: Record<string, any>;
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  summaryRefs: {
-    [key: string]: React.RefObject<SummaryRef>;
-  };
+  summaryRefs: Record<string, React.RefObject<SummaryRef>>;
   handleCopy: (ref: React.RefObject<SummaryRef>) => void;
   handleMaximize: (ref: React.RefObject<SummaryRef>) => void;
   features: {

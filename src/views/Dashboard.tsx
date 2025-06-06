@@ -5,8 +5,7 @@ import FormCreateTranscript from '@/components/FormCreateTranscript';
 import TranscriptList from '@/components/TranscriptList';
 import { logger } from '@/utils/logger';
 import useTranscripts from '@/hooks/useTranscripts';
-import useCreateTranscript from '@/hooks/useCreateTranscript';
-import { useRealtimeTranscripts, deleteTranscriptAsync, updateTranscriptAsync } from '@/hooks/useCreateTranscript';
+import useCreateTranscript, { useRealtimeTranscripts, deleteTranscriptAsync, updateTranscriptAsync } from '@/hooks/useCreateTranscript';
 import Transcript from '@/components/Transcript';
 import { Loading } from '@/components/Loading';
 import type { Transcript as TranscriptT, TranscriptData } from '@/types/types';
@@ -129,7 +128,7 @@ const Dashboard = () => {
   }, [isOnline]);
 
   const getLastNCharacters = (str: string, n: number) => {
-    let length = str.length;
+    const length = str.length;
     let result = '';
     if (n > length) {
       n = length;
@@ -215,7 +214,7 @@ const Dashboard = () => {
     let didCreateClientPatient = false;
     let didClearClientPatient = false;
 
-    if (t0 == undefined && newPatient && newPatient.mid && updatedTranscripts.find(x => x.mid === newPatient.mid!) == undefined) {
+    if (t0 == undefined && newPatient && newPatient.mid && updatedTranscripts.find(x => x.mid === newPatient.mid) == undefined) {
       const now = new Date();
       const now_utc = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(),
         now.getUTCDate(), now.getUTCHours(),
@@ -223,7 +222,7 @@ const Dashboard = () => {
       const created_at = new Date(now_utc).toISOString();
       updatedTranscripts.unshift({
         ...newPatient,
-        mid: newPatient.mid!,
+        mid: newPatient.mid,
         id: -1,
         user_id: "",
         token_count: 0,
@@ -233,7 +232,7 @@ const Dashboard = () => {
       didCreateClientPatient = true;
     }
     else if (newPatient && newPatient.mid && newPatient.mid === clientSideMid) {
-      if (updatedTranscripts.find(x => x.mid === newPatient.mid!)) {
+      if (updatedTranscripts.find(x => x.mid === newPatient.mid)) {
         setNewPatient(undefined);
         didClearClientPatient = true;
       }
@@ -268,7 +267,7 @@ const Dashboard = () => {
 
   const onRecording = useCallback(async (patient: TranscriptData) => {
     setStatus("Listening...");
-    setRecordingPatientMidUUID(patient.mid!);
+    setRecordingPatientMidUUID(patient.mid);
     clientSideMid = patient.mid;
     if (patient.token_count === 0) {
       if ((patient?.patient_code ?? "").length <= 0) {
@@ -293,13 +292,13 @@ const Dashboard = () => {
   }, [isOnline]);
 
   const onStopRecording = useCallback((t: TranscriptData) => {
-    terminateRecording({ token_count: t.token_count, mid: t.mid! });
+    terminateRecording({ token_count: t.token_count, mid: t.mid });
 
     clientSideMid = t.mid;
     setDefaultPatientCode('');
     setRecordingPatientMidUUID('');
     setPatientData({ patient_code: 'Patient', patient_tag: patientTag, mid: uuidv4(), language: t.language, token_count: 0 });
-    setUploadingPatientMidUUID(t.mid!);
+    setUploadingPatientMidUUID(t.mid);
     setStatus("Uploading...");
   }, [patientTag, isOnline, terminateRecording]);
 
@@ -361,7 +360,7 @@ const Dashboard = () => {
     const t = mergedTranscripts?.find(x => x.mid === mid);
     setSelectedTranscript(t);
     if (t) {
-      setPatientData(t!);
+      setPatientData(t);
     }
   }, [mergedTranscripts, selectedTranscript?.mid]);
 

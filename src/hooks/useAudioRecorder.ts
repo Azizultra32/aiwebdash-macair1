@@ -6,7 +6,7 @@ import { logger } from '@/utils/logger';
 import { ChunkNumberWrapper } from '@/types/types';
 import { uuidv4 } from '@/lib/utils';
 
-type Transcription = { text: string };
+interface Transcription { text: string }
 export type RecordCallback = (transcription: Transcription) => void;
 
 export default function useAudioRecorder(onTranscription: RecordCallback) {

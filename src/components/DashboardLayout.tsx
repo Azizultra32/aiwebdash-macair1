@@ -3,11 +3,10 @@ import FontSizeSelector from './FontSizeSelector';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import { useAuth } from '@/hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate , Link } from 'react-router-dom';
 import { Transcript } from '@/types/types';
 import MicReactiveScanner from './kitt-scanner-component';
 import { ProgressBar } from '@/components/ui/progress';
-import { Link } from 'react-router-dom';
 import { useGlobalState } from '@/context/GlobalStateContext';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -19,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import supabase from '@/supabase';
-type Props = {
+interface Props {
   children: React.ReactNode;
   sidebar: React.ReactNode;
   selectedTranscript?: Transcript;
@@ -29,22 +28,22 @@ type Props = {
   recording: boolean;
   onlineTranscripts?: Transcript[];
   clientTranscripts?: Transcript[];
-};
+}
 
-type PropsHeader = {
+interface PropsHeader {
   selectedTranscript: Transcript | null;
   isDesktop: boolean;
   onClick: () => void;
   recording: boolean;
   onlineTranscripts?: Transcript[];
   clientTranscripts?: Transcript[];
-};
+}
 
-type PropsSidebar = {
+interface PropsSidebar {
   sidebar: React.ReactNode;
   showSidebar: boolean;
   isDesktop: boolean;
-};
+}
 
 const DashboardSidebar = ({ sidebar, showSidebar, isDesktop }: PropsSidebar) => {
   return (

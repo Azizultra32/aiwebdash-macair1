@@ -96,7 +96,7 @@ const PromptManager = () => {
   const [user, setUser] = useState<any>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('edit');
   const [selectedMid, setSelectedMid] = useState<string>('');
-  const [recentMeetings, setRecentMeetings] = useState<Array<{mid: string, created_at: string}>>([]);
+  const [recentMeetings, setRecentMeetings] = useState<{mid: string, created_at: string}[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -133,7 +133,7 @@ const PromptManager = () => {
           const meeting = data.find(d => d.mid === mid);
           return {
             mid,
-            created_at: meeting!.created_at
+            created_at: meeting.created_at
           };
         });
       setRecentMeetings(uniqueMeetings);

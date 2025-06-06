@@ -11,12 +11,11 @@ import {
   DisconnectButton,
 } from "@livekit/components-react";
 import { useCallback, useEffect, useState } from "react";
-import { MediaDeviceFailure, Room } from "livekit-client";
+import { MediaDeviceFailure, Room , RpcError, RpcInvocationData } from "livekit-client";
 import { NoAgentNotification } from "./ui/no-agent-notification";
 import { CloseIcon } from "./ui/close-icon";
 import { useKrispNoiseFilter } from "@livekit/components-react/krisp";
 import "@livekit/components-styles";
-import { RpcError, RpcInvocationData } from 'livekit-client';
 
 interface LiveKitRoomProps {
   mid: string;
@@ -24,7 +23,7 @@ interface LiveKitRoomProps {
   selectPatient: (patientTag: number) => void;
 }
 
-type ConnectionDetails = {
+interface ConnectionDetails {
   serverUrl: string;
   roomName: string;
   participantName: string;
