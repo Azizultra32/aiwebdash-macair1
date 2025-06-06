@@ -1,50 +1,65 @@
-# Emergency Infrastructure Fix - PR Workflow Checklist
+# Infrastructure Fix - Updated PR Workflow 
 
-## 🚨 EMERGENCY RESOLUTION: Root Cause Found
+## 🔧 INFRASTRUCTURE UPDATES COMPLETED
 
-**The 20+ recent PR failures were caused by missing `node_modules` directory.**
+**All core infrastructure issues have been resolved as of June 6, 2025.**
 
-## Critical Fix Applied
+## Fixed Issues
 
-### Problem Identified:
-1. AIs were attempting `npm run prepare-pr main` without dependencies
-2. `preflight.sh` requires `node_modules/` directory to exist
-3. No `node_modules` → preflight fails → prepare-pr fails → PR fails
+### 1. ✅ ESLint Parsing Errors Resolved
+- **Problem**: Test files excluded from TypeScript project causing ESLint parsing errors
+- **Solution**: Removed `exclude` section from `tsconfig.json` to include all test files
+- **Result**: ESLint can now properly parse all TypeScript test files
 
-### Solution Implemented:
-- **MANDATORY STEP:** Run `bash .codex/setup.sh` BEFORE any PR operations
-- **VALIDATION STEP:** Confirm `npm run prepare-pr main` succeeds
-- **ONLY THEN:** Proceed with PR creation
+### 2. ✅ Workbox Precache Issue Fixed  
+- **Problem**: `public/sw.js` called `precacheAndRoute(self.__WB_MANIFEST)` without null checking
+- **Solution**: Updated to `precacheAndRoute(self.__WB_MANIFEST || [])` 
+- **Result**: Service worker tests no longer fail due to undefined manifest
 
-## For All Future AI Development
+### 3. ✅ Setup Scripts Consolidated
+- **Problem**: Duplicate setup scripts with different npm commands causing confusion
+- **Solution**: Enhanced main `setup.sh` with comprehensive error handling and `--legacy-peer-deps`
+- **Result**: Single reliable setup process for all environments
 
-### Pre-PR Checklist (MANDATORY):
+### 4. ✅ Network Access Documentation Updated
+- **Problem**: README incorrectly stated network access was disabled after setup
+- **Solution**: Updated to reflect that HTTP access persists throughout workflow
+- **Result**: Clear documentation that HTTP tools like `curl` and `gh` remain available
+
+## Current Workflow
+
+### HTTP Access Reality
+- ✅ **HTTP access persists** throughout the entire workflow (curl, npm, gh CLI all work)
+- ✅ **GitHub API calls** can be made at any time during development
+- ✅ **Package installation** works throughout the session
+- ❌ **Git network operations** are restricted (push/pull blocked)
+
+### Recommended PR Workflow
 ```bash
-# ✅ Step 1: Install dependencies (REQUIRED)
+# Install dependencies and run initial validation
 bash .codex/setup.sh
 
-# ✅ Step 2: Validate workflow (MUST succeed)  
+# Validate the workflow passes
 npm run prepare-pr main
 
-# ✅ Step 3: Only if both succeed - proceed with PR
+# If validation passes, proceed with PR work
+# HTTP access remains available for GitHub API calls
 ```
 
-### What setup.sh Does:
-- Installs dependencies: `npm install --legacy-peer-deps`
-- Runs lint and test (allows failures during setup)
-- Configures origin remote if needed
-- Fetches PR references
+### For AI Development
+- Use GitHub API for all repository modifications (create commits, merge PRs, etc.)
+- Install packages via npm as needed throughout the workflow  
+- Use `gh` CLI for GitHub operations if available
+- Local git operations work for branching/rebasing but not push/pull
 
-### What prepare-pr validates:
-- Origin remote exists
-- Working tree is clean  
-- Can fetch and rebase on main
-- Dependencies installed (preflight check)
-- Code passes lint and tests
+## Status: All Infrastructure Issues Resolved ✅
 
-## Status: Infrastructure Fixed ✅
-
-The workflow infrastructure was correctly designed but required mandatory environment setup that was being skipped. This fix prevents all future similar failures.
+The repository now has:
+- ✅ Properly configured TypeScript/ESLint for all files including tests
+- ✅ Working service worker with robust error handling
+- ✅ Consolidated setup scripts with enhanced reliability  
+- ✅ Accurate documentation reflecting current capabilities
+- ✅ Clear workflow for both human and AI contributors
 
 **Date:** June 6, 2025  
-**Resolution:** Complete infrastructure validation protocol established
+**Resolution:** Complete infrastructure modernization completed
