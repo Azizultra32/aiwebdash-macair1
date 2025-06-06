@@ -1,0 +1,183 @@
+name: Branch Protection & Quality Gates
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  quality-gates:
+    runs-on: ubuntu-latest
+    name: Quality Gates
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run preflight checks
+      run: npm run preflight
+      
+    - name: Run linting
+      run: npm run lint
+      continue-on-error: true
+      id: lint
+      
+    - name: Run tests
+      run: npm test
+      id: tests
+      
+    - name: Security audit
+      run: npm audit --audit-level=high
+      continue-on-error: true
+      id: audit
+      
+    - name: Check bundle size
+      run: |
+        npm run build
+        du -sh dist/ || echo "No dist directory found"
+      continue-on-error: true
+      
+    - name: Quality gate summary
+      uses: actions/github-script@v7
+      if: github.event_name == 'pull_request'
+      with:
+        script: |
+          const lintStatus = '${{ steps.lint.outcome }}';
+          const testStatus = '${{ steps.tests.outcome }}';
+          const auditStatus = '${{ steps.audit.outcome }}';
+          
+          let summary = '## 🔍 Quality Gate Results\n\n';
+          summary += `| Check | Status |\n`;
+          summary += `|-------|--------|\n`;
+          summary += `| Linting | ${lintStatus === 'success' ? '✅ Passed' : '❌ Failed'} |\n`;
+          summary += `| Tests | ${testStatus === 'success' ? '✅ Passed' : '❌ Failed'} |\n`;
+          summary += `| Security Audit | ${auditStatus === 'success' ? '✅ Passed' : '⚠️ Issues Found'} |\n`;
+          
+          const allPassed = lintStatus === 'success' && testStatus === 'success';
+          
+          if (allPassed) {
+            summary += '\n**✨ All quality gates passed! This PR is ready for review.**\n';
+          } else {
+            summary += '\n**❌ Some quality gates failed. Please address the issues above.**\n';
+          }
+          
+          await github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: summary
+          });
+
+  license-check:
+    runs-on: ubuntu-latest
+    name: License Compliance
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Check for LICENSE file
+      run: |
+        if [ -f LICENSE ] || [ -f LICENSE.md ] || [ -f LICENSE.txt ]; then
+          echo "✅ License file found"
+          echo "LICENSE_EXISTS=true" >> $GITHUB_ENV
+        else
+          echo "❌ No license file found"
+          echo "LICENSE_EXISTS=false" >> $GITHUB_ENV
+        fi
+        
+    - name: Validate MIT license
+      if: env.LICENSE_EXISTS == 'true'
+      run: |
+        if grep -q "MIT License" LICENSE* 2>/dev/null; then
+          echo "✅ MIT License detected"
+        else
+          echo "⚠️ License file exists but may not be MIT"
+        fi
+        
+    - name: Check package.json license
+      run: |
+        if [ -f package.json ]; then
+          LICENSE_FIELD=$(jq -r '.license // "none"' package.json)
+          echo "Package.json license: $LICENSE_FIELD"
+          if [ "$LICENSE_FIELD" = "MIT" ]; then
+            echo "✅ Package.json has MIT license"
+          else
+            echo "⚠️ Package.json license field should be 'MIT'"
+          fi
+        fi
+
+  dependency-review:
+    runs-on: ubuntu-latest
+    name: Dependency Review
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Dependency Review
+      uses: actions/dependency-review-action@v4
+      with:
+        fail-on-severity: high
+        
+  auto-assign-reviewers:
+    runs-on: ubuntu-latest
+    name: Auto-assign Reviewers
+    if: github.event_name == 'pull_request' && github.event.action == 'opened'
+    
+    steps:
+    - name: Auto-assign reviewers
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const pr = context.payload.pull_request;
+          
+          // Don't assign if it's a draft or from a fork
+          if (pr.draft || pr.head.repo.full_name !== pr.base.repo.full_name) {
+            return;
+          }
+          
+          // Add labels based on files changed
+          const { data: files } = await github.rest.pulls.listFiles({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pull_number: pr.number
+          });
+          
+          const labels = [];
+          const hasTypeScript = files.some(f => f.filename.endsWith('.ts') || f.filename.endsWith('.tsx'));
+          const hasTests = files.some(f => f.filename.includes('test') || f.filename.includes('spec'));
+          const hasConfig = files.some(f => f.filename.includes('config') || f.filename.includes('.json'));
+          const hasStyles = files.some(f => f.filename.endsWith('.css') || f.filename.endsWith('.scss'));
+          
+          if (hasTypeScript) labels.push('typescript');
+          if (hasTests) labels.push('tests');
+          if (hasConfig) labels.push('configuration');
+          if (hasStyles) labels.push('styling');
+          
+          // Add size label
+          const additions = pr.additions + pr.deletions;
+          if (additions < 10) labels.push('size/XS');
+          else if (additions < 30) labels.push('size/S');
+          else if (additions < 100) labels.push('size/M');
+          else if (additions < 500) labels.push('size/L');
+          else labels.push('size/XL');
+          
+          if (labels.length > 0) {
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              labels: labels
+            });
+          }

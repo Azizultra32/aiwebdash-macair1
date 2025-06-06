@@ -1,0 +1,332 @@
+name: Manual PR Operations
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: 'Operation to perform'
+        required: true
+        type: choice
+        options:
+          - 'check-specific-pr'
+          - 'merge-specific-pr'
+          - 'rebase-all-prs'
+          - 'generate-report'
+          - 'cleanup-merged-branches'
+      pr_number:
+        description: 'PR number (for specific operations)'
+        required: false
+        type: string
+      force_merge:
+        description: 'Force merge (bypass some checks)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  check-specific-pr:
+    if: github.event.inputs.operation == 'check-specific-pr'
+    runs-on: ubuntu-latest
+    name: Check Specific PR
+    
+    steps:
+    - name: Validate PR number
+      run: |
+        if [ -z "${{ github.event.inputs.pr_number }}" ]; then
+          echo "❌ PR number is required for this operation"
+          exit 1
+        fi
+        
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Fetch PR
+      run: |
+        git fetch origin pull/${{ github.event.inputs.pr_number }}/head:pr-${{ github.event.inputs.pr_number }}
+        git checkout pr-${{ github.event.inputs.pr_number }}
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run prepare-pr script
+      run: |
+        chmod +x ./prepare-pr.sh
+        ./prepare-pr.sh main
+        
+    - name: Report results
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const prNumber = '${{ github.event.inputs.pr_number }}';
+          
+          await github.rest.issues.createComment({
+            issue_number: parseInt(prNumber),
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `🤖 **Manual PR Check Complete**\n\nPR #${prNumber} has been checked via workflow dispatch.\n\n✅ Rebase successful\n✅ Tests passed\n✅ Linting passed\n\nThis PR is ready for manual review and merge.`
+          });
+
+  merge-specific-pr:
+    if: github.event.inputs.operation == 'merge-specific-pr'
+    runs-on: ubuntu-latest
+    name: Merge Specific PR
+    
+    steps:
+    - name: Validate inputs
+      run: |
+        if [ -z "${{ github.event.inputs.pr_number }}" ]; then
+          echo "❌ PR number is required for merge operation"
+          exit 1
+        fi
+        
+    - name: Merge PR
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const prNumber = parseInt('${{ github.event.inputs.pr_number }}');
+          const forceMerge = '${{ github.event.inputs.force_merge }}' === 'true';
+          
+          try {
+            // Get PR details
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+            
+            // Check if PR is mergeable (unless force merge)
+            if (!forceMerge && pr.mergeable === false) {
+              throw new Error('PR has merge conflicts. Use force_merge=true to override.');
+            }
+            
+            if (!forceMerge && pr.mergeable === null) {
+              throw new Error('PR mergeability is unknown. GitHub is still checking.');
+            }
+            
+            // Merge the PR
+            const { data: merge } = await github.rest.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              merge_method: 'squash',
+              commit_title: `${pr.title} (#${prNumber})`,
+              commit_message: `Merged via manual workflow dispatch\n\nOriginal PR: #${prNumber}\nAuthor: @${pr.user.login}`
+            });
+            
+            console.log(`✅ Successfully merged PR #${prNumber}`);
+            console.log(`Merge SHA: ${merge.sha}`);
+            
+            // Delete the branch if it's from the same repo
+            if (pr.head.repo.full_name === pr.base.repo.full_name) {
+              try {
+                await github.rest.git.deleteRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: `heads/${pr.head.ref}`
+                });
+                console.log(`✅ Deleted branch: ${pr.head.ref}`);
+              } catch (error) {
+                console.log(`⚠️ Could not delete branch: ${error.message}`);
+              }
+            }
+            
+          } catch (error) {
+            console.error(`❌ Failed to merge PR #${prNumber}: ${error.message}`);
+            throw error;
+          }
+
+  generate-report:
+    if: github.event.inputs.operation == 'generate-report'
+    runs-on: ubuntu-latest
+    name: Generate PR Report
+    
+    steps:
+    - name: Generate comprehensive report
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { data: prs } = await github.rest.pulls.list({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            state: 'open',
+            per_page: 100
+          });
+          
+          const now = new Date();
+          let report = '# 📊 Comprehensive PR Report\n\n';
+          report += `Generated: ${now.toISOString()}\n\n`;
+          
+          // Summary stats
+          const stats = {
+            total: prs.length,
+            ready: 0,
+            conflicts: 0,
+            draft: 0,
+            stale: 0,
+            recent: 0
+          };
+          
+          const staleThreshold = 14 * 24 * 60 * 60 * 1000; // 14 days
+          const recentThreshold = 3 * 24 * 60 * 60 * 1000; // 3 days
+          
+          // Categorize PRs
+          const categories = {
+            ready: [],
+            conflicts: [],
+            stale: [],
+            draft: [],
+            recent: []
+          };
+          
+          for (const pr of prs) {
+            const updatedAt = new Date(pr.updated_at);
+            const age = now - updatedAt;
+            
+            if (pr.draft) {
+              stats.draft++;
+              categories.draft.push(pr);
+            } else if (age > staleThreshold) {
+              stats.stale++;
+              categories.stale.push(pr);
+            } else if (age < recentThreshold) {
+              stats.recent++;
+              categories.recent.push(pr);
+            } else if (pr.mergeable === false) {
+              stats.conflicts++;
+              categories.conflicts.push(pr);
+            } else if (pr.mergeable === true) {
+              stats.ready++;
+              categories.ready.push(pr);
+            }
+          }
+          
+          // Build report
+          report += `## 📈 Summary\n\n`;
+          report += `| Category | Count |\n`;
+          report += `|----------|-------|\n`;
+          report += `| Total Open | ${stats.total} |\n`;
+          report += `| Ready to Merge | ${stats.ready} |\n`;
+          report += `| Has Conflicts | ${stats.conflicts} |\n`;
+          report += `| Draft | ${stats.draft} |\n`;
+          report += `| Stale (>14 days) | ${stats.stale} |\n`;
+          report += `| Recent (<3 days) | ${stats.recent} |\n\n`;
+          
+          // Ready to merge
+          if (categories.ready.length > 0) {
+            report += `## ✅ Ready to Merge (${categories.ready.length})\n\n`;
+            for (const pr of categories.ready) {
+              report += `- **#${pr.number}** ${pr.title} by @${pr.user.login}\n`;
+            }
+            report += '\n';
+          }
+          
+          // Conflicts
+          if (categories.conflicts.length > 0) {
+            report += `## ❌ Has Conflicts (${categories.conflicts.length})\n\n`;
+            for (const pr of categories.conflicts) {
+              report += `- **#${pr.number}** ${pr.title} by @${pr.user.login}\n`;
+            }
+            report += '\n';
+          }
+          
+          // Stale PRs
+          if (categories.stale.length > 0) {
+            report += `## ⚠️ Stale PRs (${categories.stale.length})\n\n`;
+            for (const pr of categories.stale) {
+              const daysSinceUpdate = Math.floor((now - new Date(pr.updated_at)) / (24 * 60 * 60 * 1000));
+              report += `- **#${pr.number}** ${pr.title} by @${pr.user.login} (${daysSinceUpdate} days)\n`;
+            }
+            report += '\n';
+          }
+          
+          // Create or update report issue
+          const { data: issues } = await github.rest.issues.listForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            labels: 'pr-report',
+            state: 'open'
+          });
+          
+          if (issues.length > 0) {
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issues[0].number,
+              title: `📊 PR Report - ${now.toISOString().split('T')[0]}`,
+              body: report
+            });
+          } else {
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `📊 PR Report - ${now.toISOString().split('T')[0]}`,
+              body: report,
+              labels: ['pr-report']
+            });
+          }
+
+  cleanup-merged-branches:
+    if: github.event.inputs.operation == 'cleanup-merged-branches'
+    runs-on: ubuntu-latest
+    name: Cleanup Merged Branches
+    
+    steps:
+    - name: Cleanup merged branches
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { data: branches } = await github.rest.repos.listBranches({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            per_page: 100
+          });
+          
+          let deleted = 0;
+          let skipped = 0;
+          
+          for (const branch of branches) {
+            // Skip main/master and other protected branches
+            if (['main', 'master', 'develop', 'staging'].includes(branch.name)) {
+              continue;
+            }
+            
+            try {
+              // Check if branch is merged
+              const { data: comparison } = await github.rest.repos.compareCommits({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                base: 'main',
+                head: branch.name
+              });
+              
+              if (comparison.status === 'identical' || comparison.behind_by === 0) {
+                // Branch is merged, safe to delete
+                await github.rest.git.deleteRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: `heads/${branch.name}`
+                });
+                
+                console.log(`✅ Deleted merged branch: ${branch.name}`);
+                deleted++;
+              } else {
+                console.log(`⏭️ Skipped unmerged branch: ${branch.name}`);
+                skipped++;
+              }
+            } catch (error) {
+              console.log(`❌ Error processing branch ${branch.name}: ${error.message}`);
+              skipped++;
+            }
+          }
+          
+          console.log(`\n📊 Cleanup Summary:`);
+          console.log(`- Deleted: ${deleted} branches`);
+          console.log(`- Skipped: ${skipped} branches`);

@@ -1,0 +1,270 @@
+name: PR Management & Quality Gates
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'check-all'
+        type: choice
+        options:
+        - check-all
+        - merge-ready
+        - close-stale
+
+jobs:
+  pr-quality-check:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    name: PR Quality Gates
+    
+    steps:
+    - name: Checkout PR
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Check merge conflicts
+      run: |
+        git fetch origin main
+        if ! git merge-tree $(git merge-base HEAD origin/main) HEAD origin/main | grep -q "<<<<<<< "; then
+          echo "✅ No merge conflicts detected"
+          echo "CONFLICTS=false" >> $GITHUB_ENV
+        else
+          echo "❌ Merge conflicts detected"
+          echo "CONFLICTS=true" >> $GITHUB_ENV
+        fi
+        
+    - name: Run prepare-pr script
+      run: |
+        chmod +x ./prepare-pr.sh
+        if ./prepare-pr.sh main; then
+          echo "✅ Prepare-PR passed"
+          echo "PREPARE_STATUS=success" >> $GITHUB_ENV
+        else
+          echo "❌ Prepare-PR failed"
+          echo "PREPARE_STATUS=failed" >> $GITHUB_ENV
+        fi
+        
+    - name: Update PR status
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const conflicts = process.env.CONFLICTS === 'true';
+          const prepareStatus = process.env.PREPARE_STATUS;
+          
+          let status = '🔍 **PR Status Check**\n\n';
+          status += `- **Merge Conflicts:** ${conflicts ? '❌ Found' : '✅ None'}\n`;
+          status += `- **Prepare Script:** ${prepareStatus === 'success' ? '✅ Passed' : '❌ Failed'}\n`;
+          status += `- **Ready to Merge:** ${!conflicts && prepareStatus === 'success' ? '✅ Yes' : '❌ No'}\n\n`;
+          
+          if (conflicts) {
+            status += '**Action Required:** Please rebase your branch onto main to resolve conflicts.\n';
+            status += '```bash\ngit fetch origin main\ngit rebase origin/main\n```\n';
+          }
+          
+          if (prepareStatus === 'failed') {
+            status += '**Action Required:** Please fix linting/test failures and push updates.\n';
+          }
+          
+          if (!conflicts && prepareStatus === 'success') {
+            status += '**✨ This PR is ready for review and merge!**\n';
+          }
+          
+          await github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: status
+          });
+
+  pr-dashboard-update:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    name: Update PR Dashboard
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Update PR tracking
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { data: prs } = await github.rest.pulls.list({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            state: 'open',
+            per_page: 100
+          });
+          
+          let dashboard = '# 📋 PR Dashboard\n\n';
+          dashboard += `Updated: ${new Date().toISOString()}\n\n`;
+          dashboard += `## Open PRs (${prs.length})\n\n`;
+          
+          const now = new Date();
+          const staleThreshold = 14 * 24 * 60 * 60 * 1000; // 14 days
+          
+          let readyCount = 0;
+          let conflictCount = 0;
+          let staleCount = 0;
+          
+          for (const pr of prs) {
+            const updatedAt = new Date(pr.updated_at);
+            const isStale = (now - updatedAt) > staleThreshold;
+            const daysSinceUpdate = Math.floor((now - updatedAt) / (24 * 60 * 60 * 1000));
+            
+            if (isStale) staleCount++;
+            
+            dashboard += `### PR #${pr.number} - ${pr.title}\n`;
+            dashboard += `- **Branch:** \`${pr.head.ref}\`\n`;
+            dashboard += `- **Author:** @${pr.user.login}\n`;
+            dashboard += `- **Updated:** ${daysSinceUpdate} days ago\n`;
+            dashboard += `- **Mergeable:** ${pr.mergeable ?? 'Unknown'}\n`;
+            
+            if (isStale) {
+              dashboard += `- **Status:** ⚠️ STALE (${daysSinceUpdate} days)\n`;
+            } else if (pr.mergeable === false) {
+              dashboard += `- **Status:** ❌ CONFLICTS\n`;
+              conflictCount++;
+            } else if (pr.mergeable === true) {
+              dashboard += `- **Status:** ✅ READY\n`;
+              readyCount++;
+            } else {
+              dashboard += `- **Status:** 🔍 CHECKING\n`;
+            }
+            
+            dashboard += `- **Checkout:** \`git checkout -b pr-${pr.number} refs/pull/${pr.number}/head\`\n\n`;
+          }
+          
+          dashboard += `## Summary\n\n`;
+          dashboard += `- **Total PRs:** ${prs.length}\n`;
+          dashboard += `- **Ready to Merge:** ${readyCount}\n`;
+          dashboard += `- **Need Conflict Resolution:** ${conflictCount}\n`;
+          dashboard += `- **Stale (>14 days):** ${staleCount}\n`;
+          
+          // Update or create dashboard issue
+          const { data: issues } = await github.rest.issues.listForRepo({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            labels: 'pr-dashboard',
+            state: 'open'
+          });
+          
+          if (issues.length > 0) {
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issues[0].number,
+              body: dashboard
+            });
+          } else {
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '📋 PR Management Dashboard',
+              body: dashboard,
+              labels: ['pr-dashboard']
+            });
+          }
+
+  auto-merge-ready:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'merge-ready'
+    runs-on: ubuntu-latest
+    name: Auto-merge Ready PRs
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Auto-merge ready PRs
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { data: prs } = await github.rest.pulls.list({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            state: 'open'
+          });
+          
+          for (const pr of prs) {
+            if (pr.mergeable === true && pr.draft === false) {
+              try {
+                await github.rest.pulls.merge({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                  merge_method: 'squash',
+                  commit_title: `${pr.title} (#${pr.number})`,
+                  commit_message: `Merged via automated workflow\n\nCo-authored-by: ${pr.user.login} <${pr.user.login}@users.noreply.github.com>`
+                });
+                
+                console.log(`✅ Merged PR #${pr.number}: ${pr.title}`);
+              } catch (error) {
+                console.log(`❌ Failed to merge PR #${pr.number}: ${error.message}`);
+              }
+            }
+          }
+
+  close-stale-prs:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'close-stale'
+    runs-on: ubuntu-latest
+    name: Close Stale PRs
+    
+    steps:
+    - name: Close stale PRs
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { data: prs } = await github.rest.pulls.list({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            state: 'open'
+          });
+          
+          const now = new Date();
+          const staleThreshold = 30 * 24 * 60 * 60 * 1000; // 30 days
+          
+          for (const pr of prs) {
+            const updatedAt = new Date(pr.updated_at);
+            const isStale = (now - updatedAt) > staleThreshold;
+            
+            if (isStale) {
+              const daysSinceUpdate = Math.floor((now - updatedAt) / (24 * 60 * 60 * 1000));
+              
+              await github.rest.issues.createComment({
+                issue_number: pr.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `This PR has been automatically closed due to inactivity (${daysSinceUpdate} days since last update). Per repository policy, PRs are closed after 30 days of inactivity. If you'd like to continue this work, please reopen and rebase onto the latest main branch.`
+              });
+              
+              await github.rest.pulls.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                state: 'closed'
+              });
+              
+              console.log(`Closed stale PR #${pr.number}: ${pr.title} (${daysSinceUpdate} days old)`);
+            }
+          }
