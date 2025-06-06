@@ -2,7 +2,10 @@ const { FlatCompat } = require('@eslint/eslintrc');
 
 // Provide the recommended configuration explicitly to avoid a
 // "missing recommendedConfig" constructor error when using FlatCompat.
-const compat = new FlatCompat({ recommendedConfig: require('@eslint/js').configs.recommended });
+const compat = new FlatCompat({
+  recommendedConfig: require('@eslint/js').configs.recommended,
+  baseDirectory: __dirname,
+});
 
 module.exports = [
   {
