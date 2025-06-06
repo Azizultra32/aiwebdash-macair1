@@ -25,7 +25,7 @@ function cleanup() {
 
 // Precache assets injected by Workbox during the build
 cleanupOutdatedCaches();
-precacheAndRoute(self.__WB_MANIFEST);
+precacheAndRoute(self.__WB_MANIFEST || []);
 
 // Install event - immediately activate the new service worker
 self.addEventListener('install', () => {
