@@ -24,6 +24,8 @@ function cleanup() {
 }
 
 // Precache assets injected by Workbox during the build
+// Fallback to an empty manifest in development or tests where
+// Workbox does not inject __WB_MANIFEST.
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST || []);
 
