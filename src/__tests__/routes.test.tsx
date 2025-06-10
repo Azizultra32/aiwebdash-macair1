@@ -1,7 +1,18 @@
 import React from 'react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { Outlet } from 'react-router-dom';
+
+// Mock Supabase to avoid environment variable requirements
+vi.mock('@/supabase', () => ({
+  __esModule: true,
+  default: {
+    auth: {
+      getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+      onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
+    },
+  },
+}));
 
 vi.mock('@/components/AuthRoute', () => ({
   __esModule: true,

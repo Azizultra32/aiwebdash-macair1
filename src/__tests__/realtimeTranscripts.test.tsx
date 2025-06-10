@@ -4,11 +4,10 @@ import { render } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useRealtimeTranscripts } from '@/hooks/useCreateTranscript';
 
-// Mocks
-let channelMock: any;
+// Mocks - Define variables before vi.mock to avoid hoisting issues
 const unsubscribes: vi.Mock[] = [];
 vi.mock('@/supabase', () => {
-  channelMock = vi.fn(() => ({
+  const channelMock = vi.fn(() => ({
     on: vi.fn().mockReturnThis(),
     subscribe: vi.fn(cb => {
       const unsub = vi.fn();
@@ -30,7 +29,8 @@ describe('useRealtimeTranscripts', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     unsubscribes.length = 0;
-    channelMock.mockClear();
+    // Clear all mocks instead of specific channelMock reference
+    vi.clearAllMocks();
   });
   afterEach(() => {
     vi.useRealTimers();
@@ -44,7 +44,8 @@ describe('useRealtimeTranscripts', () => {
       </QueryClientProvider>
     );
     vi.runAllTimers();
-    expect(channelMock).toHaveBeenCalledTimes(1);
+    // Test that subscriptions are created (check unsubscribes array)
+    expect(unsubscribes).toHaveLength(1);
     unmount();
     expect(unsubscribes[0]).toHaveBeenCalledTimes(1);
 
@@ -54,7 +55,8 @@ describe('useRealtimeTranscripts', () => {
       </QueryClientProvider>
     );
     vi.runAllTimers();
-    expect(channelMock).toHaveBeenCalledTimes(2);
+    // Second mount should create another subscription
+    expect(unsubscribes).toHaveLength(2);
     unmount2();
     expect(unsubscribes[1]).toHaveBeenCalledTimes(1);
   });
