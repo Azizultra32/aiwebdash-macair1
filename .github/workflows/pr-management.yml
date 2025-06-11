@@ -54,37 +54,10 @@ jobs:
     - name: Install dependencies
       run: npm ci
       
-    - name: Configure Git user
+    - name: Configure Git User
       run: |
-        git config --global user.name "GitHub Actions Runner"
-        git config --global user.email "runner@github.com"
-        echo "Git user configured:"
-        git config --global user.name
-        git config --global user.email
-
-    - name: Validate Git configuration
-      run: |
-        echo "Validating Git configuration..."
-        if [ -z "$(git config --global user.name)" ] || [ -z "$(git config --global user.email)" ]; then
-          echo "❌ Git configuration failed"
-          exit 1
-        fi
-        echo "✅ Git configuration valid"
-
-    - name: Validate GitHub token permissions
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        echo "Validating GitHub token permissions..."
-        curl -s -H "Authorization: token $GITHUB_TOKEN" \
-             -H "Accept: application/vnd.github.v3+json" \
-             "https://api.github.com/repos/${{ github.repository }}" > /dev/null
-        if [ $? -eq 0 ]; then
-          echo "✅ GitHub token permissions valid"
-        else
-          echo "❌ GitHub token permissions failed"
-          exit 1
-        fi
+        git config --global user.name "GitHub Actions Bot"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
     - name: Check merge conflicts
       run: |
@@ -96,11 +69,6 @@ jobs:
           echo "❌ Merge conflicts detected"
           echo "CONFLICTS=true" >> $GITHUB_ENV
         fi
-
-    - name: Set Git Identity
-      run: |
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
 
     - name: Run prepare-pr script
       run: |

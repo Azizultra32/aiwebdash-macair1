@@ -17,23 +17,23 @@ if ! command -v npm >/dev/null 2>&1; then
   exit 1
 fi
 
-# Validate and configure Git identity
+# Validate Git identity
 echo "🔧 Validating Git identity..."
 
 # Check if Git user is configured
 if [ -z "$(git config --global user.name 2>/dev/null || true)" ]; then
   echo "❌ Error: Git user name not configured globally"
   echo "This should have been set by the workflow. Please ensure the workflow includes:"
-  echo "  git config --global user.name 'GitHub Actions'"
-  echo "  git config --global user.email 'actions@github.com'"
+  echo "  git config --global user.name 'GitHub Actions Bot'"
+  echo "  git config --global user.email 'github-actions[bot]@users.noreply.github.com'"
   exit 1
 fi
 
 if [ -z "$(git config --global user.email 2>/dev/null || true)" ]; then
   echo "❌ Error: Git user email not configured globally"
   echo "This should have been set by the workflow. Please ensure the workflow includes:"
-  echo "  git config --global user.name 'GitHub Actions'"
-  echo "  git config --global user.email 'actions@github.com'"
+  echo "  git config --global user.name 'GitHub Actions Bot'"
+  echo "  git config --global user.email 'github-actions[bot]@users.noreply.github.com'"
   exit 1
 fi
 
