@@ -1,0 +1,82 @@
+name: Merge Pre-tested PRs
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_numbers:
+        description: 'Comma-separated PR numbers to merge (e.g., 243,244,245)'
+        required: true
+        default: '243,244,245'
+
+jobs:
+  merge-prs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Merge pre-tested PRs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          
+          echo "🚀 Merging pre-tested PRs: ${{ github.event.inputs.pr_numbers }}"
+          
+          # Process each PR
+          IFS=',' read -ra PR_ARRAY <<< "${{ github.event.inputs.pr_numbers }}"
+          
+          successful_merges=()
+          failed_merges=()
+          
+          for pr in "${PR_ARRAY[@]}"; do
+            pr=$(echo $pr | xargs) # trim whitespace
+            echo ""
+            echo "🔄 Processing PR #$pr"
+            
+            # Check if PR exists and is open
+            if gh pr view $pr --json state --jq '.state' | grep -q "OPEN"; then
+              echo "✅ PR #$pr is open, proceeding with merge"
+              
+              # Merge the PR
+              if gh pr merge $pr --squash --delete-branch; then
+                successful_merges+=($pr)
+                echo "✅ Successfully merged and deleted branch for PR #$pr"
+              else
+                failed_merges+=($pr)
+                echo "❌ Failed to merge PR #$pr"
+              fi
+            else
+              echo "⚠️ PR #$pr is not open, skipping"
+              failed_merges+=($pr)
+            fi
+          done
+          
+          # Summary
+          echo ""
+          echo "📊 MERGE SUMMARY"
+          echo "================"
+          echo "Successfully merged: ${successful_merges[*]}"
+          echo "Failed to merge: ${failed_merges[*]}"
+          
+          # Set outputs for summary
+          echo "successful_merges=${successful_merges[*]}" >> $GITHUB_OUTPUT
+          echo "failed_merges=${failed_merges[*]}" >> $GITHUB_OUTPUT
+
+      - name: Create summary
+        run: |
+          echo "## 🎯 Auto-merge Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Successfully Merged PRs:" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.merge-prs.outputs.successful_merges }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ❌ Failed PRs:" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.merge-prs.outputs.failed_merges }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🎉 All pre-tested PRs have been processed!" >> $GITHUB_STEP_SUMMARY
