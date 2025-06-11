@@ -30,8 +30,8 @@ echo "  Global - user.email: $(git config --global user.email 2>/dev/null || ech
 # Set Git configuration like GitHub Actions workflow would
 echo ""
 echo "🔧 Setting Git configuration like GitHub Actions workflow..."
-git config --global user.name "GitHub Actions"
-git config --global user.email "actions@github.com"
+git config --global user.name "GitHub Actions Bot"
+git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
 echo "✅ Git configuration set:"
 echo "  Global user.name: $(git config --global user.name)"
@@ -55,8 +55,8 @@ fi
 # Restore original Git configuration
 echo ""
 echo "🔄 Restoring original Git configuration..."
-git config --global user.name "GitHub Actions"
-git config --global user.email "actions@github.com"
+git config --global user.name "GitHub Actions Bot"
+git config --global user.email "github-actions[bot]@users.noreply.github.com"
 echo "✅ Git configuration restored"
 
 echo ""
