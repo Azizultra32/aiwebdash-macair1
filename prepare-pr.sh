@@ -17,54 +17,29 @@ if ! command -v npm >/dev/null 2>&1; then
   exit 1
 fi
 
-# Configure Git user for CI environments
-echo "🔧 Configuring Git identity..."
+# Validate and configure Git identity
+echo "🔧 Validating Git identity..."
 
-# Set environment variables if not already set (for CI environments)
-if [ -z "${GIT_AUTHOR_NAME:-}" ]; then
-  export GIT_AUTHOR_NAME="GitHub Actions"
-  export GIT_AUTHOR_EMAIL="actions@github.com"
-  export GIT_COMMITTER_NAME="GitHub Actions"
-  export GIT_COMMITTER_EMAIL="actions@github.com"
-  echo "✅ Git environment variables set"
-fi
-
-# Configure Git user if not already set
-if [ -z "$(git config user.name 2>/dev/null || true)" ]; then
-  echo "Configuring local Git user..."
-  git config user.name "${GIT_AUTHOR_NAME:-GitHub Actions}"
-  git config user.email "${GIT_AUTHOR_EMAIL:-actions@github.com}"
-  echo "✅ Local Git user configured"
-fi
-
-# Also set global config as fallback
+# Check if Git user is configured
 if [ -z "$(git config --global user.name 2>/dev/null || true)" ]; then
-  echo "Configuring global Git user..."
-  git config --global user.name "${GIT_AUTHOR_NAME:-GitHub Actions}"
-  git config --global user.email "${GIT_AUTHOR_EMAIL:-actions@github.com}"
-  echo "✅ Global Git user configured"
-fi
-
-# Display current configuration
-echo "📋 Current Git configuration:"
-echo "  Environment - GIT_AUTHOR_NAME: ${GIT_AUTHOR_NAME:-Not set}"
-echo "  Environment - GIT_AUTHOR_EMAIL: ${GIT_AUTHOR_EMAIL:-Not set}"
-echo "  Environment - GIT_COMMITTER_NAME: ${GIT_COMMITTER_NAME:-Not set}"
-echo "  Environment - GIT_COMMITTER_EMAIL: ${GIT_COMMITTER_EMAIL:-Not set}"
-echo "  Local - user.name: $(git config user.name 2>/dev/null || echo 'Not set')"
-echo "  Local - user.email: $(git config user.email 2>/dev/null || echo 'Not set')"
-echo "  Global - user.name: $(git config --global user.name 2>/dev/null || echo 'Not set')"
-echo "  Global - user.email: $(git config --global user.email 2>/dev/null || echo 'Not set')"
-
-# Validate Git configuration
-if [ -z "${GIT_AUTHOR_NAME:-}" ] && [ -z "$(git config user.name 2>/dev/null)" ] && [ -z "$(git config --global user.name 2>/dev/null)" ]; then
-  echo "❌ Error: Git user name must be configured"
-  echo "Please set one of:"
-  echo "  export GIT_AUTHOR_NAME='Your Name'"
-  echo "  git config user.name 'Your Name'"
-  echo "  git config --global user.name 'Your Name'"
+  echo "❌ Error: Git user name not configured globally"
+  echo "This should have been set by the workflow. Please ensure the workflow includes:"
+  echo "  git config --global user.name 'GitHub Actions'"
+  echo "  git config --global user.email 'actions@github.com'"
   exit 1
 fi
+
+if [ -z "$(git config --global user.email 2>/dev/null || true)" ]; then
+  echo "❌ Error: Git user email not configured globally"
+  echo "This should have been set by the workflow. Please ensure the workflow includes:"
+  echo "  git config --global user.name 'GitHub Actions'"
+  echo "  git config --global user.email 'actions@github.com'"
+  exit 1
+fi
+
+echo "✅ Git identity validated:"
+echo "  Global user.name: $(git config --global user.name)"
+echo "  Global user.email: $(git config --global user.email)"
 
 # Ensure origin remote exists or configure it from REPO_URL
 if ! git remote | grep -q '^origin$'; then
