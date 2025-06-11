@@ -6,6 +6,12 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  workflows: read
+
 jobs:
   quality-gates:
     runs-on: ubuntu-latest
