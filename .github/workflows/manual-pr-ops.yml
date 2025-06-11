@@ -24,6 +24,12 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  workflows: read
+
 jobs:
   check-specific-pr:
     if: github.event.inputs.operation == 'check-specific-pr'
