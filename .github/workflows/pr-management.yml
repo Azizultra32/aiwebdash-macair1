@@ -56,8 +56,18 @@ jobs:
       
     - name: Configure Git User
       run: |
+        echo "🔧 Configuring Git user for GitHub Actions..."
         git config --global user.name "GitHub Actions Bot"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+        echo "✅ Git configuration set:"
+        echo "  Global user.name: $(git config --global user.name)"
+        echo "  Global user.email: $(git config --global user.email)"
+
+        echo "🔍 Environment check:"
+        echo "  Runner: $(whoami)@$(hostname)"
+        echo "  Working directory: $(pwd)"
+        echo "  Git version: $(git --version)"
 
     - name: Check merge conflicts
       run: |
@@ -72,12 +82,25 @@ jobs:
 
     - name: Run prepare-pr script
       run: |
+        echo "🚀 Starting prepare-pr script execution..."
+        echo "📋 Pre-execution environment check:"
+        echo "  Git user.name: $(git config --global user.name 2>/dev/null || echo 'NOT SET')"
+        echo "  Git user.email: $(git config --global user.email 2>/dev/null || echo 'NOT SET')"
+        echo "  Working tree status: $(git status --porcelain | wc -l) files changed"
+        echo "  Current branch: $(git branch --show-current)"
+
         chmod +x ./prepare-pr.sh
+        echo "🔧 Script permissions set, executing..."
+
         if ./prepare-pr.sh main; then
           echo "✅ Prepare-PR passed"
           echo "PREPARE_STATUS=success" >> $GITHUB_ENV
         else
-          echo "❌ Prepare-PR failed"
+          echo "❌ Prepare-PR failed with exit code $?"
+          echo "🔍 Post-failure environment check:"
+          echo "  Git user.name: $(git config --global user.name 2>/dev/null || echo 'NOT SET')"
+          echo "  Git user.email: $(git config --global user.email 2>/dev/null || echo 'NOT SET')"
+          echo "  Working tree status: $(git status --porcelain | wc -l) files changed"
           echo "PREPARE_STATUS=failed" >> $GITHUB_ENV
         fi
         

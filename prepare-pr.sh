@@ -17,29 +17,51 @@ if ! command -v npm >/dev/null 2>&1; then
   exit 1
 fi
 
-# Validate Git identity
+# Validate and configure Git identity
 echo "🔧 Validating Git identity..."
 
-# Check if Git user is configured
+# Check if Git user is configured globally
 if [ -z "$(git config --global user.name 2>/dev/null || true)" ]; then
-  echo "❌ Error: Git user name not configured globally"
-  echo "This should have been set by the workflow. Please ensure the workflow includes:"
-  echo "  git config --global user.name 'GitHub Actions Bot'"
-  echo "  git config --global user.email 'github-actions[bot]@users.noreply.github.com'"
-  exit 1
+  echo "⚠️  Warning: Git user name not configured globally"
+  echo "🔧 Attempting to configure Git identity as fallback..."
+
+  # Try to set Git identity as fallback
+  if git config --global user.name "GitHub Actions Bot" && git config --global user.email "github-actions[bot]@users.noreply.github.com"; then
+    echo "✅ Git identity configured as fallback"
+  else
+    echo "❌ Error: Failed to configure Git identity"
+    echo "Please ensure the workflow includes:"
+    echo "  git config --global user.name 'GitHub Actions Bot'"
+    echo "  git config --global user.email 'github-actions[bot]@users.noreply.github.com'"
+    exit 1
+  fi
 fi
 
 if [ -z "$(git config --global user.email 2>/dev/null || true)" ]; then
-  echo "❌ Error: Git user email not configured globally"
-  echo "This should have been set by the workflow. Please ensure the workflow includes:"
-  echo "  git config --global user.name 'GitHub Actions Bot'"
-  echo "  git config --global user.email 'github-actions[bot]@users.noreply.github.com'"
-  exit 1
+  echo "⚠️  Warning: Git user email not configured globally"
+  echo "🔧 Attempting to configure Git email as fallback..."
+
+  if git config --global user.email "github-actions[bot]@users.noreply.github.com"; then
+    echo "✅ Git email configured as fallback"
+  else
+    echo "❌ Error: Failed to configure Git email"
+    exit 1
+  fi
 fi
 
 echo "✅ Git identity validated:"
 echo "  Global user.name: $(git config --global user.name)"
 echo "  Global user.email: $(git config --global user.email)"
+
+# Additional environment debugging for CI
+if [ -n "${CI:-}" ]; then
+  echo "🔍 CI Environment detected, additional debugging:"
+  echo "  CI: ${CI:-not set}"
+  echo "  GITHUB_ACTIONS: ${GITHUB_ACTIONS:-not set}"
+  echo "  RUNNER_OS: ${RUNNER_OS:-not set}"
+  echo "  HOME: ${HOME:-not set}"
+  echo "  Git config location: $(git config --list --show-origin | grep user.name || echo 'not found')"
+fi
 
 # Ensure origin remote exists or configure it from REPO_URL
 if ! git remote | grep -q '^origin$'; then
