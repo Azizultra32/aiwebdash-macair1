@@ -1,5 +1,4 @@
-/// <reference types="react" />
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import type { Transcript, SummaryRef } from '../types/types';
 import TranscriptConsultWizard from './TranscriptConsultWizard.tsx';
