@@ -18,8 +18,8 @@ on:
         - check-all
         - merge-ready
         - close-stale
-      - rebase-all
-      - rebase-behind
+        - rebase-all
+        - rebase-behind
 
 permissions:
   contents: write
@@ -51,6 +51,10 @@ jobs:
         node-version: '18'
         cache: 'npm'
         
+    - name: Clean dependency cache
+      run: |
+        rm -rf node_modules package-lock.json
+
     - name: Install dependencies
       run: npm ci
       
@@ -88,11 +92,13 @@ jobs:
         echo "  Git user.email: $(git config --global user.email 2>/dev/null || echo 'NOT SET')"
         echo "  Working tree status: $(git status --porcelain | wc -l) files changed"
         echo "  Current branch: $(git branch --show-current)"
+        echo "  Node modules exists: $([ -d node_modules ] && echo 'YES' || echo 'NO')"
+        echo "  Package-lock exists: $([ -f package-lock.json ] && echo 'YES' || echo 'NO')"
 
         chmod +x ./prepare-pr.sh
-        echo "🔧 Script permissions set, executing..."
+        echo "🔧 Script permissions set, executing with debug mode..."
 
-        if ./prepare-pr.sh main; then
+        if set -x && ./prepare-pr.sh main; then
           echo "✅ Prepare-PR passed"
           echo "PREPARE_STATUS=success" >> $GITHUB_ENV
         else
@@ -101,6 +107,8 @@ jobs:
           echo "  Git user.name: $(git config --global user.name 2>/dev/null || echo 'NOT SET')"
           echo "  Git user.email: $(git config --global user.email 2>/dev/null || echo 'NOT SET')"
           echo "  Working tree status: $(git status --porcelain | wc -l) files changed"
+          echo "  Node modules exists: $([ -d node_modules ] && echo 'YES' || echo 'NO')"
+          echo "  Package-lock exists: $([ -f package-lock.json ] && echo 'YES' || echo 'NO')"
           echo "PREPARE_STATUS=failed" >> $GITHUB_ENV
         fi
         
