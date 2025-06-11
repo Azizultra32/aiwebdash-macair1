@@ -12,6 +12,7 @@ import PromptEditor from '@/views/PromptEditor';
 import PromptPlayground from '@/views/PromptPlayground';
 import PromptVisualizerPage from '@/views/PromptVisualizerPage';
 import Billing from '@/views/Billing';
+import AfterscribeDemo from '@/components/AfterscribeDemo';
 
 const router = createBrowserRouter([
   {
@@ -60,6 +61,10 @@ const router = createBrowserRouter([
       {
         path: '/billing',
         Component: Billing,
+      },
+      {
+        path: '/afterscribe-demo',
+        Component: AfterscribeDemo,
       },
     ],
   },

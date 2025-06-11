@@ -60,10 +60,25 @@ export const useAuth = () => useContext(AuthContext);
 
 const AuthProvider = ({ children }: Props) => {
   const queryClient = useQueryClient();
+  const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true';
 
   const getUser = useQuery({
     queryKey: ['user'],
     queryFn: async () => {
+      if (isDemoMode) {
+        // Return a demo user in demo mode
+        return {
+          id: 'demo-user-id',
+          email: 'demo@assistmd.ai',
+          phone: '+1234567890',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          aud: 'authenticated',
+          role: 'authenticated',
+          app_metadata: {},
+          user_metadata: { name: 'Demo User' },
+        } as User;
+      }
       const { data } = await supabase.auth.getUser();
       return data.user;
     },
@@ -72,6 +87,37 @@ const AuthProvider = ({ children }: Props) => {
   const login = useMutation<{ user: User | null; session: Session | null }, Error, { phone: string; password: string }>(
     {
       mutationFn: async (credentials: { phone: string; password: string }) => {
+        if (isDemoMode) {
+          // Simulate login delay
+          await new Promise(resolve => setTimeout(resolve, 1000));
+
+          const demoUser = {
+            id: 'demo-user-id',
+            email: 'demo@assistmd.ai',
+            phone: credentials.phone,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            aud: 'authenticated',
+            role: 'authenticated',
+            app_metadata: {},
+            user_metadata: { name: 'Demo User' },
+          } as User;
+
+          const demoSession = {
+            access_token: 'demo-access-token',
+            refresh_token: 'demo-refresh-token',
+            expires_in: 3600,
+            expires_at: Date.now() + 3600000,
+            token_type: 'bearer',
+            user: demoUser,
+          } as Session;
+
+          // Update query cache with demo user
+          queryClient.setQueryData(['user'], demoUser);
+
+          return { user: demoUser, session: demoSession };
+        }
+
         const { data, error } = await supabase.auth.signInWithPassword({
           phone: credentials.phone,
           password: credentials.password,
@@ -85,6 +131,37 @@ const AuthProvider = ({ children }: Props) => {
 
   const register = useMutation<{ user: User | null; session: Session | null }, Error, LoginData>(
     async ({ email, password }: LoginData) => {
+      if (isDemoMode) {
+        // Simulate registration delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        const demoUser = {
+          id: 'demo-user-id',
+          email: email,
+          phone: '+1234567890',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          aud: 'authenticated',
+          role: 'authenticated',
+          app_metadata: {},
+          user_metadata: { name: 'Demo User' },
+        } as User;
+
+        const demoSession = {
+          access_token: 'demo-access-token',
+          refresh_token: 'demo-refresh-token',
+          expires_in: 3600,
+          expires_at: Date.now() + 3600000,
+          token_type: 'bearer',
+          user: demoUser,
+        } as Session;
+
+        // Update query cache with demo user
+        queryClient.setQueryData(['user'], demoUser);
+
+        return { user: demoUser, session: demoSession };
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -95,6 +172,12 @@ const AuthProvider = ({ children }: Props) => {
   );
 
   const logout = async () => {
+    if (isDemoMode) {
+      // Clear demo user from cache
+      queryClient.setQueryData(['user'], null);
+      queryClient.removeQueries();
+      return;
+    }
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   };

@@ -30,6 +30,7 @@ import { useTranscriptSelection } from '@/hooks/useTranscriptSelection';
 import SpeechCommandDialog from '@/components/SpeechCommandDialog';
 import StatusBanner from '@/components/StatusBanner';
 import FloatingWidget from '@/components/FloatingWidget';
+import FloatingAfterscribeManager from '@/components/FloatingAfterscribeManager';
 
 let clientSideMid: string | undefined = undefined;
 
@@ -437,6 +438,7 @@ const Dashboard = () => {
         isActivated={recordingPatientMidUUID !== ''}
         actions={[{ label: 'Hide', onClick: () => {} }]}
       />
+      <FloatingAfterscribeManager />
     </>
   );
 };
