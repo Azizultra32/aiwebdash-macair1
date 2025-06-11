@@ -27,19 +27,15 @@ echo "  Local - user.email: $(git config user.email 2>/dev/null || echo 'Not set
 echo "  Global - user.name: $(git config --global user.name 2>/dev/null || echo 'Not set')"
 echo "  Global - user.email: $(git config --global user.email 2>/dev/null || echo 'Not set')"
 
-# Set environment variables like GitHub Actions would
+# Set Git configuration like GitHub Actions workflow would
 echo ""
-echo "🔧 Setting GitHub Actions environment variables..."
-export GIT_AUTHOR_NAME="GitHub Actions"
-export GIT_AUTHOR_EMAIL="actions@github.com"
-export GIT_COMMITTER_NAME="GitHub Actions"
-export GIT_COMMITTER_EMAIL="actions@github.com"
+echo "🔧 Setting Git configuration like GitHub Actions workflow..."
+git config --global user.name "GitHub Actions"
+git config --global user.email "actions@github.com"
 
-echo "✅ Environment variables set:"
-echo "  GIT_AUTHOR_NAME=$GIT_AUTHOR_NAME"
-echo "  GIT_AUTHOR_EMAIL=$GIT_AUTHOR_EMAIL"
-echo "  GIT_COMMITTER_NAME=$GIT_COMMITTER_NAME"
-echo "  GIT_COMMITTER_EMAIL=$GIT_COMMITTER_EMAIL"
+echo "✅ Git configuration set:"
+echo "  Global user.name: $(git config --global user.name)"
+echo "  Global user.email: $(git config --global user.email)"
 
 # Test the prepare-pr.sh script
 echo ""
