@@ -2,8 +2,8 @@ vi.mock('nosleep.js', () => ({ default: vi.fn(() => ({ enable: vi.fn(), disable:
 vi.mock('@/hooks/useIndexedDbUpload', () => ({
   useIndexedDbUpload: () => ({ handleChunk: vi.fn(), finalizeUploads: vi.fn() }),
 }));
-const toastMock = vi.fn();
 vi.mock('@/components/ui/use-toast', () => {
+  const toastMock = vi.fn();
   return {
     useToast: () => ({ toast: toastMock }),
     toast: toastMock,

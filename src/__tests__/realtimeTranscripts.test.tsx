@@ -6,7 +6,8 @@ import { useRealtimeTranscripts } from '@/hooks/useCreateTranscript';
 
 // Mocks - Define variables before vi.mock to avoid hoisting issues
 const unsubscribes: vi.Mock[] = [];
-const channelMock = vi.fn(() => ({
+vi.mock('@/supabase', () => {
+  const channelMock = vi.fn(() => ({
     on: vi.fn().mockReturnThis(),
     subscribe: vi.fn(cb => {
       const unsub = vi.fn();
@@ -15,10 +16,11 @@ const channelMock = vi.fn(() => ({
       return { unsubscribe: unsub };
     }),
   }));
-vi.mock('@/supabase', () => ({
-  __esModule: true,
-  default: { channel: channelMock },
-}));
+  return {
+    __esModule: true,
+    default: { channel: channelMock },
+  };
+});
 vi.mock('@/utils/logger', () => ({ logger: { debug: vi.fn() } }));
 
 function TestComponent() {
