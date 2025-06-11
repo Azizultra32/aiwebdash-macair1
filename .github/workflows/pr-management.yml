@@ -18,8 +18,14 @@ on:
         - check-all
         - merge-ready
         - close-stale
-        - rebase-all
-        - rebase-behind
+      - rebase-all
+      - rebase-behind
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  workflows: read
 
 jobs:
   pr-quality-check:
