@@ -97,8 +97,35 @@ jobs:
           echo "CONFLICTS=true" >> $GITHUB_ENV
         fi
 
-    - name: Run prepare-pr script
+    - name: Set Git Identity Environment Variables
       run: |
+        echo "Setting Git identity environment variables..."
+        echo "GIT_AUTHOR_NAME=GitHub Actions" >> $GITHUB_ENV
+        echo "GIT_AUTHOR_EMAIL=actions@github.com" >> $GITHUB_ENV
+        echo "GIT_COMMITTER_NAME=GitHub Actions" >> $GITHUB_ENV
+        echo "GIT_COMMITTER_EMAIL=actions@github.com" >> $GITHUB_ENV
+
+    - name: Run prepare-pr script
+      env:
+        GIT_AUTHOR_NAME: "GitHub Actions"
+        GIT_AUTHOR_EMAIL: "actions@github.com"
+        GIT_COMMITTER_NAME: "GitHub Actions"
+        GIT_COMMITTER_EMAIL: "actions@github.com"
+      run: |
+        echo "Environment variables set:"
+        echo "GIT_AUTHOR_NAME=$GIT_AUTHOR_NAME"
+        echo "GIT_AUTHOR_EMAIL=$GIT_AUTHOR_EMAIL"
+        echo "GIT_COMMITTER_NAME=$GIT_COMMITTER_NAME"
+        echo "GIT_COMMITTER_EMAIL=$GIT_COMMITTER_EMAIL"
+
+        # Ensure Git config is set locally as well
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+
+        echo "Local Git config:"
+        git config user.name
+        git config user.email
+
         chmod +x ./prepare-pr.sh
         if ./prepare-pr.sh main; then
           echo "✅ Prepare-PR passed"
