@@ -61,7 +61,7 @@
     "react-speech-recognition": "^3.10.0",
     "reactflow": "^11.11.4",
     "regenerator-runtime": "^0.14.1",
-    "sort-by": "^1.2.0",
+    "sort-by": "0.0.2",
     "stripe": "^17.5.0",
     "styled-components": "^6.1.18",
     "tailwind-merge": "^1.14.0",
