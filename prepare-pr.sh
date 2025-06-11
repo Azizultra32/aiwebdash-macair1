@@ -17,6 +17,13 @@ if ! command -v npm >/dev/null 2>&1; then
   exit 1
 fi
 
+# Configure Git user if not already set (for CI environments)
+if [ -z "$(git config --global user.name 2>/dev/null || true)" ]; then
+  echo "Configuring Git user for CI environment..."
+  git config --global user.name "GitHub Actions"
+  git config --global user.email "actions@github.com"
+fi
+
 # Ensure origin remote exists or configure it from REPO_URL
 if ! git remote | grep -q '^origin$'; then
   if [ -n "${REPO_URL:-}" ]; then
