@@ -1,0 +1,152 @@
+name: Auto-merge Ready PRs
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_numbers:
+        description: 'Comma-separated PR numbers to merge (e.g., 243,244,245)'
+        required: true
+        default: '243,244,245'
+      merge_method:
+        description: 'Merge method'
+        required: true
+        default: 'squash'
+        type: choice
+        options:
+          - squash
+          - merge
+          - rebase
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Parse PR numbers
+        id: parse_prs
+        run: |
+          IFS=',' read -ra PR_ARRAY <<< "${{ github.event.inputs.pr_numbers }}"
+          echo "pr_list=${PR_ARRAY[@]}" >> $GITHUB_OUTPUT
+
+      - name: Process each PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MERGE_METHOD: ${{ github.event.inputs.merge_method }}
+        run: |
+          set -e
+          
+          # Configure git
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          
+          # Function to test PR
+          test_pr() {
+            local pr_number=$1
+            echo "🔍 Testing PR #$pr_number"
+            
+            # Fetch and checkout PR
+            git fetch origin pull/$pr_number/head:pr-$pr_number
+            git checkout pr-$pr_number
+            
+            # Run our comprehensive test
+            if ./prepare-pr.sh main; then
+              echo "✅ PR #$pr_number passed all tests"
+              return 0
+            else
+              echo "❌ PR #$pr_number failed tests"
+              return 1
+            fi
+          }
+          
+          # Function to merge PR
+          merge_pr() {
+            local pr_number=$1
+            echo "🚀 Merging PR #$pr_number"
+            
+            case "$MERGE_METHOD" in
+              "squash")
+                gh pr merge $pr_number --squash --auto
+                ;;
+              "merge")
+                gh pr merge $pr_number --merge --auto
+                ;;
+              "rebase")
+                gh pr merge $pr_number --rebase --auto
+                ;;
+            esac
+          }
+          
+          # Process each PR
+          IFS=',' read -ra PR_ARRAY <<< "${{ github.event.inputs.pr_numbers }}"
+          
+          successful_merges=()
+          failed_tests=()
+          
+          for pr in "${PR_ARRAY[@]}"; do
+            pr=$(echo $pr | xargs) # trim whitespace
+            echo "Processing PR #$pr"
+            
+            # Return to main for each PR
+            git checkout main
+            git clean -fd
+            
+            # Test the PR
+            if test_pr $pr; then
+              # If tests pass, merge it
+              if merge_pr $pr; then
+                successful_merges+=($pr)
+                echo "✅ Successfully merged PR #$pr"
+              else
+                echo "❌ Failed to merge PR #$pr"
+              fi
+            else
+              failed_tests+=($pr)
+              echo "❌ PR #$pr failed tests, skipping merge"
+            fi
+            
+            # Clean up
+            git checkout main
+            git branch -D pr-$pr 2>/dev/null || true
+          done
+          
+          # Summary
+          echo "📊 MERGE SUMMARY"
+          echo "================"
+          echo "Successful merges: ${successful_merges[*]}"
+          echo "Failed tests: ${failed_tests[*]}"
+          
+          # Set outputs for summary
+          echo "successful_merges=${successful_merges[*]}" >> $GITHUB_OUTPUT
+          echo "failed_tests=${failed_tests[*]}" >> $GITHUB_OUTPUT
+
+      - name: Create summary
+        run: |
+          echo "## 🎯 Auto-merge Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Successfully Merged PRs:" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.process_prs.outputs.successful_merges }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ❌ Failed PRs:" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.process_prs.outputs.failed_tests }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔧 Next Steps:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Review any failed PRs" >> $GITHUB_STEP_SUMMARY
+          echo "2. Create improvement PRs" >> $GITHUB_STEP_SUMMARY
+          echo "3. Address remaining problematic PRs" >> $GITHUB_STEP_SUMMARY
