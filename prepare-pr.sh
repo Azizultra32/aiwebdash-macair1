@@ -20,8 +20,18 @@ fi
 # Configure Git user if not already set (for CI environments)
 if [ -z "$(git config --global user.name 2>/dev/null || true)" ]; then
   echo "Configuring Git user for CI environment..."
-  git config --global user.name "GitHub Actions"
-  git config --global user.email "actions@github.com"
+  git config --global user.name "GitHub Actions Runner"
+  git config --global user.email "runner@github.com"
+  echo "✅ Git user configured: $(git config --global user.name) <$(git config --global user.email)>"
+fi
+
+# Validate Git configuration
+if [ -z "$(git config --global user.name)" ] || [ -z "$(git config --global user.email)" ]; then
+  echo "❌ Error: Git user name and email must be configured"
+  echo "Please run:"
+  echo "  git config --global user.name 'Your Name'"
+  echo "  git config --global user.email 'your.email@example.com'"
+  exit 1
 fi
 
 # Ensure origin remote exists or configure it from REPO_URL
@@ -50,7 +60,13 @@ if ! git fetch origin "$TARGET_BRANCH"; then
 fi
 
 if ! git rebase "origin/$TARGET_BRANCH"; then
-  echo "Error: git rebase failed." >&2
+  echo "❌ Error: git rebase failed." >&2
+  echo "This usually means there are merge conflicts that need manual resolution." >&2
+  echo "To resolve conflicts:" >&2
+  echo "  1. Fix conflicts in the affected files" >&2
+  echo "  2. Run: git add <resolved-files>" >&2
+  echo "  3. Run: git rebase --continue" >&2
+  echo "  4. Re-run this script: ./prepare-pr.sh $TARGET_BRANCH" >&2
   exit 1
 fi
 

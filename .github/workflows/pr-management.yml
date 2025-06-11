@@ -32,12 +32,18 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     name: PR Quality Gates
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      statuses: write
     
     steps:
     - name: Checkout PR
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
         
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -50,8 +56,35 @@ jobs:
       
     - name: Configure Git user
       run: |
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
+        git config --global user.name "GitHub Actions Runner"
+        git config --global user.email "runner@github.com"
+        echo "Git user configured:"
+        git config --global user.name
+        git config --global user.email
+
+    - name: Validate Git configuration
+      run: |
+        echo "Validating Git configuration..."
+        if [ -z "$(git config --global user.name)" ] || [ -z "$(git config --global user.email)" ]; then
+          echo "❌ Git configuration failed"
+          exit 1
+        fi
+        echo "✅ Git configuration valid"
+
+    - name: Validate GitHub token permissions
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "Validating GitHub token permissions..."
+        curl -s -H "Authorization: token $GITHUB_TOKEN" \
+             -H "Accept: application/vnd.github.v3+json" \
+             "https://api.github.com/repos/${{ github.repository }}" > /dev/null
+        if [ $? -eq 0 ]; then
+          echo "✅ GitHub token permissions valid"
+        else
+          echo "❌ GitHub token permissions failed"
+          exit 1
+        fi
 
     - name: Check merge conflicts
       run: |
