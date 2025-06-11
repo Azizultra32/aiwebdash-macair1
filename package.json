@@ -58,7 +58,7 @@
     "react-hook-form": "^7.45.2",
     "react-media-recorder": "^1.6.6",
     "react-router-dom": "^6.14.2",
-    "react-speech-recognition": "^3.10.0",
+    "react-speech-recognition": "^4.0.1",
     "reactflow": "^11.11.4",
     "regenerator-runtime": "^0.14.1",
     "sort-by": "0.0.2",
