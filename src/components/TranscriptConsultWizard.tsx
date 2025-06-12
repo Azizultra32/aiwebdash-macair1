@@ -1,6 +1,5 @@
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import TranscriptTabSection from './TranscriptTabSection';
+import SummaryPanel from './SummaryPanel'
 import TranscriptSummary from './TranscriptSummary';
 import type { Transcript, AI_Summary, SummaryRef } from '@/types/types';
 
@@ -20,23 +19,20 @@ const TranscriptConsultWizard: React.FC<TranscriptConsultWizardProps> = ({
   summaryRef
 }) => {
   return (
-    <Card className="h-full flex flex-col">
-      <TranscriptTabSection
-        title="Consult Wizard"
-        onCopy={onCopy}
-        onMaximize={onMaximize}
-        summaryRef={summaryRef}
-      />
-      <CardContent className="flex-grow min-h-0 pt-2 px-4 pb-4">
-        {summaryMap['3'] && (
-          <TranscriptSummary
-            ref={summaryRef}
-            summary={summaryMap['3']}
-            transcript={transcript}
-          />
-        )}
-      </CardContent>
-    </Card>
+    <SummaryPanel
+      title="Consult Wizard"
+      onCopy={onCopy}
+      onMaximize={onMaximize}
+      summaryRef={summaryRef}
+    >
+      {summaryMap['3'] && (
+        <TranscriptSummary
+          ref={summaryRef}
+          summary={summaryMap['3']}
+          transcript={transcript}
+        />
+      )}
+    </SummaryPanel>
   );
 };
 
