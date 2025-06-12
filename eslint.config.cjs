@@ -9,7 +9,22 @@ const compat = new FlatCompat({
 
 module.exports = [
   {
-    ignores: ['node_modules/**', 'dist/**', 'env.d.ts', 'eslint.config.cjs', '.storybook/**', '**/*.stories.tsx', 'server/**', 'public/**', 'supabase/**', '**/*.cjs', '**/*.js'],
+    ignores: [
+      'node_modules/**',
+      'dist/**',
+      'env.d.ts',
+      'eslint.config.cjs',
+      '.storybook/**',
+      '**/*.stories.tsx',
+      'server/**',
+      'public/**',
+      'supabase/**',
+      '**/*.cjs',
+      '**/*.js',
+      '**/__tests__/**',
+      '**/*.test.ts',
+      '**/*.test.tsx',
+    ],
   },
   ...compat.config({
     env: { browser: true, es2020: true },
