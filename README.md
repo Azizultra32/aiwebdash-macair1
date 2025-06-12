@@ -229,10 +229,19 @@ This workflow allows for efficient PR management even when working offline.
 ### Codex PR workflow
 
 1. Adjust the allowed domains and HTTP methods in `.codex/codex-config.json`. The default configuration permits all network requests.
-2. Run `./codex-pr-workflow.sh` to execute the recommended workflow:
+2. Export `OPENAI_API_KEY` and either `GITHUB_PERSONAL_ACCESS_TOKEN` or `GITHUB_TOKEN` for GitHub authentication.
+3. Run `./codex-pr-workflow.sh` to execute the recommended workflow:
    - Installs dependencies via `.codex/setup.sh` if needed
    - Rebases your branch and runs preflight, lint, and tests
    - Launches `odex_pr_assistant.py` when API keys are set for automated PR reviews
+
+Example:
+
+```bash
+export OPENAI_API_KEY=your-openai-key
+export GITHUB_TOKEN=your-token # or export GITHUB_PERSONAL_ACCESS_TOKEN
+./codex-pr-workflow.sh
+```
 
 ## Service Worker Version Checks
 
