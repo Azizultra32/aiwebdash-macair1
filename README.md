@@ -226,6 +226,14 @@ To work with a specific PR:
 
 This workflow allows for efficient PR management even when working offline.
 
+### Codex PR workflow
+
+1. Adjust the allowed domains and HTTP methods in `.codex/codex-config.json`. The default configuration permits all network requests.
+2. Run `./codex-pr-workflow.sh` to execute the recommended workflow:
+   - Installs dependencies via `.codex/setup.sh` if needed
+   - Rebases your branch and runs preflight, lint, and tests
+   - Launches `odex_pr_assistant.py` when API keys are set for automated PR reviews
+
 ## Service Worker Version Checks
 
 When the service worker activates it broadcasts `GET_CURRENT_VERSION` to every connected client. Each client replies with its current version so the worker can compare it to the latest value from `version.json`.
