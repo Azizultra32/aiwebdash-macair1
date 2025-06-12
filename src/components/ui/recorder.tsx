@@ -19,7 +19,6 @@ interface AudioRecorderProps {
   onStopRecording: (patient: TranscriptData) => void;
   onUploadComplete?: (patient: TranscriptData) => void;
   onSpeechCommand?: (command: number, text?: string) => void;
-  selectPatient: (patientTag: number) => void;
 }
 
 export default function AudioRecorder(props: AudioRecorderProps) {
@@ -30,12 +29,10 @@ export default function AudioRecorder(props: AudioRecorderProps) {
     onRecording,
     onStopRecording,
     onUploadComplete,
-    selectPatient,
   } = props;
   const patientTag = props.patientTag;
 
-  const [isAddendum, setIsAddendum] = useState(false);
-  const [isVoiceChat, setIsVoiceChat] = useState(false);
+  const [isAddendum] = useState(false);
 
   const isOnline = useOnlineStatus();
 
@@ -157,22 +154,17 @@ export default function AudioRecorder(props: AudioRecorderProps) {
     }
   }, [hasMicrophoneAccess]);
 
-  const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
-  const [microphoneError, setMicrophoneError] = useState<string>('');
+  const [, setRecordingBlob] = useState<Blob | null>(null);
+  const [microphoneError] = useState<string>('');
   const hasApiKey = true; // Placeholder - should be managed properly
 
   return (
     <RecorderControls
-      isRecording={recording} // Use the destructured state
-      setIsRecording={setRecording} // Pass the destructured setter
-      isPaused={recordingPaused} // Use the destructured state
-      setIsPaused={setRecordingPaused} // Pass the destructured setter
-      recordingBlob={recordingBlob}
+      setIsRecording={setRecording}
+      setIsPaused={setRecordingPaused}
       setRecordingBlob={setRecordingBlob}
-      hasApiKey={hasApiKey} // Pass the placeholder or actual value
-      mid={patient.mid} // Pass the mid from patient object
+      hasApiKey={hasApiKey}
       microphoneError={microphoneError}
-      setMicrophoneError={setMicrophoneError}
       // Note: hasMicrophoneAccess is used internally by RecorderControls via useAudioRecorder, 
       // but it's not an explicit prop of RecorderControls itself. 
       // The original RecorderControls component definition shows it expects these props.

@@ -15,14 +15,9 @@ import { useToast } from '@/components/ui/use-toast';
 import 'regenerator-runtime/runtime'
 import { useSpeechRecognition } from 'react-speech-recognition';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
-import { debounce } from '@/utils/debounce';
-import { unregisterServiceWorker } from '@/utils/serviceWorker';
 import {
-  clearOfflineQueue,
   loadFromLocalStorage,
-  loadOfflineQueue,
   saveToLocalStorage,
-  saveToOfflineQueue,
 } from '@/utils/storageHelpers';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import { useServiceWorkerReload } from '@/hooks/useServiceWorkerReload';
@@ -71,7 +66,6 @@ const Dashboard = () => {
     offlineQueueCount,
     isProcessingOfflineQueue,
     queueAction,
-    processQueue,
   } = useOfflineQueue(mergedTranscripts, isOnline);
 
   const defaultPatientData = { patient_code: 'Patient', patient_tag: patientTag, mid: uuidv4(), language: 'auto', token_count: 0 };
@@ -266,10 +260,10 @@ const Dashboard = () => {
     }
   }, [showSidebar]);
 
-  const onRecording = useCallback(async (patient: TranscriptData) => {
-    setStatus("Listening...");
-    setRecordingPatientMidUUID(patient.mid);
-    clientSideMid = patient.mid;
+    const onRecording = useCallback(async (patient: TranscriptData) => {
+      setStatus("Listening...");
+      setRecordingPatientMidUUID(patient.mid ?? '');
+      clientSideMid = patient.mid;
     if (patient.token_count === 0) {
       if ((patient?.patient_code ?? "").length <= 0) {
         patient.patient_code = 'Patient';
@@ -292,28 +286,28 @@ const Dashboard = () => {
     }
   }, [isOnline]);
 
-  const onStopRecording = useCallback((t: TranscriptData) => {
-    terminateRecording({ token_count: t.token_count, mid: t.mid });
+    const onStopRecording = useCallback((t: TranscriptData) => {
+      terminateRecording({ token_count: t.token_count, mid: t.mid ?? '' });
 
     clientSideMid = t.mid;
     setDefaultPatientCode('');
     setRecordingPatientMidUUID('');
-    setPatientData({ patient_code: 'Patient', patient_tag: patientTag, mid: uuidv4(), language: t.language, token_count: 0 });
-    setUploadingPatientMidUUID(t.mid);
+      setPatientData({ patient_code: 'Patient', patient_tag: patientTag, mid: uuidv4(), language: t.language, token_count: 0 });
+      setUploadingPatientMidUUID(t.mid ?? '');
     setStatus("Uploading...");
   }, [patientTag, isOnline, terminateRecording]);
 
-  const onUploadComplete = useCallback((t: TranscriptData) => {
-    clientSideMid = t.mid;
-    setUploadingPatientMidUUID('');
-  }, []);
+    const onUploadComplete = useCallback((t: TranscriptData) => {
+      clientSideMid = t.mid;
+      setUploadingPatientMidUUID('');
+    }, []);
 
   useEffect(() => {
     checkMicrophonePermissions()
       .then(hasMicrophoneAccess => setHasMicrophoneAccess(hasMicrophoneAccess));
   }, []);
 
-  const onSpeechCommand = useCallback((command: number, text: string) => {
+  const onSpeechCommand = useCallback((command: number, text?: string) => {
     setSpeechCommandActivated(command);
     setTimeout(() => setSpeechCommandActivated(0), 3000);
     if (command === 1) {
@@ -334,11 +328,15 @@ const Dashboard = () => {
       })
     }
     else if (command === 4) {
-      setDefaultPatientCode(text);
-      setPatientData({ ...patientData, patient_code: text });
+      if (text) {
+        setDefaultPatientCode(text);
+        if (patientData) {
+          setPatientData({ ...patientData, patient_code: text });
+        }
+      }
       toast({
         title: 'Patient Name',
-        description: `Patient named ${text}`,
+        description: `Patient named ${text ?? ''}`,
       })
     }
   }, [patientData]);
@@ -374,12 +372,11 @@ const Dashboard = () => {
   return (
     <>
       <SpeechCommandDialog speechCommandActivated={speechCommandActivated} />
-      <DashboardLayout
-        recording={recordingPatientMidUUID !== ''}
-        showSidebar={showSidebar}
-        isDesktop={isDesktop}
-        toggleSidebar={toggleSidebar}
-        sidebar={
+        <DashboardLayout
+          recording={recordingPatientMidUUID !== ''}
+          showSidebar={showSidebar}
+          isDesktop={isDesktop}
+          sidebar={
           <>
             <div className="grow min-h-0 bg-background/90 backdrop-blur z-10">
               {(isLoadingTranscripts && isOnline) || isProcessingOfflineQueue || isInitializing ? (
@@ -404,17 +401,13 @@ const Dashboard = () => {
             </div>
             <AudioRecorder
               patientTag={patientTag}
-              patientData={patientData}
+              patientData={patientData ?? defaultPatientData}
               newPatientData={newPatientData}
               onRecording={onRecording}
               onStopRecording={onStopRecording}
               onUploadComplete={onUploadComplete}
               hasMicrophoneAccess={hasMicrophoneAccess}
               onSpeechCommand={onSpeechCommand}
-              selectPatient={(patientTag: number) => {
-                const t = mergedTranscripts.find(x => x.patient_tag === patientTag);
-                selectTranscript(t);
-              }}
             />
             <div className="flex-grow-0 px-4 lg:px-6 pb-4 lg:pb-6">
               <StatusBanner status={status} speechStatus={speechStatus} isOnline={isOnline} />
@@ -425,7 +418,6 @@ const Dashboard = () => {
             </div>
           </>
         }
-        selectedTranscript={selectedTranscript}
         onlineTranscripts={onlineTranscripts}
         clientTranscripts={clientTranscripts}
       >

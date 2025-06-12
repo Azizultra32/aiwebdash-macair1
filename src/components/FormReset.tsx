@@ -4,6 +4,7 @@ import { useToast } from './ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { isError } from '@/utils/error';
+import type { UserData } from '@/types/types';
 
 const FormReset = () => {
   const {
@@ -16,7 +17,7 @@ const FormReset = () => {
 
   const onSubmit = async (values: Record<string, string>) => {
     try {
-      await reset(values);
+      await reset(values as unknown as UserData);
       navigate('/login');
     } catch (error: unknown) {
       toast({

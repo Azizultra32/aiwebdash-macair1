@@ -26,7 +26,7 @@ const TranscriptSummary = forwardRef(({ summary, transcript }: Props, ref) => {
   const [editedText, setEditedText] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [summaryCopy, setSummaryCopy] = useState(summary);
-  const { isRecording, handleRecord: recordAudio } = useAudioRecorder((transcription) => {
+  const { recording, handleRecord: recordAudio } = useAudioRecorder({ onTranscription: (transcription: { text: string }) => {
     segments.push(transcription.text);
     if (summary.number === -1) {
       setSummaryCopy({
@@ -34,7 +34,7 @@ const TranscriptSummary = forwardRef(({ summary, transcript }: Props, ref) => {
         summary: segments.join(' '),
       });
     }
-  });
+  }});
 
   // Determine if this summary should show edit toggle
   const showEditToggle = ![2, 4, 6, 9].includes(summary.number);
@@ -216,13 +216,13 @@ const TranscriptSummary = forwardRef(({ summary, transcript }: Props, ref) => {
                   >
                     <Mic
                       size={16}
-                      className={isRecording ? 'text-destructive' : 'text-foreground'}
+                      className={recording ? 'text-destructive' : 'text-foreground'}
                     />
-                    <span className="sr-only">{isRecording ? 'Stop recording' : 'Record summary'}</span>
+                    <span className="sr-only">{recording ? 'Stop recording' : 'Record summary'}</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{isRecording ? 'Transcribing...' : 'Ending transcript...'}</p>
+                  <p>{recording ? 'Transcribing...' : 'Ending transcript...'}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

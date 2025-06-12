@@ -51,8 +51,8 @@ const initialTasks: Task[] = [
 
 // Main Dashboard Component
 export default function Dashboard() {
-  const [doctors, setDoctors] = React.useState<Person[]>(initialDoctors)
-  const [moas, setMOAs] = React.useState<Person[]>(initialMOAs)
+  const [doctors] = React.useState<Person[]>(initialDoctors)
+  const [moas] = React.useState<Person[]>(initialMOAs)
   const [tasks, setTasks] = React.useState<Task[]>(initialTasks)
   const [patients] = React.useState<Patient[]>(initialPatients)
   const [doctorSearch, setDoctorSearch] = React.useState("")

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useForm, useFormState, Controller } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
@@ -242,13 +242,13 @@ const FormRegisterBasic = () => {
   const handleReset = async () => {
     await cleanupAuthState();
 
-    registrationForm.reset({
-      name: '',
-      email: '',
-      password: '',
-      countryCode: detectedCountryCode,
-      phone: '',
-    });
+      registrationForm.reset({
+        name: '',
+        email: '',
+        password: '',
+        countryCode: detectedCodeFromHook,
+        phone: '',
+      });
 
     setShowOtp(false);
     setOtpTimer(60);
@@ -384,11 +384,11 @@ const FormRegisterBasic = () => {
                 </FormItem>
               )}
             />
-            <FormField
-              control={registrationForm.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem className="flex-grow">
+              <FormField
+                control={registrationForm.control}
+                name="phone"
+                render={() => (
+                  <FormItem className="flex-grow">
                   <FormLabel>Phone</FormLabel>
                   <FormControl>
                     <Controller

@@ -45,7 +45,7 @@ export function useRecorderState({
       if (isAddendum) {
         chunk = patient.token_count + chunk;
       }
-      await handleChunk(patient.mid, chunk, blob);
+        await handleChunk(patient.mid ?? '', chunk, blob);
       setChunkNumberWrapper({ chunkNumber: chunk - (isAddendum ? patient.token_count : 0) });
     },
     [chunkNumberWrapper, handleChunk, patient, isAddendum, patient.token_count],
@@ -72,7 +72,7 @@ export function useRecorderState({
 
       if (!paused) {
         if (isOnline) {
-          await finalizeUploads(patient.mid);
+          await finalizeUploads(patient.mid ?? '');
         } else {
           logger.debug('Recording completed offline', { patientId: patient.mid });
         }

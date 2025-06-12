@@ -31,10 +31,10 @@ export default function FloatingAfterscribeManager({ showToggleButton = true }: 
         >
           <Button
             onClick={toggleFloating}
-            size="lg"
+            size="icon"
             className={`
               h-14 w-14 rounded-full shadow-lg transition-all duration-300
-              ${isFloatingVisible 
+              ${isFloatingVisible
                 ? 'bg-red-500 hover:bg-red-600 text-white' 
                 : 'bg-blue-500 hover:bg-blue-600 text-white'
               }

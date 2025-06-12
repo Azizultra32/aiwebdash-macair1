@@ -9,8 +9,13 @@ import { uuidv4 } from '@/lib/utils';
 interface Transcription { text: string }
 export type RecordCallback = (transcription: Transcription) => void;
 
-export default function useAudioRecorder(onTranscription: RecordCallback) {
-  const [isRecording, setIsRecording] = useState(false);
+export default function useAudioRecorder({
+  onTranscription = () => {},
+}: { onTranscription?: RecordCallback }) {
+  const [recording, setRecording] = useState(false);
+  const [recordingPaused, setRecordingPaused] = useState(false);
+  const [hasMicrophoneAccess] = useState(true);
+  const mimeType = 'audio/mp3';
   const chunkNumberRef = useRef<ChunkNumberWrapper>({ chunkNumber: 0 });
   const recorderRef = useRef(new MicRecorder({ bitRate: 128 }));
   // Holds the active interval for collecting audio chunks
@@ -47,7 +52,7 @@ export default function useAudioRecorder(onTranscription: RecordCallback) {
     const { data } = await supabase.auth.getSession();
     const recorder = recorderRef.current;
 
-    if (!isRecording) {
+    if (!recording) {
       flashUUIDRef.current = uuidv4();
       recorder.start().catch((e: unknown) => logger.error('Recorder start error', e));
       if (intervalRef.current) {
@@ -57,7 +62,7 @@ export default function useAudioRecorder(onTranscription: RecordCallback) {
       intervalRef.current = setInterval(() => {
         recorder
           .getMp3()
-          .then((result) => {
+            .then((result: [unknown, Blob]) => {
             // getMp3 returns [buffer, Blob] according to library docs
             const [, blob] = result as [unknown, Blob];
             const soundDetected = AudioContext.getSoundDetected();
@@ -74,7 +79,7 @@ export default function useAudioRecorder(onTranscription: RecordCallback) {
       recorder
         .stop()
         .getMp3()
-        .then((result) => {
+        .then((result: [unknown, Blob]) => {
           // getMp3 returns [buffer, Blob] according to library docs
           const [, blob] = result as [unknown, Blob];
           const soundDetected = AudioContext.getSoundDetected();
@@ -83,8 +88,18 @@ export default function useAudioRecorder(onTranscription: RecordCallback) {
         })
         .catch((e: unknown) => logger.error('Recorder stop error', e));
     }
-    setIsRecording(!isRecording);
-  }, [isRecording, transcribe]);
+    setRecording(!recording);
+  }, [recording, transcribe]);
 
-  return { isRecording, handleRecord: record };
+  return {
+    recording,
+    recordingPaused,
+    startRecording: () => record(),
+    stopRecording: () => record(),
+    pauseRecording: () => setRecordingPaused(true),
+    resumeRecording: () => setRecordingPaused(false),
+    hasMicrophoneAccess,
+    mimeType,
+    handleRecord: record,
+  };
 }
