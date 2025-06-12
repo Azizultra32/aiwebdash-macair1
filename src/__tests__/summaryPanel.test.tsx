@@ -34,4 +34,11 @@ describe('SummaryPanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Print summary' }))
     expect(onPrint).toHaveBeenCalled()
   })
+
+  it('does not render print button when onPrint is not provided', () => {
+    render(<SummaryPanel title="Hello">content</SummaryPanel>)
+    expect(
+      screen.queryByRole('button', { name: 'Print summary' })
+    ).toBeNull()
+  })
 })
