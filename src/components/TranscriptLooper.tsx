@@ -1,6 +1,5 @@
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import TranscriptTabSection from './TranscriptTabSection';
+import SummaryPanel from './SummaryPanel'
 import TranscriptSummary from './TranscriptSummary';
 import type { Transcript, AI_Summary, SummaryRef } from '@/types/types';
 
@@ -20,23 +19,20 @@ const TranscriptLooper: React.FC<TranscriptLooperProps> = ({
   summaryRef
 }) => {
   return (
-    <Card className="h-full flex flex-col">
-      <TranscriptTabSection
-        title="Looper"
-        onCopy={onCopy}
-        onMaximize={onMaximize}
-        summaryRef={summaryRef}
-      />
-      <CardContent className="flex-grow min-h-0 pt-2 px-4 pb-4">
-        {summaryMap['2'] && (
-          <TranscriptSummary 
-            ref={summaryRef}
-            summary={summaryMap['2']} 
-            transcript={transcript}
-          />
-        )}
-      </CardContent>
-    </Card>
+    <SummaryPanel
+      title="Looper"
+      onCopy={onCopy}
+      onMaximize={onMaximize}
+      summaryRef={summaryRef}
+    >
+      {summaryMap['2'] && (
+        <TranscriptSummary
+          ref={summaryRef}
+          summary={summaryMap['2']}
+          transcript={transcript}
+        />
+      )}
+    </SummaryPanel>
   );
 };
 
