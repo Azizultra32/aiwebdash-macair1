@@ -19,6 +19,17 @@ describe('SummaryPanel', () => {
     expect(root.style.cursor).not.toBe('move')
   })
 
+  it('remains draggable when onPrint is provided', () => {
+    const ref = React.createRef<SummaryRef>()
+    const { container } = render(
+      <SummaryPanel title="Hello" onPrint={() => {}} summaryRef={ref}>
+        content
+      </SummaryPanel>
+    )
+    const root = container.firstChild as HTMLElement
+    expect(root.style.cursor).toBe('move')
+  })
+
   it('invokes onPrint when print button is clicked', () => {
     const onPrint = vi.fn()
     const ref = React.createRef<SummaryRef>()
