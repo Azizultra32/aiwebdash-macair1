@@ -1,6 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Capture existing Git configuration and environment variables
+ORIG_GLOBAL_USER_NAME="$(git config --global user.name 2>/dev/null || true)"
+ORIG_GLOBAL_USER_EMAIL="$(git config --global user.email 2>/dev/null || true)"
+ORIG_LOCAL_USER_NAME="$(git config user.name 2>/dev/null || true)"
+ORIG_LOCAL_USER_EMAIL="$(git config user.email 2>/dev/null || true)"
+
+ORIG_GIT_AUTHOR_NAME="${GIT_AUTHOR_NAME-}"
+ORIG_GIT_AUTHOR_EMAIL="${GIT_AUTHOR_EMAIL-}"
+ORIG_GIT_COMMITTER_NAME="${GIT_COMMITTER_NAME-}"
+ORIG_GIT_COMMITTER_EMAIL="${GIT_COMMITTER_EMAIL-}"
+
 echo "🧪 Testing CI Environment Simulation"
 echo "===================================="
 
@@ -59,8 +70,54 @@ fi
 # Restore original Git configuration
 echo ""
 echo "🔄 Restoring original Git configuration..."
-git config --global user.name "GitHub Actions"
-git config --global user.email "actions@github.com"
+if [ -n "$ORIG_GLOBAL_USER_NAME" ]; then
+  git config --global user.name "$ORIG_GLOBAL_USER_NAME"
+else
+  git config --global --unset user.name 2>/dev/null || true
+fi
+
+if [ -n "$ORIG_GLOBAL_USER_EMAIL" ]; then
+  git config --global user.email "$ORIG_GLOBAL_USER_EMAIL"
+else
+  git config --global --unset user.email 2>/dev/null || true
+fi
+
+if [ -n "$ORIG_LOCAL_USER_NAME" ]; then
+  git config user.name "$ORIG_LOCAL_USER_NAME"
+else
+  git config --unset user.name 2>/dev/null || true
+fi
+
+if [ -n "$ORIG_LOCAL_USER_EMAIL" ]; then
+  git config user.email "$ORIG_LOCAL_USER_EMAIL"
+else
+  git config --unset user.email 2>/dev/null || true
+fi
+
+# Restore environment variables
+if [ -n "$ORIG_GIT_AUTHOR_NAME" ]; then
+  export GIT_AUTHOR_NAME="$ORIG_GIT_AUTHOR_NAME"
+else
+  unset GIT_AUTHOR_NAME 2>/dev/null || true
+fi
+
+if [ -n "$ORIG_GIT_AUTHOR_EMAIL" ]; then
+  export GIT_AUTHOR_EMAIL="$ORIG_GIT_AUTHOR_EMAIL"
+else
+  unset GIT_AUTHOR_EMAIL 2>/dev/null || true
+fi
+
+if [ -n "$ORIG_GIT_COMMITTER_NAME" ]; then
+  export GIT_COMMITTER_NAME="$ORIG_GIT_COMMITTER_NAME"
+else
+  unset GIT_COMMITTER_NAME 2>/dev/null || true
+fi
+
+if [ -n "$ORIG_GIT_COMMITTER_EMAIL" ]; then
+  export GIT_COMMITTER_EMAIL="$ORIG_GIT_COMMITTER_EMAIL"
+else
+  unset GIT_COMMITTER_EMAIL 2>/dev/null || true
+fi
 echo "✅ Git configuration restored"
 
 echo ""
