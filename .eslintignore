@@ -11,3 +11,5 @@ unique-pr-*.txt
 src/__tests__/realtimeTranscripts.test.tsx
 src/__tests__/recorder-component-error.test.tsx
 src/__tests__/recorder-state-error.test.tsx
+src/__tests__/**
+src/utils/__tests__/**
