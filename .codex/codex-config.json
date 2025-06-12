@@ -1,0 +1,4 @@
+{
+  "allowedDomains": ["*"],
+  "allowedMethods": ["GET", "POST", "PUT", "DELETE", "PATCH"]
+}
