@@ -41,4 +41,11 @@ describe('SummaryPanel', () => {
       screen.queryByRole('button', { name: 'Print summary' })
     ).toBeNull()
   })
+
+  it('renders without onPrint and does not show Print summary button', () => {
+    render(<SummaryPanel title="Hello">content</SummaryPanel>)
+    expect(
+      screen.queryByRole('button', { name: 'Print summary' })
+    ).toBeNull()
+  })
 })
