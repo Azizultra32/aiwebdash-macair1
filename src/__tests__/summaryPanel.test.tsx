@@ -1,6 +1,6 @@
 import React from 'react'
-import { describe, it, expect } from 'vitest'
-import { render } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
+import { render, fireEvent, screen } from '@testing-library/react'
 import SummaryPanel from '@/components/SummaryPanel'
 
 describe('SummaryPanel', () => {
@@ -16,5 +16,16 @@ describe('SummaryPanel', () => {
     )
     const root = container.firstChild as HTMLElement
     expect(root.style.cursor).not.toBe('move')
+  })
+
+  it('calls onPrint when print button clicked', () => {
+    const onPrint = vi.fn()
+    render(
+      <SummaryPanel title="Test" onPrint={onPrint}>
+        content
+      </SummaryPanel>
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Print summary' }))
+    expect(onPrint).toHaveBeenCalled()
   })
 })
