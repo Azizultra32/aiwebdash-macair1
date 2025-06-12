@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import TranscriptTabSection from './TranscriptTabSection';
+import SummaryPanel from './SummaryPanel';
 import TranscriptSummary from './TranscriptSummary';
 import type { Transcript, AI_Summary, SummaryRef } from '@/types/types';
 
@@ -9,6 +9,7 @@ interface TranscriptConsultWizardProps {
   summaryMap: Record<string, AI_Summary['arguments']['summaries'][0]>;
   onCopy: (ref: React.RefObject<SummaryRef>) => void;
   onMaximize: (ref: React.RefObject<SummaryRef>) => void;
+  onPrint: () => void;
   summaryRef: React.RefObject<SummaryRef>;
 }
 
@@ -17,14 +18,16 @@ const TranscriptConsultWizard: React.FC<TranscriptConsultWizardProps> = ({
   summaryMap,
   onCopy,
   onMaximize,
+  onPrint,
   summaryRef
 }) => {
   return (
     <Card className="h-full flex flex-col">
-      <TranscriptTabSection
+      <SummaryPanel
         title="Consult Wizard"
         onCopy={onCopy}
         onMaximize={onMaximize}
+        onPrint={onPrint}
         summaryRef={summaryRef}
       />
       <CardContent className="flex-grow min-h-0 pt-2 px-4 pb-4">

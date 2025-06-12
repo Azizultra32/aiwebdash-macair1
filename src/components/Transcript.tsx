@@ -71,6 +71,10 @@ const Transcript = ({ transcript }: Props) => {
     }
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <div className="flex flex-1 flex-col md:flex-row overflow-hidden h-full">
       <TranscriptSoap 
@@ -81,6 +85,7 @@ const Transcript = ({ transcript }: Props) => {
         summaryRef={summaryRefs['1']}
         handleCopy={handleCopy}
         handleMaximize={handleMaximize}
+        handlePrint={handlePrint}
       />
       
       <div className="flex-1 flex flex-col overflow-y-auto min-h-0">
@@ -114,6 +119,7 @@ const Transcript = ({ transcript }: Props) => {
           summaryRefs={summaryRefs}
           handleCopy={handleCopy}
           handleMaximize={handleMaximize}
+          handlePrint={handlePrint}
           features={features}
         />
       </div>

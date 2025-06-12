@@ -17,6 +17,7 @@ interface TranscriptTabsProps {
   summaryRefs: Record<string, React.RefObject<SummaryRef>>;
   handleCopy: (ref: React.RefObject<SummaryRef>) => void;
   handleMaximize: (ref: React.RefObject<SummaryRef>) => void;
+  handlePrint: () => void;
   features: {
     looper: boolean;
     assistPatient: boolean;
@@ -33,6 +34,7 @@ const TranscriptTabs = ({
   summaryRefs,
   handleCopy,
   handleMaximize,
+  handlePrint,
   features
 }: TranscriptTabsProps): JSX.Element => {
   // Switch to consult tab if current tab becomes invisible
@@ -72,71 +74,77 @@ const TranscriptTabs = ({
         </div>
 
         <div className="p-6 flex-1 overflow-y-auto min-h-0">
-          <TabsContent value="consult" className="h-full m-0">
-            <TranscriptConsultWizard
-              transcript={transcript}
-              summaryMap={summaryMap}
-              onCopy={handleCopy}
-              onMaximize={handleMaximize}
-              summaryRef={summaryRefs['3']}
-            />
-          </TabsContent>
+  <TabsContent value="consult" className="h-full m-0">
+    <TranscriptConsultWizard
+      transcript={transcript}
+      summaryMap={summaryMap}
+      onCopy={handleCopy}
+      onMaximize={handleMaximize}
+      onPrint={handlePrint}
+      summaryRef={summaryRefs['3']}
+    />
+  </TabsContent>
 
           <TabsContent value="orders" className="h-full m-0">
-            <TranscriptOrders
-              transcript={transcript}
-              summaryMap={summaryMap}
-              onCopy={handleCopy}
-              onMaximize={handleMaximize}
-              summaryRef={summaryRefs['5']}
-            />
+  <TranscriptOrders
+      transcript={transcript}
+      summaryMap={summaryMap}
+      onCopy={handleCopy}
+      onMaximize={handleMaximize}
+      onPrint={handlePrint}
+      summaryRef={summaryRefs['5']}
+    />
           </TabsContent>
 
           {features.looper && (
             <TabsContent value="looper" className="h-full m-0">
-              <TranscriptLooper
-                transcript={transcript}
-                summaryMap={summaryMap}
-                onCopy={handleCopy}
-                onMaximize={handleMaximize}
-                summaryRef={summaryRefs['2']}
-              />
+  <TranscriptLooper
+      transcript={transcript}
+      summaryMap={summaryMap}
+      onCopy={handleCopy}
+      onMaximize={handleMaximize}
+      onPrint={handlePrint}
+      summaryRef={summaryRefs['2']}
+    />
             </TabsContent>
           )}
 
           {features.assistPatient && (
             <TabsContent value="assist" className="h-full m-0">
-              <TranscriptAssistPatient
-                transcript={transcript}
-                summaryMap={summaryMap}
-                onCopy={handleCopy}
-                onMaximize={handleMaximize}
-                summaryRef={summaryRefs['9']}
-              />
+  <TranscriptAssistPatient
+      transcript={transcript}
+      summaryMap={summaryMap}
+      onCopy={handleCopy}
+      onMaximize={handleMaximize}
+      onPrint={handlePrint}
+      summaryRef={summaryRefs['9']}
+    />
             </TabsContent>
           )}
 
           {features.taskGo && (
             <TabsContent value="taskgo" className="h-full m-0">
-              <TranscriptTaskGo
-                transcript={transcript}
-                summaryMap={summaryMap}
-                onCopy={handleCopy}
-                onMaximize={handleMaximize}
-                summaryRef={summaryRefs['4']}
-              />
+  <TranscriptTaskGo
+      transcript={transcript}
+      summaryMap={summaryMap}
+      onCopy={handleCopy}
+      onMaximize={handleMaximize}
+      onPrint={handlePrint}
+      summaryRef={summaryRefs['4']}
+    />
             </TabsContent>
           )}
 
           {features.hashTask && (
             <TabsContent value="hashtask" className="h-full m-0">
-              <TranscriptHashTask
-                transcript={transcript}
-                summaryMap={summaryMap}
-                onCopy={handleCopy}
-                onMaximize={handleMaximize}
-                summaryRef={summaryRefs['6']}
-              />
+  <TranscriptHashTask
+      transcript={transcript}
+      summaryMap={summaryMap}
+      onCopy={handleCopy}
+      onMaximize={handleMaximize}
+      onPrint={handlePrint}
+      summaryRef={summaryRefs['6']}
+    />
             </TabsContent>
           )}
         </div>
