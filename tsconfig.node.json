@@ -10,7 +10,6 @@
     "vite.config.ts",
     "tailwind.config.js",
     "postcss.config.js",
-    "update-appcache.cjs",
-    "supabase/functions/stripe-checkout/index.ts"
+    "update-appcache.cjs"
   ]
 }
