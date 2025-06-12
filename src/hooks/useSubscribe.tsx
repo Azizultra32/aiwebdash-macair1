@@ -9,7 +9,7 @@ export default function useSubscribe() {
   const navigate = useNavigate();
 
   return useCallback(
-    async (planId: number, priceId: string) => {
+    async (_planId: number, priceId: string) => {
       try {
         const {
           data: { user },
@@ -51,6 +51,9 @@ export default function useSubscribe() {
         if (error) throw new Error(error);
 
         const stripe = await getStripe();
+        if (!stripe) {
+          throw new Error('Stripe.js failed to load');
+        }
         const { error: stripeError } = await stripe.redirectToCheckout({ sessionId });
 
         if (stripeError) {

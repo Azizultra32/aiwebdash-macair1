@@ -31,11 +31,10 @@ const DemoAuth = ({ onLogin }: DemoAuthProps) => {
             <p>No real authentication required</p>
           </div>
           
-          <Button 
+          <Button
             onClick={handleDemoLogin}
             disabled={isLoading}
             className="w-full"
-            size="lg"
           >
             {isLoading ? 'Logging in...' : 'Enter Demo'}
           </Button>

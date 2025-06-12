@@ -1,4 +1,4 @@
-import { ArrowLeft, User, LogOut, Settings } from 'lucide-react';
+import { User, LogOut, Settings } from 'lucide-react';
 import FontSizeSelector from './FontSizeSelector';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
@@ -21,19 +21,15 @@ import supabase from '@/supabase';
 interface Props {
   children: React.ReactNode;
   sidebar: React.ReactNode;
-  selectedTranscript?: Transcript;
   showSidebar: boolean;
   isDesktop: boolean;
-  toggleSidebar: () => void;
   recording: boolean;
   onlineTranscripts?: Transcript[];
   clientTranscripts?: Transcript[];
 }
 
 interface PropsHeader {
-  selectedTranscript: Transcript | null;
   isDesktop: boolean;
-  onClick: () => void;
   recording: boolean;
   onlineTranscripts?: Transcript[];
   clientTranscripts?: Transcript[];
@@ -60,13 +56,11 @@ const DashboardSidebar = ({ sidebar, showSidebar, isDesktop }: PropsSidebar) => 
   );
 };
 
-const DashboardHeader = ({ 
-  selectedTranscript, 
-  isDesktop, 
-  onClick, 
+const DashboardHeader = ({
+  isDesktop,
   recording,
   onlineTranscripts,
-  clientTranscripts 
+  clientTranscripts
 }: PropsHeader) => {
   const {
     getUser: { data: user },
@@ -117,9 +111,6 @@ const DashboardHeader = ({
   const handleLogout = () => {
     logout();
     navigate('/login', { replace: true });
-  };
-  const handleGoToTasks = () => {
-    navigate('/tasks', { replace: true });
   };
 
   return (
@@ -262,23 +253,19 @@ const DashboardHeader = ({
   );
 };
 
-const DashboardLayout = ({ 
-  children, 
-  sidebar, 
-  selectedTranscript, 
-  showSidebar, 
-  isDesktop, 
-  toggleSidebar, 
+const DashboardLayout = ({
+  children,
+  sidebar,
+  showSidebar,
+  isDesktop,
   recording,
   onlineTranscripts,
-  clientTranscripts 
+  clientTranscripts
 }: Props) => {
   return (
     <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
-      <DashboardHeader 
-        isDesktop={isDesktop} 
-        onClick={toggleSidebar} 
-        selectedTranscript={selectedTranscript}
+      <DashboardHeader
+        isDesktop={isDesktop}
         recording={recording}
         onlineTranscripts={onlineTranscripts}
         clientTranscripts={clientTranscripts}

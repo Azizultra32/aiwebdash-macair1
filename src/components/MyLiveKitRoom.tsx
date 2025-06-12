@@ -108,7 +108,7 @@ export function MyLiveKitRoom({ mid, onDisconnected, selectPatient } : LiveKitRo
           isDisconnecting={isDisconnecting}
         />
         <RoomAudioRenderer />
-        <NoAgentNotification state={agentState} didShowNotification={() => {
+        <NoAgentNotification onClose={() => {
           setIsDisconnecting(true);
           setTimeout(() => onDisconnected(), 3000);
         }} />

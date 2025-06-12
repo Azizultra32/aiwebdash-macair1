@@ -292,7 +292,7 @@ export default function FloatingAfterscribe({ isFloating = false, onClose }: Flo
   )
 
   // Handle drag constraints and mobile responsiveness
-  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     setIsDragging(false)
     setPosition({ x: info.offset.x, y: info.offset.y })
   }

@@ -4,6 +4,7 @@ import {
   type PropsWithChildren,
   type ButtonHTMLAttributes,
   type FormHTMLAttributes,
+  type FormEvent,
 } from 'react';
 import supabase from '@/supabase';
 import { logger } from '@/utils/logger';
@@ -41,7 +42,7 @@ const Button = ({ className = '', ...props }: ButtonHTMLAttributes<HTMLButtonEle
   />
 );
 
-const EditForm = ({ children, ...props }: PropsWithChildren<React.FormHTMLAttributes<HTMLFormElement>>) => (
+const EditForm = ({ children, ...props }: PropsWithChildren<FormHTMLAttributes<HTMLFormElement>>) => (
   <form className="my-5 flex max-w-[600px] flex-col gap-2.5" {...props}>{children}</form>
 );
 
@@ -133,7 +134,7 @@ const PromptManager = () => {
           const meeting = data.find(d => d.mid === mid);
           return {
             mid,
-            created_at: meeting.created_at
+            created_at: meeting?.created_at ?? ''
           };
         });
       setRecentMeetings(uniqueMeetings);
@@ -196,7 +197,7 @@ const PromptManager = () => {
     });
   };
 
-  const handleUpdate = async (e: React.FormEvent) => {
+  const handleUpdate = async (e: FormEvent) => {
     e.preventDefault();
     if (!editingPrompt) return;
     

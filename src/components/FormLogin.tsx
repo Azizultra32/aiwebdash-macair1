@@ -114,7 +114,7 @@ const FormLogin = () => {
           <FormField
             control={form.control}
             name="phone"
-            render={({ field }) => (
+            render={() => (
               <FormItem className="flex-grow">
                 <p className="font-bold text-xs tracking-[0.04em] leading-[1.2]">
                   Phone

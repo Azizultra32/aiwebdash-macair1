@@ -108,7 +108,10 @@ const TranscriptList = ({
                   e.preventDefault();
                   setUnlock({ ...unlock, [index]: false });
                   handleRename(e.currentTarget.textContent || '', patient.mid);
-                } else if (e.key !== 'Backspace' && e.currentTarget.textContent.length >= 12) {
+                  } else if (
+                    e.key !== 'Backspace' &&
+                    (e.currentTarget.textContent?.length ?? 0) >= 12
+                  ) {
                   e.preventDefault();
                 }
               }}

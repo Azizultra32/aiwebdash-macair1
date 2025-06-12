@@ -5,27 +5,17 @@ import { Button } from './button';
 import { cn } from '@/lib/utils';
 
 export default function RecorderControls({
-  isRecording,
   setIsRecording,
-  isPaused,
   setIsPaused,
-  recordingBlob,
   setRecordingBlob,
   hasApiKey,
-  mid,
   microphoneError,
-  setMicrophoneError,
 }: {
-  isRecording: boolean;
   setIsRecording: React.Dispatch<React.SetStateAction<boolean>>;
-  isPaused: boolean;
   setIsPaused: React.Dispatch<React.SetStateAction<boolean>>;
-  recordingBlob: Blob | null;
   setRecordingBlob: React.Dispatch<React.SetStateAction<Blob | null>>;
   hasApiKey: boolean;
-  mid: string;
   microphoneError: string;
-  setMicrophoneError: React.Dispatch<React.SetStateAction<string>>;
 }) {
   const {
     recording,
@@ -36,7 +26,7 @@ export default function RecorderControls({
     resumeRecording,
     hasMicrophoneAccess,
     mimeType,
-  } = useAudioRecorder({ mid });
+  } = useAudioRecorder({});
 
   const [recordingTime, setRecordingTime] = useState(0);
 

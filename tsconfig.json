@@ -35,5 +35,9 @@
     "deno.d.ts",
     "public/db-worker.js"
   ],
+  "exclude": [
+    "**/__tests__/**",
+    "**/*.stories.tsx"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

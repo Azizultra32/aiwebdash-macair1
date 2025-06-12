@@ -42,10 +42,14 @@ const Transcript = ({ transcript }: Props) => {
   const [_, copy] = useCopyToClipboard();
 
   type Summary = AI_Summary['arguments']['summaries'][0];
-  const summaryMap = (showDetail ? transcript.ai_summary : transcript.ai_short_summary)?.arguments?.summaries?.reduce((acc: Record<string, Summary>, latest) => {
-    acc[latest.number.toString()] = latest;
-    return acc;
-  }, { '-1': { number: -1, summary: '' } }) ?? {};
+  const summaryMap =
+    (showDetail ? transcript.ai_summary : transcript.ai_short_summary)?.arguments?.summaries?.reduce(
+      (acc: Record<string, Summary>, latest) => {
+        acc[latest.number.toString()] = latest;
+        return acc;
+      },
+      { '-1': { links: [], title: '', number: -1, summary: '' } } as Record<string, Summary>,
+    ) ?? {};
 
   // Create refs for each summary
   const summaryRefs: Record<string, React.RefObject<SummaryRef>> = {

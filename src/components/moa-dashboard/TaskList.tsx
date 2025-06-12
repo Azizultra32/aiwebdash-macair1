@@ -47,8 +47,8 @@ const TaskList: React.FC<Props> = ({ tasks, doctors, patients, taskSearch, onSea
               <TaskCard
                 key={task.id}
                 task={task}
-                doctor={doctors.find((d) => d.id === task.doctorId)}
-                patient={patients.find((p) => p.id === task.patientId)}
+                doctor={doctors.find((d) => d.id === task.doctorId)!}
+                patient={patients.find((p) => p.id === task.patientId)!}
                 onComplete={() => onComplete(task.id)}
                 onAssign={(person) => onAssign(task.id, person)}
               />
@@ -63,7 +63,7 @@ const TaskList: React.FC<Props> = ({ tasks, doctors, patients, taskSearch, onSea
                     key={task.id}
                     task={task}
                     doctor={doctor}
-                    patient={patients.find((p) => p.id === task.patientId)}
+                    patient={patients.find((p) => p.id === task.patientId)!}
                     onComplete={() => onComplete(task.id)}
                     onAssign={(person) => onAssign(task.id, person)}
                   />

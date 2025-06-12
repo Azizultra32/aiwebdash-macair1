@@ -33,7 +33,7 @@ export function useOfflineQueue(
   const [isProcessingOfflineQueue, setIsProcessingOfflineQueue] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [prevOnlineStatus, setPrevOnlineStatus] = useState<boolean>(isOnline);
+  const [prevOnlineStatus, setPrevOnlineStatus] = useState<boolean>(isOnline ?? false);
 
   useEffect(() => {
     setOfflineQueueCount(loadOfflineQueue().length);

@@ -4,6 +4,7 @@ import { useToast } from './ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { isError } from '@/utils/error';
+import type { PasswordData } from '@/types/types';
 
 const FormChangePassword = () => {
   const {
@@ -15,7 +16,7 @@ const FormChangePassword = () => {
 
   const onSubmit = async (values: Record<string, string>) => {
     try {
-      await changePassword(values);
+      await changePassword(values as unknown as PasswordData);
       navigate('/');
     } catch (error: unknown) {
       toast({
