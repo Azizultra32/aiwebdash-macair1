@@ -19,6 +19,10 @@ npm run prepare-pr "$TARGET_BRANCH"
 # Optional: run the PR assistant if API keys are configured
 if [ -n "${OPENAI_API_KEY:-}" ] && [ -n "${GITHUB_PERSONAL_ACCESS_TOKEN:-${GITHUB_TOKEN:-}}" ]; then
   echo "Running Codex PR assistant..."
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "python3 is required to run the Codex PR assistant but was not found." >&2
+    exit 1
+  fi
   python3 odex_pr_assistant.py
 else
   echo "Skipping Codex PR assistant - API keys not configured"
