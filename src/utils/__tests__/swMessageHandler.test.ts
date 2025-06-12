@@ -32,7 +32,8 @@ beforeEach(async () => {
 
   // Workbox reads `self.__WB_MANIFEST` during module initialization. Define
   // a dummy manifest before importing `workbox-precaching` to avoid errors
-  // when the precache controller attempts to parse this variable.
+  // when the precache controller attempts to parse this variable. This
+  // ensures the precache controller can safely parse the manifest during tests.
   const manifest = [{ url: '/index.html', revision: '1' }];
 
   (global as any).self = {
