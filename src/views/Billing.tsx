@@ -65,7 +65,7 @@ const Billing = () => {
   const billingContent = (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style={{ marginLeft: 0 }}>
       <h1
-        className="mt-100000 font-heading font-normal text-black text-3xl sm:text-4xl md:text-[40px] leading-tight sm:leading-[1.1] text-center mb-10 sm:mb-20"
+        className="mt-10 font-heading font-normal text-black text-3xl sm:text-4xl md:text-[40px] leading-tight sm:leading-[1.1] text-center mb-10 sm:mb-20"
       >
         Your SuperPowers Await.
       </h1>
