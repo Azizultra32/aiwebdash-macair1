@@ -4,12 +4,3 @@ tailwind.config.js
 update-appcache.cjs
 vite.config.ts
 
-# Ignore test artifacts and problematic test files
-unique-pr-*.txt
-
-# Temporarily ignore test files with mocking issues
-src/__tests__/realtimeTranscripts.test.tsx
-src/__tests__/recorder-component-error.test.tsx
-src/__tests__/recorder-state-error.test.tsx
-src/__tests__/**
-src/utils/__tests__/**
