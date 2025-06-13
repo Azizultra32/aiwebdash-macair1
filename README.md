@@ -33,7 +33,7 @@ If you are developing a production application, we recommend updating the config
    ```bash
    ./setup.sh
    ```
-2. Codex executes `.codex/setup.sh` during environment initialization to install dependencies. If `node_modules/` is missing, run:
+2. Codex executes `.codex/setup.sh` during environment initialization to install dependencies. **Run this script anytime `node_modules/` is missing** to restore packages:
 
    ```bash
    bash .codex/setup.sh
