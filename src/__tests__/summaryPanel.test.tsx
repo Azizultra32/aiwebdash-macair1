@@ -46,6 +46,30 @@ describe('SummaryPanel', () => {
     expect(onPrint).toHaveBeenCalled()
   })
 
+  it('invokes onCopy when copy button is clicked', () => {
+    const onCopy = vi.fn()
+    const ref = React.createRef<SummaryRef>()
+    render(
+      <SummaryPanel title="Hello" onCopy={onCopy} summaryRef={ref}>
+        content
+      </SummaryPanel>
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Copy summary' }))
+    expect(onCopy).toHaveBeenCalledWith(ref)
+  })
+
+  it('invokes onMaximize when maximize button is clicked', () => {
+    const onMaximize = vi.fn()
+    const ref = React.createRef<SummaryRef>()
+    render(
+      <SummaryPanel title="Hello" onMaximize={onMaximize} summaryRef={ref}>
+        content
+      </SummaryPanel>
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Maximize summary' }))
+    expect(onMaximize).toHaveBeenCalledWith(ref)
+  })
+
   it('does not render print button when onPrint is not provided', () => {
     render(<SummaryPanel title="Hello">content</SummaryPanel>)
     expect(
