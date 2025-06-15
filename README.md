@@ -46,6 +46,12 @@ If you are developing a production application, we recommend updating the config
    ```
 
 3. Optional: install the [GitHub CLI](https://cli.github.com/) to unlock additional PR dashboard features.
+   If the setup script cannot install it automatically, you can install it manually:
+
+   ```bash
+   sudo apt-get update
+   sudo apt-get install -y gh
+   ```
 
 4. Create a `.env` file by copying `.env.example` and updating the values for your environment.
 
@@ -225,7 +231,12 @@ Codex will execute this script automatically during environment initialization.
 
 ### Working with PR branches
 
-After running the setup script, you can use the included PR dashboard script to view and manage pull request branches. Install the [GitHub CLI](https://cli.github.com/) beforehand to enable PR titles and checkout commands:
+After running the setup script, you can use the included PR dashboard script to view and manage pull request branches. Install the [GitHub CLI](https://cli.github.com/) beforehand to enable PR titles and checkout commands. If it is not already installed, run:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y gh
+```
 
 ```bash
 ./pr-dashboard.sh
