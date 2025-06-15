@@ -45,9 +45,11 @@ If you are developing a production application, we recommend updating the config
    npm run preflight
    ```
 
-3. Create a `.env` file by copying `.env.example` and updating the values for your environment.
+3. Optional: install the [GitHub CLI](https://cli.github.com/) to unlock additional PR dashboard features.
 
-4. Run the development server:
+4. Create a `.env` file by copying `.env.example` and updating the values for your environment.
+
+5. Run the development server:
 
    ```bash
    npm run dev
@@ -206,7 +208,7 @@ Codex will execute this script automatically during environment initialization.
 
 ### Working with PR branches
 
-After running the setup script, you can use the included PR dashboard script to view and manage pull request branches:
+After running the setup script, you can use the included PR dashboard script to view and manage pull request branches. Install the [GitHub CLI](https://cli.github.com/) beforehand to enable PR titles and checkout commands:
 
 ```bash
 ./pr-dashboard.sh
