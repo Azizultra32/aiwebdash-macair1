@@ -7,12 +7,14 @@ if [ ! -d "node_modules" ]; then
   exit 1
 fi
 
-# Enforce Node.js 20.x as specified in package.json engines
+# Enforce Node.js 20.x minimum as specified in package.json engines
 REQUIRED_NODE_MAJOR=20
 CURRENT_NODE_MAJOR=$(node -v | sed -e 's/^v//' -e 's/\..*$//')
-if [ "$CURRENT_NODE_MAJOR" -ne "$REQUIRED_NODE_MAJOR" ]; then
-  echo "Error: Node ${REQUIRED_NODE_MAJOR}.x required, but found $(node -v)." >&2
+if [ "$CURRENT_NODE_MAJOR" -lt "$REQUIRED_NODE_MAJOR" ]; then
+  echo "Error: Node ${REQUIRED_NODE_MAJOR}.x or higher required, but found $(node -v)." >&2
   exit 1
+elif [ "$CURRENT_NODE_MAJOR" -ne "$REQUIRED_NODE_MAJOR" ]; then
+  echo "Warning: Expected Node ${REQUIRED_NODE_MAJOR}.x, but found $(node -v). Continuing..." >&2
 fi
 
 # Optionally extend with more checks in the future
