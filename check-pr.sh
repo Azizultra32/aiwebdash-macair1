@@ -8,6 +8,12 @@ if [ $# -eq 0 ]; then
   exit 1
 fi
 
+# Ensure jq is installed since this script relies on it
+if ! command -v jq >/dev/null 2>&1; then
+  echo "❌ Error: jq is not installed. Please install jq to use this script."
+  exit 1
+fi
+
 PR_NUMBER="$1"
 
 echo "🔍 Checking PR #$PR_NUMBER"
