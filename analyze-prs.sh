@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Ensure jq is installed before proceeding
+if ! command -v jq >/dev/null 2>&1; then
+  echo "Error: jq is required but not installed." >&2
+  exit 1
+fi
+
 echo "🔍 PR Analysis Report"
 echo "===================="
 echo "Generated: $(date)"

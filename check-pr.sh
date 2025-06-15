@@ -8,9 +8,9 @@ if [ $# -eq 0 ]; then
   exit 1
 fi
 
-# Ensure jq is installed since this script relies on it
+# Ensure jq is installed before proceeding
 if ! command -v jq >/dev/null 2>&1; then
-  echo "❌ Error: jq is not installed. Please install jq to use this script."
+  echo "Error: jq is required but not installed." >&2
   exit 1
 fi
 
