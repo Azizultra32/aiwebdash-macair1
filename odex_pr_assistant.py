@@ -21,7 +21,9 @@ from datetime import datetime
 from typing import List, Dict
 
 # Configuration
-REPO = "Azizultra32/aiwebdash-macair1"  # Repository to process
+# Read target repository from environment for flexibility, defaulting to the
+# actual repo if not provided.
+REPO = os.getenv("TARGET_REPO", "Azizultra32/aiwebdash-macair1")
 FILTER_LABEL = "needs-review"  # Set to None to review all PRs
 MAX_PRS_TO_PROCESS = 5  # Limit to avoid rate limits
 
