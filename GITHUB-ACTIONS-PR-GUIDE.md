@@ -2,6 +2,13 @@
 
 Complete automation for PR management using GitHub Actions instead of dangerous local scripts.
 
+### Local setup
+Before running any workflow or local script, ensure dependencies are installed. If the `node_modules/` directory is missing, restore packages with:
+
+```bash
+bash .codex/setup.sh
+```
+
 ## 🎯 **What This Replaces**
 
 ❌ **Dangerous local automation** (like those other AIs suggested):

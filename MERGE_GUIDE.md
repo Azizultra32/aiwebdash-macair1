@@ -2,8 +2,12 @@
 
 ## 📋 Current Open PRs
 
-Run `./prepare-pr.sh main` for each PR before merging. This rebases the branch
-onto `main` and verifies the preflight, lint, and test steps.
+Run `./prepare-pr.sh main` for each PR before merging. This rebases the branch onto `main` and verifies the preflight, lint, and test steps.
+
+If `node_modules/` is missing, install dependencies first with:
+```bash
+bash .codex/setup.sh
+```
 
 ### **Active Reviews**
 
