@@ -28,7 +28,7 @@ If you are developing a production application, we recommend updating the config
 
 ## Development Setup
 
-1. After cloning the repository, make sure you are using **Node 20**. Run `nvm use` (the repository includes a `.nvmrc` file) and then install the dependencies with the setup script:
+1. After cloning the repository, make sure you are using **Node 20 or later**. Run `nvm use` (the repository includes a `.nvmrc` file) and then install the dependencies with the setup script:
 
    ```bash
    ./setup.sh
@@ -57,7 +57,7 @@ If you are developing a production application, we recommend updating the config
 
 ### Environment optimization
 
-- Ensure Node.js 20 is available. If it's missing, install it and set it as your default:
+- Ensure Node.js 20 **or later** is available. If it's missing, install it and set it as your default:
 
   ```bash
   nvm install 20
@@ -191,7 +191,7 @@ supabase stop
 
 ### Codex environment setup
 
-After setup finishes, HTTP access persists for tools like `curl` and `gh`, but Git network operations are no longer allowed. The `.codex/setup.sh` script installs dependencies and fetches open pull requests while the network is still available. It first checks for an `origin` remote and falls back to the `REPO_URL` environment variable if one isn't configured.
+After setup finishes, HTTP and Git network access remain available for tools like `curl`, `gh`, and `git`. The `.codex/setup.sh` script installs dependencies and fetches open pull requests while the network is available. It first checks for an `origin` remote and falls back to the `REPO_URL` environment variable if one isn't configured.
 
 ```bash
 #!/usr/bin/env bash
