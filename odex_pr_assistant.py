@@ -10,6 +10,10 @@ Required Environment Variables:
 Optional Environment Variables:
 - CODEX_MODEL: AI model to use (default: gpt-4o)
   Available options: gpt-4o, gpt-4-turbo
+
+Usage:
+- Set the `REPO` constant to "Azizultra32/aiwebdash-macair1".
+- Run `python odex_pr_assistant.py` to review open pull requests in this repository.
 """
 
 import requests
@@ -21,7 +25,7 @@ from datetime import datetime
 from typing import List, Dict
 
 # Configuration
-REPO = "Azizultra32/AliGGGG"  # Your actual repository
+REPO = "Azizultra32/aiwebdash-macair1"  # Repository to process
 FILTER_LABEL = "needs-review"  # Set to None to review all PRs
 MAX_PRS_TO_PROCESS = 5  # Limit to avoid rate limits
 
