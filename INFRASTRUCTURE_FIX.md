@@ -32,7 +32,7 @@
 - ✅ **HTTP access persists** throughout the entire workflow (curl, npm, gh CLI all work)
 - ✅ **GitHub API calls** can be made at any time during development
 - ✅ **Package installation** works throughout the session
-- ❌ **Git network operations** are restricted (push/pull blocked)
+- ✅ **Git network operations** (push/pull) are available
 
 ### Recommended PR Workflow
 ```bash
@@ -50,7 +50,7 @@ npm run prepare-pr main
 - Use GitHub API for all repository modifications (create commits, merge PRs, etc.)
 - Install packages via npm as needed throughout the workflow  
 - Use `gh` CLI for GitHub operations if available
-- Local git operations work for branching/rebasing but not push/pull
+- Local git operations support branching, rebasing, and push/pull
 
 ## Status: All Infrastructure Issues Resolved ✅
 
