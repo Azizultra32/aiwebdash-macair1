@@ -21,9 +21,9 @@ module.exports = [
       'supabase/**',
       '**/*.cjs',
       '**/*.js',
-      'src/utils/__tests__/**',
-      'src/__tests__/**',
-    ],
+      '**/__tests__/**',
+      '**/*.test.ts',
+      '**/*.test.tsx',    ],
   },
   ...compat.config({
     env: { browser: true, es2020: true },
