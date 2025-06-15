@@ -28,7 +28,7 @@ If you are developing a production application, we recommend updating the config
 
 ## Development Setup
 
-1. After cloning the repository, run the setup script once to install the Node.js dependencies:
+1. After cloning the repository, make sure you are using **Node 20**. Run `nvm use` (the repository includes a `.nvmrc` file) and then install the dependencies with the setup script:
 
    ```bash
    ./setup.sh
