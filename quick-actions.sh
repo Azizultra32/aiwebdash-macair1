@@ -20,23 +20,39 @@ show_menu() {
 
 open_ready_prs() {
     echo "🌐 Opening ready PRs in browser..."
-    if command -v open &> /dev/null; then
-        open "https://github.com/Azizultra32/aiwebdash-macair1/pull/276"
-        open "https://github.com/Azizultra32/aiwebdash-macair1/pull/275"
-        open "https://github.com/Azizultra32/aiwebdash-macair1/pull/273"
-        open "https://github.com/Azizultra32/aiwebdash-macair1/pull/267"
-    elif command -v xdg-open &> /dev/null; then
-        xdg-open "https://github.com/Azizultra32/aiwebdash-macair1/pull/276"
-        xdg-open "https://github.com/Azizultra32/aiwebdash-macair1/pull/275"
-        xdg-open "https://github.com/Azizultra32/aiwebdash-macair1/pull/273"
-        xdg-open "https://github.com/Azizultra32/aiwebdash-macair1/pull/267"
+
+    local pr_urls=()
+    if command -v gh &> /dev/null; then
+        mapfile -t pr_urls < <(gh pr list --state open --json url --jq '.[].url')
+    elif [ -f "pr_list.json" ]; then
+        mapfile -t pr_urls < <(
+            jq -r '.[].number' pr_list.json \
+            | sed 's|^|https://github.com/Azizultra32/aiwebdash-macair1/pull/|'
+        )
     else
-        echo "Manual URLs:"
-        echo "PR #276: https://github.com/Azizultra32/aiwebdash-macair1/pull/276"
-        echo "PR #275: https://github.com/Azizultra32/aiwebdash-macair1/pull/275"
-        echo "PR #273: https://github.com/Azizultra32/aiwebdash-macair1/pull/273"
-        echo "PR #267: https://github.com/Azizultra32/aiwebdash-macair1/pull/267"
+        echo "❌ pr_list.json not found and gh CLI missing"
+        return 1
     fi
+
+    if [ ${#pr_urls[@]} -eq 0 ]; then
+        echo "No open PRs found"
+        return 0
+    fi
+
+    local open_cmd=""
+    if command -v open &> /dev/null; then
+        open_cmd="open"
+    elif command -v xdg-open &> /dev/null; then
+        open_cmd="xdg-open"
+    fi
+
+    for url in "${pr_urls[@]}"; do
+        if [ -n "$open_cmd" ]; then
+            "$open_cmd" "$url"
+        else
+            echo "Manual URL: $url"
+        fi
+    done
 }
 
 create_workflow_pr() {
