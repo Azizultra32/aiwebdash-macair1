@@ -43,24 +43,33 @@ check_pr_status() {
 echo "📊 Ready PRs Status:"
 echo "==================="
 
+# Fetch open PR numbers and titles dynamically using gh if available,
+# otherwise fall back to the GitHub API. The output format is
+# "<number>\t<title>" per line.
+if command -v gh &> /dev/null; then
+    ready_pr_list=$(gh pr list --state open --json number,title -q '.[] | [.number, .title] | @tsv')
+else
+    echo "⚠️  gh CLI not found, falling back to GitHub API" >&2
+    ready_pr_list=$(curl -s "https://api.github.com/repos/Azizultra32/aiwebdash-macair1/pulls?state=open" \
+        | jq -r '.[] | "\(.number)\t\(.title)"')
+fi
+
+if [ -z "$ready_pr_list" ]; then
+    echo "No open PRs found." >&2
+    exit 0
+fi
+
 ready_prs=0
-total_ready=4
+pending_prs=()
+total_ready=$(echo "$ready_pr_list" | grep -c '^')
 
-if check_pr_status 276 "Remove TranscriptTabSection leftovers"; then
-    ((ready_prs++))
-fi
-
-if check_pr_status 275 "Add summary panel action callback tests"; then
-    ((ready_prs++))
-fi
-
-if check_pr_status 273 "Fix vite config import and update tsconfigs"; then
-    ((ready_prs++))
-fi
-
-if check_pr_status 267 "Resolve formatting for SummaryPanel files"; then
-    ((ready_prs++))
-fi
+while IFS=$'\t' read -r pr_number pr_title; do
+    if check_pr_status "$pr_number" "$pr_title"; then
+        ((ready_prs++))
+    else
+        pending_prs+=("$pr_number")
+    fi
+done <<< "$ready_pr_list"
 
 echo ""
 echo "📈 Progress: $ready_prs/$total_ready PRs merged"
@@ -76,18 +85,16 @@ elif [ $ready_prs -gt 0 ]; then
     echo "⚡ Partial progress made!"
     echo ""
     echo "🔄 Continue with remaining PRs:"
-    [ $ready_prs -lt 1 ] && echo "- PR #276: https://github.com/Azizultra32/aiwebdash-macair1/pull/276"
-    [ $ready_prs -lt 2 ] && echo "- PR #275: https://github.com/Azizultra32/aiwebdash-macair1/pull/275"
-    [ $ready_prs -lt 3 ] && echo "- PR #273: https://github.com/Azizultra32/aiwebdash-macair1/pull/273"
-    [ $ready_prs -lt 4 ] && echo "- PR #267: https://github.com/Azizultra32/aiwebdash-macair1/pull/267"
+    for pr in "${pending_prs[@]}"; do
+        echo "- PR #$pr: https://github.com/Azizultra32/aiwebdash-macair1/pull/$pr"
+    done
 else
     echo "⏳ No PRs merged yet"
     echo ""
     echo "🚀 Start here:"
-    echo "1. PR #276: https://github.com/Azizultra32/aiwebdash-macair1/pull/276"
-    echo "2. PR #275: https://github.com/Azizultra32/aiwebdash-macair1/pull/275"
-    echo "3. PR #273: https://github.com/Azizultra32/aiwebdash-macair1/pull/273"
-    echo "4. PR #267: https://github.com/Azizultra32/aiwebdash-macair1/pull/267"
+    for pr in "${pending_prs[@]}"; do
+        echo "- PR #$pr: https://github.com/Azizultra32/aiwebdash-macair1/pull/$pr"
+    done
 fi
 
 echo ""
