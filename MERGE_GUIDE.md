@@ -30,22 +30,7 @@ onto `main` and verifies the preflight, lint, and test steps.
 - **Action**: Create PR and merge
 - **Link**: https://github.com/Azizultra32/aiwebdash-macair1/pull/new/improve/remove-unused-imports
 
-## ⚠️ PROBLEMATIC PRS (3 Need Attention)
 
-### **PR #248 - Fix npm audit issues**
-- **Issue**: Merge conflicts in package-lock.json
-- **Action**: Ask contributor to rebase onto latest main
-- **Command**: `git rebase origin/main`
-
-### **PR #251 - Fix package-lock and add dev dependency**
-- **Issue**: Complex conflicts with recent changes
-- **Action**: Manual conflict resolution needed
-- **Priority**: Low (conflicts with our improvements)
-
-### **PR #247 - Fix service worker precache comment**
-- **Issue**: Still in DRAFT status
-- **Action**: Wait for author to mark as ready
-- **Priority**: Low (work in progress)
 
 ## 📋 MERGE CHECKLIST
 
@@ -82,6 +67,12 @@ After merging all ready PRs:
 - No **breaking changes** introduced
 - **Rollback possible** if issues arise
 - **Automated testing** validates all changes
+
+## 🗃 Archived PRs
+
+- **PR #248** - Fix npm audit issues (merge conflicts in `package-lock.json`)
+- **PR #251** - Fix package-lock and add dev dependency (manual conflict resolution needed)
+- **PR #247** - Fix service worker precache comment (still in draft)
 
 ---
 
