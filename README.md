@@ -263,6 +263,14 @@ export GITHUB_TOKEN=your-token # or export GITHUB_PERSONAL_ACCESS_TOKEN
 ./codex-pr-workflow.sh
 ```
 
+### Using `odex_pr_assistant.py`
+
+Before using the assistant, install the Python requirements:
+
+```bash
+pip install -r requirements.txt
+```
+
 ## Service Worker Version Checks
 
 When the service worker activates it broadcasts `GET_CURRENT_VERSION` to every connected client. Each client replies with its current version so the worker can compare it to the latest value from `version.json`.
