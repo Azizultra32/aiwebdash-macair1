@@ -72,4 +72,30 @@ describe('SummaryPanel', () => {
     render(<SummaryPanel title="Hello">content</SummaryPanel>);
     expect(screen.queryByRole('button', { name: 'Print summary' })).toBeNull();
   });
+
+  it('calls provided onCopy handler when handler is set', () => {
+    const onCopy = vi.fn();
+    const ref = React.createRef<SummaryRef>();
+    render(
+      <SummaryPanel title="Hello" onCopy={onCopy} summaryRef={ref}>
+        content
+      </SummaryPanel>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Copy summary' }));
+    expect(onCopy).toHaveBeenCalledTimes(1);
+    expect(onCopy).toHaveBeenCalledWith(ref);
+  });
+
+  it('calls provided onMaximize handler when handler is set', () => {
+    const onMaximize = vi.fn();
+    const ref = React.createRef<SummaryRef>();
+    render(
+      <SummaryPanel title="Hello" onMaximize={onMaximize} summaryRef={ref}>
+        content
+      </SummaryPanel>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Maximize summary' }));
+    expect(onMaximize).toHaveBeenCalledTimes(1);
+    expect(onMaximize).toHaveBeenCalledWith(ref);
+  });
 });
