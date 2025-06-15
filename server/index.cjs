@@ -1,11 +1,26 @@
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
+const dotenv = require('dotenv');
 
-const supabaseUrl = process.env.BFF_SUPABASE_URL;
-const supabaseKey = process.env.BFF_SUPABASE_SERVICE_ROLE_KEY;
+// Load environment variables from `.env` if present.
+dotenv.config();
+
+// Support legacy and new environment variable names so the server
+// works without additional configuration.
+const supabaseUrl =
+  process.env.BFF_SUPABASE_URL ||
+  process.env.SUPABASE_URL ||
+  process.env.VITE_SUPABASE_URL ||
+  process.env.VITE_APP_SUPABASE_URL;
+const supabaseKey =
+  process.env.BFF_SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_SERVICE_ROLE_KEY;
+
 if (!supabaseUrl || !supabaseKey) {
-  throw new Error('Missing Supabase configuration');
+  throw new Error(
+    'Missing Supabase configuration: set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env',
+  );
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);

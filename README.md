@@ -80,7 +80,7 @@ If you are developing a production application, we recommend updating the config
 
 ### Starting the backend
 
-1. Copy `.env.example` to `.env` and set `BFF_PORT`, `BFF_SUPABASE_URL`, and `BFF_SUPABASE_SERVICE_ROLE_KEY`.
+1. Copy `.env.example` to `.env` and set `BFF_PORT`, `SUPABASE_URL`, and `SUPABASE_SERVICE_ROLE_KEY`.
 2. Start the backend service:
 
    ```bash
@@ -105,8 +105,8 @@ The application relies on several environment variables for Supabase and Stripe 
 - `VITE_V0_API_URL` - base URL for the v0 UI generation API.
 - `VITE_V0_API_KEY` - authentication token for the v0 API.
 - `BFF_PORT` - port for the backend service.
-- `BFF_SUPABASE_URL` - Supabase project URL for the backend.
-- `BFF_SUPABASE_SERVICE_ROLE_KEY` - service role key used by the backend.
+- `SUPABASE_URL` - Supabase project URL used by the backend.
+- `SUPABASE_SERVICE_ROLE_KEY` - service role key used by the backend.
 
 ## Quality Assurance & Testing
 
