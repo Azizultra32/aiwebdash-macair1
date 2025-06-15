@@ -55,6 +55,23 @@ If you are developing a production application, we recommend updating the config
    npm run dev
    ```
 
+### Environment optimization
+
+- Ensure Node.js 20 is available. If it's missing, install it and set it as your default:
+
+  ```bash
+  nvm install 20
+  nvm alias default 20
+  nvm use 20
+  ```
+
+- After installing dependencies, check for security issues and apply safe fixes:
+
+  ```bash
+  npm audit
+  npm audit fix
+  ```
+
 ### Starting the backend
 
 1. Copy `.env.example` to `.env` and set `BFF_PORT`, `BFF_SUPABASE_URL`, and `BFF_SUPABASE_SERVICE_ROLE_KEY`.
