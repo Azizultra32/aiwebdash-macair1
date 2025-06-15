@@ -24,6 +24,8 @@ if command -v npm >/dev/null 2>&1; then
   fi
   if command -v gh >/dev/null 2>&1; then
     gh pr list --state open --json number,title,headRefName > pr_list.json
+  else
+    echo "Tip: install the GitHub CLI (gh) to generate PR metadata for the dashboard" >&2
   fi
 else
   echo "Error: npm not found." >&2
