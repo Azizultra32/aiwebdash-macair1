@@ -235,6 +235,7 @@ This workflow allows for efficient PR management even when working offline.
 3. Run `./codex-pr-workflow.sh` to execute the recommended workflow:
    - Installs dependencies via `.codex/setup.sh` if needed
    - Rebases your branch and runs preflight, lint, and tests
+   - Install Python dependencies with `pip install -r requirements.txt` before running `odex_pr_assistant.py`
    - Launches `odex_pr_assistant.py` when API keys are set for automated PR reviews
 
 Example:
