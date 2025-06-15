@@ -21,18 +21,21 @@ show_menu() {
 open_ready_prs() {
     echo "🌐 Opening ready PRs in browser..."
     if command -v open &> /dev/null; then
-        open "https://github.com/Azizultra32/aiwebdash-macair1/pull/243"
-        open "https://github.com/Azizultra32/aiwebdash-macair1/pull/244"
-        open "https://github.com/Azizultra32/aiwebdash-macair1/pull/245"
+        open "https://github.com/Azizultra32/aiwebdash-macair1/pull/276"
+        open "https://github.com/Azizultra32/aiwebdash-macair1/pull/275"
+        open "https://github.com/Azizultra32/aiwebdash-macair1/pull/273"
+        open "https://github.com/Azizultra32/aiwebdash-macair1/pull/267"
     elif command -v xdg-open &> /dev/null; then
-        xdg-open "https://github.com/Azizultra32/aiwebdash-macair1/pull/243"
-        xdg-open "https://github.com/Azizultra32/aiwebdash-macair1/pull/244"
-        xdg-open "https://github.com/Azizultra32/aiwebdash-macair1/pull/245"
+        xdg-open "https://github.com/Azizultra32/aiwebdash-macair1/pull/276"
+        xdg-open "https://github.com/Azizultra32/aiwebdash-macair1/pull/275"
+        xdg-open "https://github.com/Azizultra32/aiwebdash-macair1/pull/273"
+        xdg-open "https://github.com/Azizultra32/aiwebdash-macair1/pull/267"
     else
         echo "Manual URLs:"
-        echo "PR #243: https://github.com/Azizultra32/aiwebdash-macair1/pull/243"
-        echo "PR #244: https://github.com/Azizultra32/aiwebdash-macair1/pull/244"
-        echo "PR #245: https://github.com/Azizultra32/aiwebdash-macair1/pull/245"
+        echo "PR #276: https://github.com/Azizultra32/aiwebdash-macair1/pull/276"
+        echo "PR #275: https://github.com/Azizultra32/aiwebdash-macair1/pull/275"
+        echo "PR #273: https://github.com/Azizultra32/aiwebdash-macair1/pull/273"
+        echo "PR #267: https://github.com/Azizultra32/aiwebdash-macair1/pull/267"
     fi
 }
 

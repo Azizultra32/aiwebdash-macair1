@@ -1,29 +1,16 @@
 # 🚀 PR Merge Guide
 
-## ✅ READY TO MERGE IMMEDIATELY (3 PRs)
+## 📋 Current Open PRs
 
-### **Priority 1: Dependency Updates (SAFE)**
+Run `./prepare-pr.sh main` for each PR before merging. This rebases the branch
+onto `main` and verifies the preflight, lint, and test steps.
 
-#### PR #243 - react-speech-recognition (3.10.0 → 4.0.1)
-- **Status**: ✅ FULLY TESTED & APPROVED
-- **Tests**: 35/35 passed (3.48s)
-- **Security**: Fixes vulnerabilities
-- **Action**: **MERGE NOW** with "Squash and merge"
-- **Link**: https://github.com/Azizultra32/aiwebdash-macair1/pull/243
+### **Active Reviews**
 
-#### PR #244 - zod (3.25.32 → 3.25.56)  
-- **Status**: ✅ FULLY TESTED & APPROVED
-- **Tests**: 35/35 passed (3.81s)
-- **Security**: Fixes vulnerabilities
-- **Action**: **MERGE NOW** with "Squash and merge"
-- **Link**: https://github.com/Azizultra32/aiwebdash-macair1/pull/244
-
-#### PR #245 - @testing-library/react (14.3.1 → 16.3.0)
-- **Status**: ✅ FULLY TESTED & APPROVED
-- **Tests**: 35/35 passed (3.73s)
-- **Testing**: Improves test capabilities
-- **Action**: **MERGE NOW** with "Squash and merge"
-- **Link**: https://github.com/Azizultra32/aiwebdash-macair1/pull/245
+- **PR #276** - Remove TranscriptTabSection leftovers
+- **PR #275** - Add summary panel action callback tests
+- **PR #273** - Fix vite config import and update tsconfigs
+- **PR #267** - Resolve formatting for SummaryPanel files
 
 ## 🔧 CREATE NEW PRS (2 Improvements)
 
@@ -63,18 +50,20 @@
 ## 📋 MERGE CHECKLIST
 
 ### For Each Ready PR:
-1. ✅ Click "Merge pull request"
-2. ✅ Select "Squash and merge" 
-3. ✅ Use descriptive commit message
-4. ✅ Confirm merge
-5. ✅ Delete branch after merge
+1. ✅ Run `./prepare-pr.sh main`
+2. ✅ Click "Merge pull request"
+3. ✅ Select "Squash and merge"
+4. ✅ Use descriptive commit message
+5. ✅ Confirm merge
+6. ✅ Delete branch after merge
 
 ### Recommended Merge Order:
-1. **PR #243** (react-speech-recognition)
-2. **PR #244** (zod)  
-3. **PR #245** (@testing-library/react)
-4. **Create & merge TypeScript strict mode PR**
-5. **Create & merge code cleanup PR**
+1. **PR #276** (Remove TranscriptTabSection leftovers)
+2. **PR #275** (Add summary panel action callback tests)
+3. **PR #273** (Fix vite config import and update tsconfigs)
+4. **PR #267** (Resolve formatting for SummaryPanel files)
+5. **Create & merge TypeScript strict mode PR**
+6. **Create & merge code cleanup PR**
 
 ## 🎯 EXPECTED RESULTS
 
@@ -96,4 +85,4 @@ After merging all ready PRs:
 
 ---
 
-**Ready to proceed? Start with PR #243 and work through the list! 🚀**
+**Ready to proceed? Start with PR #276 and work through the list! 🚀**

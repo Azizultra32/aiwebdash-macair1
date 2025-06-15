@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       pr_numbers:
-        description: 'Comma-separated PR numbers to merge (e.g., 243,244,245)'
+        description: 'Comma-separated PR numbers to merge (e.g., 276,275,273)'
         required: true
-        default: '243,244,245'
+        default: '276,275,273,267'
       merge_method:
         description: 'Merge method'
         required: true

@@ -44,17 +44,21 @@ echo "📊 Ready PRs Status:"
 echo "==================="
 
 ready_prs=0
-total_ready=3
+total_ready=4
 
-if check_pr_status 243 "react-speech-recognition"; then
+if check_pr_status 276 "Remove TranscriptTabSection leftovers"; then
     ((ready_prs++))
 fi
 
-if check_pr_status 244 "zod"; then
+if check_pr_status 275 "Add summary panel action callback tests"; then
     ((ready_prs++))
 fi
 
-if check_pr_status 245 "@testing-library/react"; then
+if check_pr_status 273 "Fix vite config import and update tsconfigs"; then
+    ((ready_prs++))
+fi
+
+if check_pr_status 267 "Resolve formatting for SummaryPanel files"; then
     ((ready_prs++))
 fi
 
@@ -72,16 +76,18 @@ elif [ $ready_prs -gt 0 ]; then
     echo "⚡ Partial progress made!"
     echo ""
     echo "🔄 Continue with remaining PRs:"
-    [ $ready_prs -lt 1 ] && echo "- PR #243: https://github.com/Azizultra32/aiwebdash-macair1/pull/243"
-    [ $ready_prs -lt 2 ] && echo "- PR #244: https://github.com/Azizultra32/aiwebdash-macair1/pull/244"
-    [ $ready_prs -lt 3 ] && echo "- PR #245: https://github.com/Azizultra32/aiwebdash-macair1/pull/245"
+    [ $ready_prs -lt 1 ] && echo "- PR #276: https://github.com/Azizultra32/aiwebdash-macair1/pull/276"
+    [ $ready_prs -lt 2 ] && echo "- PR #275: https://github.com/Azizultra32/aiwebdash-macair1/pull/275"
+    [ $ready_prs -lt 3 ] && echo "- PR #273: https://github.com/Azizultra32/aiwebdash-macair1/pull/273"
+    [ $ready_prs -lt 4 ] && echo "- PR #267: https://github.com/Azizultra32/aiwebdash-macair1/pull/267"
 else
     echo "⏳ No PRs merged yet"
     echo ""
     echo "🚀 Start here:"
-    echo "1. PR #243: https://github.com/Azizultra32/aiwebdash-macair1/pull/243"
-    echo "2. PR #244: https://github.com/Azizultra32/aiwebdash-macair1/pull/244"
-    echo "3. PR #245: https://github.com/Azizultra32/aiwebdash-macair1/pull/245"
+    echo "1. PR #276: https://github.com/Azizultra32/aiwebdash-macair1/pull/276"
+    echo "2. PR #275: https://github.com/Azizultra32/aiwebdash-macair1/pull/275"
+    echo "3. PR #273: https://github.com/Azizultra32/aiwebdash-macair1/pull/273"
+    echo "4. PR #267: https://github.com/Azizultra32/aiwebdash-macair1/pull/267"
 fi
 
 echo ""
