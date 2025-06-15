@@ -32,7 +32,7 @@
 - ✅ **HTTP access persists** throughout the entire workflow (curl, npm, gh CLI all work)
 - ✅ **GitHub API calls** can be made at any time during development
 - ✅ **Package installation** works throughout the session
-- ❌ **Git network operations** are restricted (push/pull blocked)
+- ✅ **Git network operations** (push/pull) remain available
 
 ### Recommended PR Workflow
 ```bash

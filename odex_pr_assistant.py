@@ -19,7 +19,6 @@ import sys
 import time
 from datetime import datetime
 from typing import List, Dict
-
 # Configuration
 # Repository to process pull requests for. Update this when moving the
 # script to a different project.
